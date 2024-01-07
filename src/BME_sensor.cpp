@@ -25,18 +25,23 @@ BMESensor::~BMESensor() {
 void BMESensor::init() {
     if(!bme->begin()) {
         logg("Could not find a valid BME680 sensor, check wiring!");
-        delay(1000);
+    } else {
+        sensorFound = true;
+        bme->setTemperatureOversampling(BME680_OS_8X);
+        bme->setHumidityOversampling(BME680_OS_2X);
+        bme->setPressureOversampling(BME680_OS_4X);
+        bme->setIIRFilterSize(BME680_FILTER_SIZE_3);
+        bme->setGasHeater(320, 150); // 320*C for 150 ms
+        logg("BME680 initialized");
     }
-    bme->setTemperatureOversampling(BME680_OS_8X);
-    bme->setHumidityOversampling(BME680_OS_2X);
-    bme->setPressureOversampling(BME680_OS_4X);
-    bme->setIIRFilterSize(BME680_FILTER_SIZE_3);
-    bme->setGasHeater(320, 150); // 320*C for 150 ms
-    logg("BME680 initialized");
 }
 
 // Routine to update BME values
 void BMESensor::update() {
+    if (!this->sensorFound) {
+        return;
+    }
+
     logg("BME680 reading...");
     
     bool status = bme->performReading();

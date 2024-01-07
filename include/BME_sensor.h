@@ -27,6 +27,7 @@ class BMESensor {
     uint32_t getGas();
     float getAltitude();
     bool errorBME = false;
+    bool sensorFound = false;
   private:
     BLECharacteristic* temperatureCharacteristic;
     BLECharacteristic* pressureCharacteristic;

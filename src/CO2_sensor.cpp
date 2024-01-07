@@ -2,7 +2,7 @@
 
 // Construct CO2 sensor
 CO2Sensor::CO2Sensor(BLECharacteristic *co2Characteristic): co2Characteristic(co2Characteristic) {
-  mhz19Serial = new HardwareSerial(1);
+  mhz19Serial = new HardwareSerial(0);
 }
 
 CO2Sensor::~CO2Sensor() {
@@ -14,12 +14,20 @@ void CO2Sensor::init() {
   mhz19Serial->begin(9600, SERIAL_8N1, CO2_RX_PIN, CO2_TX_PIN);
   mhz19.begin(*mhz19Serial);
   mhz19.autoCalibration();
-
-  logg("CO2 sensor initialized");
+  if (mhz19.errorCode != RESULT_OK) {
+    logg("Could not initialize MH-Z19 sensor, check wiring!");
+  } else {
+    logg("MH-Z19 initialized");
+    sensorFound = true;
+  }
 }
 
 // Routine to update CO2 and temperature values
 void CO2Sensor::update() {
+  if (!this->sensorFound) {
+    return;
+  }
+
   logg("MH-Z19 reading...");
   this->co2 = mhz19.getCO2();
   logg("MH-Z19 CO2: " + String(this->co2));

@@ -35,6 +35,11 @@ class MyServerCallbacks: public BLEServerCallbacks {
 void init_BLE();
 void init_timer_read_sensors();
 void init_buttons();
+void handle_sensor_readings();
+void handle_button_readings();
+void check_CO2_sensor();
+void check_PM_sensor();
+void check_BME_sensor();
 
 void IRAM_ATTR ISR_sensors_read();
 void IRAM_ATTR ISR_button_B();
@@ -45,10 +50,10 @@ void setup() {
   Serial.begin(115200);
   // Init buttons
   init_buttons();
-  // Init CO2 sensor
-  co2Sensor.init();
-  // Initialize PM sensor
-  // pmSensor.init();
+  // Init CO2 sensor (serial0)
+  // co2Sensor.init();
+  // Initialize PM sensor (serial1)
+  pmSensor.init();
   // Initialize BME sensor
   bmeSensor.init();
   // Initialize BLE
@@ -60,47 +65,53 @@ void setup() {
 
 void loop() {
   // Check if there is a sensor to read
-  if (read_sensor != SENSORS::NO_SENSOR) {
-    // Read CO2 sensor (BLE updates are sent automatically)
-    if (read_sensor & SENSORS::SENSOR_CO2) {
-      co2Sensor.update();
-
-      // Check for errors
-      if (co2Sensor.errorCO2 || co2Sensor.errorTemperature) {
-        // treat error
-      }
-
-      // Clear flag
-      read_sensor &= ~SENSORS::SENSOR_CO2;
-    }
-
-    // Read PM sensor
-    if (read_sensor & SENSORS::SENSOR_PM) {
-      pmSensor.update();
-
-      // Check for errors
-      if (pmSensor.errorPM) {
-        // treat error
-      }
-
-      // Clear flag
-      read_sensor &= ~SENSORS::SENSOR_PM;
-    }
-
-    // Read BME sensor
-    if (read_sensor & SENSORS::SENSOR_BME) {
-      bmeSensor.update();
-
-      // Check for errors
-      if (bmeSensor.errorBME) {
-        // treat error
-      }
-      
-      read_sensor &= ~SENSORS::SENSOR_BME;
-    }
-  }
+  handle_sensor_readings();
 
   // Check if there is a button pressed
+  handle_button_readings();
+}
+
+void handle_sensor_readings() {
+  if (read_sensor != SENSORS::NO_SENSOR) {
+    // Read CO2 sensor (BLE updates are sent automatically)
+    check_CO2_sensor();
+
+    // Read PM sensor (BLE updates are sent automatically)
+    check_PM_sensor();
+
+    // Read BME sensor (BLE updates are sent automatically)
+    check_BME_sensor();
+  }
+}
+
+void check_CO2_sensor() {
+  if (read_sensor & SENSORS::SENSOR_CO2) {
+    co2Sensor.update();
+
+    // Clear flag
+    read_sensor &= ~SENSORS::SENSOR_CO2;
+  }
+}
+
+void check_PM_sensor() {
+  if (read_sensor & SENSORS::SENSOR_PM) {
+    pmSensor.update();
+
+    // Clear flag
+    read_sensor &= ~SENSORS::SENSOR_PM;
+  }
+}
+
+void check_BME_sensor() {
+  if (read_sensor & SENSORS::SENSOR_BME) {
+    bmeSensor.update();
+    
+    // Clear flag
+    read_sensor &= ~SENSORS::SENSOR_BME;
+  }
+}
+
+void handle_button_readings() {
   if (pressed_button != BUTTONS::NO_BUTTON) {
     // Button blue pressed
     if (pressed_button & BUTTONS::BUTTON_B) {

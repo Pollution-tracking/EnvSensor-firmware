@@ -19,6 +19,7 @@ class CO2Sensor {
     uint16_t getTemperature();
     bool errorCO2 = false;
     bool errorTemperature = false;
+    bool sensorFound = false;
   private:
     BLECharacteristic* co2Characteristic;
     uint16_t co2;

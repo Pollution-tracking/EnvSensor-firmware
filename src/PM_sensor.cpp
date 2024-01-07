@@ -17,11 +17,16 @@ PMSensor::~PMSensor() {
 // Routine to initialize PM sensor
 void PMSensor::init() {
     pms->init();
+    this->sensorFound = true;
     logg("PM sensor initialized");
 }
 
 // Routine to update PM values
 void PMSensor::update() {
+    if (!this->sensorFound) {
+        return;
+    }
+    
     logg("PMSA003 reading...");
     SerialPM::STATUS status = pms->read();
     

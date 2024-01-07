@@ -21,6 +21,7 @@ class PMSensor {
     uint16_t getPM2_5();
     uint16_t getPM10();
     bool errorPM = false;
+    bool sensorFound = false;
   private:
     SerialPM *pms;
     uint16_t pm1;
