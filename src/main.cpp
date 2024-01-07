@@ -150,9 +150,9 @@ void init_timer_read_sensors() {
   timerAlarmEnable(timer_read_sensors);
   
   // Setup timer interrupt for 3V3 sensors
-  timerAttachInterrupt(timer_read_sensors, &ISR_sensors_3V3, true);
-  timerAlarmWrite(timer_read_sensors, WAIT_TIME_3V3, true);
-  timerAlarmEnable(timer_read_sensors);
+  // timerAttachInterrupt(timer_read_sensors, &ISR_sensors_3V3, true);
+  // timerAlarmWrite(timer_read_sensors, WAIT_TIME_3V3, true);
+  // timerAlarmEnable(timer_read_sensors);
 
   // Start timer
   timerStart(timer_read_sensors);
