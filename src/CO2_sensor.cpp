@@ -27,7 +27,9 @@ void CO2Sensor::update() {
   logg("MH-Z19 temperature: " + String(this->temperature));
 
   this->checkErrors();
-  this->updateCharacteristic();
+  
+  if (!this->errorCO2 && !this->errorTemperature)
+    this->updateCharacteristic();
 }
 
 // Getters
@@ -48,14 +50,14 @@ void CO2Sensor::updateCharacteristic() {
 
 void CO2Sensor::checkErrors() {
   if (this->co2 == 0) {
-    //logg("MHZ19 CO2 error");
+    logg("MHZ19 CO2 error");
     this->errorCO2 = true;
   } else {
     this->errorCO2 = false;
   }
 
   if (this->temperature == -273.15) {
-    //logg("MHZ19 temperature error");
+    logg("MHZ19 temperature error");
     this->errorTemperature = true;
   } else {
     this->errorTemperature = false;

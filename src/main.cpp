@@ -8,11 +8,13 @@
 #include "PMserial.h"
 #include <CO2_sensor.h>
 #include <PM_sensor.h>
+#include <BME_sensor.h>
 
 // Global variables
 bool deviceConnected = false;  // Client conneted to server?
 CO2Sensor co2Sensor(&carbonDioxideCharacteristic); // CO2 sensor
 PMSensor pmSensor(&pm1Characteristic, &pm2_5Characteristic, &pm10Characteristic); // PM sensor
+BMESensor bmeSensor(&temperatureCharacteristic, &pressureCharacteristic, &humidityCharacteristic, &gasCharacteristic, &altitudeCharacteristic); // BME sensor
 hw_timer_t *timer_read_sensors = NULL; // Timer for sensor readings
 uint8_t read_sensor = SENSORS::NO_SENSOR; // Which sensors to read?
 uint8_t pressed_button = BUTTONS::NO_BUTTON; // Which button was pressed?
@@ -34,8 +36,7 @@ void init_BLE();
 void init_timer_read_sensors();
 void init_buttons();
 
-void ISR_sensors_5V();
-void ISR_sensors_3V3();
+void IRAM_ATTR ISR_sensors_read();
 void IRAM_ATTR ISR_button_B();
 void IRAM_ATTR ISR_button_Y();
 void IRAM_ATTR ISR_button_R();
@@ -47,7 +48,9 @@ void setup() {
   // Init CO2 sensor
   co2Sensor.init();
   // Initialize PM sensor
-  //pmSensor.init();
+  // pmSensor.init();
+  // Initialize BME sensor
+  bmeSensor.init();
   // Initialize BLE
   init_BLE();
 
@@ -70,6 +73,7 @@ void loop() {
       // Clear flag
       read_sensor &= ~SENSORS::SENSOR_CO2;
     }
+
     // Read PM sensor
     if (read_sensor & SENSORS::SENSOR_PM) {
       pmSensor.update();
@@ -82,8 +86,15 @@ void loop() {
       // Clear flag
       read_sensor &= ~SENSORS::SENSOR_PM;
     }
+
     // Read BME sensor
     if (read_sensor & SENSORS::SENSOR_BME) {
+      bmeSensor.update();
+
+      // Check for errors
+      if (bmeSensor.errorBME) {
+        // treat error
+      }
       
       read_sensor &= ~SENSORS::SENSOR_BME;
     }
@@ -115,14 +126,10 @@ void loop() {
   }
 }
 
-// Mark PM and CO2 sensors to be read
-void IRAM_ATTR ISR_sensors_5V() {
+// Mark all sensors to be read
+void IRAM_ATTR ISR_sensors_read() {
   read_sensor |= SENSORS::SENSOR_PM;
   read_sensor |= SENSORS::SENSOR_CO2;
-}
-
-// Mark BME sensor to be read
-void IRAM_ATTR ISR_sensors_3V3() {
   read_sensor |= SENSORS::SENSOR_BME;
 }
 
@@ -144,16 +151,11 @@ void IRAM_ATTR ISR_button_R(){
 void init_timer_read_sensors() {
   // Initialize timer
   timer_read_sensors = timerBegin(1, 80, true);
-  // Setup timer interrupt for 5V sensors
-  timerAttachInterrupt(timer_read_sensors, &ISR_sensors_5V, true);
-  timerAlarmWrite(timer_read_sensors, WAIT_TIME_5V, true);
+  // Setup timer interrupt for sensor readings
+  timerAttachInterrupt(timer_read_sensors, &ISR_sensors_read, true);
+  timerAlarmWrite(timer_read_sensors, WAIT_TIME_READ_SENSORS, true);
   timerAlarmEnable(timer_read_sensors);
   
-  // Setup timer interrupt for 3V3 sensors
-  // timerAttachInterrupt(timer_read_sensors, &ISR_sensors_3V3, true);
-  // timerAlarmWrite(timer_read_sensors, WAIT_TIME_3V3, true);
-  // timerAlarmEnable(timer_read_sensors);
-
   // Start timer
   timerStart(timer_read_sensors);
   logg("Timer initialized");
@@ -176,6 +178,10 @@ void init_BLE() {
   pm1Descriptor.setValue("PM1");
   pm2_5Descriptor.setValue("PM2.5");
   pm10Descriptor.setValue("PM10");
+  gasDescriptor.setValue("Gas");
+  humidityDescriptor.setValue("Humidity");
+  pressureDescriptor.setValue("Pressure");
+  altitudeDescriptor.setValue("Altitude");
   
   // Configure BLE characteristics
   temperatureCharacteristic.addDescriptor(&temperatureDescriptor);
@@ -183,6 +189,10 @@ void init_BLE() {
   pm1Characteristic.addDescriptor(&pm1Descriptor);
   pm2_5Characteristic.addDescriptor(&pm2_5Descriptor);
   pm10Characteristic.addDescriptor(&pm10Descriptor);
+  gasCharacteristic.addDescriptor(&gasDescriptor);
+  humidityCharacteristic.addDescriptor(&humidityDescriptor);
+  pressureCharacteristic.addDescriptor(&pressureDescriptor);
+  altitudeCharacteristic.addDescriptor(&altitudeDescriptor);
 
   // Add BLE characteristics to BLE service
   envService->addCharacteristic(&temperatureCharacteristic);
@@ -190,6 +200,10 @@ void init_BLE() {
   envService->addCharacteristic(&pm1Characteristic);
   envService->addCharacteristic(&pm2_5Characteristic);
   envService->addCharacteristic(&pm10Characteristic);
+  envService->addCharacteristic(&gasCharacteristic);
+  envService->addCharacteristic(&humidityCharacteristic);
+  envService->addCharacteristic(&pressureCharacteristic);
+  envService->addCharacteristic(&altitudeCharacteristic);
 
   // Start BLE service
   envService->start();
