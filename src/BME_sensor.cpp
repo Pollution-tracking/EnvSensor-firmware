@@ -12,7 +12,7 @@ BMESensor::BMESensor(BLECharacteristic *temperatureCharacteristic,
       gasCharacteristic(gasCharacteristic),
       altitudeCharacteristic(altitudeCharacteristic) {
     theWire = new TwoWire(0);
-    theWire->setPins(BME680_SDA_PIN, CLK_PIN);
+    theWire->begin(BME680_SDA_PIN, CLK_PIN);
     bme = new Adafruit_BME680(theWire);
 }
 
