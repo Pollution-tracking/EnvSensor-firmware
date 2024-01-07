@@ -10,8 +10,10 @@ const std::string bleServerName = "ESP32_EnvMonitor";
 const uint16_t CO2_ERROR = 0xFFFF;
 
 // Time between sensor reads (in us -> chosen to be prime numbers)
-const uint64_t WAIT_TIME_5V = 30000017;
-const uint64_t WAIT_TIME_3V3 = 20000009;
+const uint64_t WAIT_TIME_READ_SENSORS = 20000009;
+
+// Sea level pressure (in h200Pa)
+const float seaLevel = 1013.25;
 
 // Each bit represents one of the sensors to be read
 namespace SENSORS {
@@ -27,6 +29,14 @@ namespace BUTTONS {
     const uint8_t BUTTON_B = 0b001;
     const uint8_t BUTTON_Y = 0b010;
     const uint8_t BUTTON_R = 0b100;
+};
+
+struct BMEData {
+    int32_t temperature;
+    int32_t pressure;
+    int32_t humidity;
+    int32_t gas;
+    float altitude;
 };
 
 #endif // CONSTANTS_H

@@ -23,11 +23,11 @@ void PMSensor::init() {
 // Routine to update PM values
 void PMSensor::update() {
     logg("PMSA003 reading...");
-    SerialPM::STATUS sts = pms->read();
+    SerialPM::STATUS status = pms->read();
     
-    if (sts != SerialPM::OK) {
+    if (status != SerialPM::OK) {
         this->errorPM = true;
-        this->checkErrors(sts);
+        this->checkErrors(status);
     } else {
         this->errorPM = false;
 

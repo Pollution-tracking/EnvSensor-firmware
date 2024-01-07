@@ -14,4 +14,7 @@
 #define BUTTON_YELLOW 2
 #define BUTTON_RED 3
 
+#define CLK_PIN 9
+#define BME680_SDA_PIN 8
+
 #endif // PINS_H

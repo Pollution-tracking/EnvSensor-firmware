@@ -32,4 +32,24 @@ BLECharacteristic pm10Characteristic(PM10_CHARACTERISTIC_UUID,
                                      BLECharacteristic::PROPERTY_NOTIFY);
 BLEDescriptor pm10Descriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
 
+#define GAS_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2BE7)) //???
+BLECharacteristic gasCharacteristic(GAS_CHARACTERISTIC_UUID,
+                                    BLECharacteristic::PROPERTY_NOTIFY);
+BLEDescriptor gasDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+
+#define HUMIDITY_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2A6F))
+BLECharacteristic humidityCharacteristic(HUMIDITY_CHARACTERISTIC_UUID,
+                                         BLECharacteristic::PROPERTY_NOTIFY);
+BLEDescriptor humidityDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+
+#define PRESSURE_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2A6D))
+BLECharacteristic pressureCharacteristic(PRESSURE_CHARACTERISTIC_UUID,
+                                         BLECharacteristic::PROPERTY_NOTIFY);
+BLEDescriptor pressureDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+
+#define ALTITUDE_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2AB3))
+BLECharacteristic altitudeCharacteristic(ALTITUDE_CHARACTERISTIC_UUID,
+                                         BLECharacteristic::PROPERTY_NOTIFY);
+BLEDescriptor altitudeDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+
 #endif // BLE_CHARACTERISTICS_H
