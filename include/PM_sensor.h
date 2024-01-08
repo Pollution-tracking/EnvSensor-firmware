@@ -6,14 +6,12 @@
 #include "pins.h"
 #include "constants.h"
 #include <logger.h>
-#include <BLECharacteristic.h>
+#include "Bluetooth_module.h"
 
 
 class PMSensor {
   public:
-    PMSensor(BLECharacteristic* pm1Characteristic,
-             BLECharacteristic* pm2_5Characteristic,
-             BLECharacteristic* pm10Characteristic);
+    PMSensor(Bluetooth_module *bluetoothModule);
     ~PMSensor();
     void update();
     void init();
@@ -27,9 +25,7 @@ class PMSensor {
     uint16_t pm1;
     uint16_t pm2_5;
     uint16_t pm10;
-    BLECharacteristic* pm1Characteristic;
-    BLECharacteristic* pm2_5Characteristic;
-    BLECharacteristic* pm10Characteristic;
+    Bluetooth_module *bluetoothModule;
     void updateCharacteristics();
     void checkErrors(SerialPM::STATUS status);
 };

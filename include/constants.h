@@ -6,6 +6,29 @@
 // BLE server name
 const std::string bleServerName = "ESP32_EnvMonitor";
 
+// UUIDs
+#define SERVICE_UUID (BLEUUID((uint16_t)0x181A))
+#define CLIENT_CHARACTERISTIC_CONFIG_UUID (BLEUUID((uint16_t)0x2902))
+#define TEMPERATURE_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2A6E))
+#define CARBON_DIOXIDE_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2B8C))
+#define PM1_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2BD5))
+#define PM2_5_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2BD6))
+#define PM10_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2BD7))
+#define GAS_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2BE7)) //???
+#define HUMIDITY_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2A6F))
+#define PRESSURE_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2A6D))
+#define ALTITUDE_CHARACTERISTIC_UUID (BLEUUID((uint16_t)0x2AB3))
+
+// BLE descriptor values
+const std::string temperatureDescriptorValue = "Temperature";
+const std::string carbonDioxideDescriptorValue = "Carbon dioxide";
+const std::string pm1DescriptorValue = "PM1";
+const std::string pm2_5DescriptorValue = "PM2.5";
+const std::string pm10DescriptorValue = "PM10";
+const std::string gasDescriptorValue = "Gas resistance";
+const std::string humidityDescriptorValue = "Humidity";
+const std::string pressureDescriptorValue = "Pressure";
+const std::string altitudeDescriptorValue = "Altitude";
 // MH-Z19 sensor read error
 const uint16_t CO2_ERROR = 0xFFFF;
 

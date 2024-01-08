@@ -1,16 +1,8 @@
 #include "BME_sensor.h"
 
 // Construct BME sensor
-BMESensor::BMESensor(BLECharacteristic *temperatureCharacteristic,
-                     BLECharacteristic *pressureCharacteristic,
-                     BLECharacteristic *humidityCharacteristic,
-                     BLECharacteristic *gasCharacteristic,
-                     BLECharacteristic *altitudeCharacteristic)
-    : temperatureCharacteristic(temperatureCharacteristic),
-      pressureCharacteristic(pressureCharacteristic),
-      humidityCharacteristic(humidityCharacteristic),
-      gasCharacteristic(gasCharacteristic),
-      altitudeCharacteristic(altitudeCharacteristic) {
+BMESensor::BMESensor(Bluetooth_module *bluetoothModule)
+    : bluetoothModule(bluetoothModule) {
     theWire = new TwoWire(0);
     theWire->begin(BME680_SDA_PIN, CLK_PIN);
     bme = new Adafruit_BME680(theWire);
@@ -92,27 +84,12 @@ float BMESensor::getAltitude() {
 // Internal functions
 void BMESensor::updateCharacteristics() {
     logg("Updating BME characteristics");
-    // Cast values
-    int temp = static_cast<int>(this->data.temperature);
-    int press = static_cast<int>(this->data.pressure);
-    int hum = static_cast<int>(this->data.humidity);
-    int gas = static_cast<int>(this->data.gas);
-
-    // Update characteristics
-    this->temperatureCharacteristic->setValue(temp);
-    this->temperatureCharacteristic->notify();
-
-    this->pressureCharacteristic->setValue(press);
-    this->pressureCharacteristic->notify();
-
-    this->humidityCharacteristic->setValue(hum);
-    this->humidityCharacteristic->notify();
-
-    this->gasCharacteristic->setValue(gas);
-    this->gasCharacteristic->notify();
-
-    this->altitudeCharacteristic->setValue(this->data.altitude);
-    this->altitudeCharacteristic->notify();
+    
+    bluetoothModule->updateTemperatureCharacteristic(data.temperature);
+    bluetoothModule->updatePressureCharacteristic(data.pressure);
+    bluetoothModule->updateHumidityCharacteristic(data.humidity);
+    bluetoothModule->updateGasCharacteristic(data.gas);
+    bluetoothModule->updateAltitudeCharacteristic(data.altitude);
 }
 
 void BMESensor::checkErrors(bool status) {

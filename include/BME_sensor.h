@@ -5,19 +5,15 @@
 #include "pins.h"
 #include "constants.h"
 #include <logger.h>
-#include <BLECharacteristic.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
+#include "Bluetooth_module.h"
 
 class BMESensor {
   public:
-    BMESensor(BLECharacteristic* temperatureCharacteristic,
-            BLECharacteristic* pressureCharacteristic,
-            BLECharacteristic* humidityCharacteristic,
-            BLECharacteristic* gasCharacteristic,
-            BLECharacteristic* altitudeCharacteristic);
+    BMESensor(Bluetooth_module *bluetoothModule);
     ~BMESensor();
     void update();
     void init();
@@ -29,11 +25,7 @@ class BMESensor {
     bool errorBME = false;
     bool sensorFound = false;
   private:
-    BLECharacteristic* temperatureCharacteristic;
-    BLECharacteristic* pressureCharacteristic;
-    BLECharacteristic* humidityCharacteristic;
-    BLECharacteristic* gasCharacteristic;
-    BLECharacteristic* altitudeCharacteristic;
+    Bluetooth_module *bluetoothModule;
     Adafruit_BME680 *bme;
     TwoWire *theWire;
     BMEData data;

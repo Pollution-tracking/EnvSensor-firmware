@@ -1,48 +1,24 @@
 #include <Arduino.h>
-#include "ble_characteristics.h"
 #include "pins.h"
 #include "constants.h"
 #include <logger.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
 #include "PMserial.h"
 #include <CO2_sensor.h>
 #include <PM_sensor.h>
 #include <BME_sensor.h>
+#include <Bluetooth_module.h>
 
 // Global variables
-bool deviceConnected = false;  // Client conneted to server?
-BLEServer* envServer; // BLE server
-BLEService* envService; // BLE service
-CO2Sensor co2Sensor(&carbonDioxideCharacteristic); // CO2 sensor
-PMSensor pmSensor(&pm1Characteristic,
-                &pm2_5Characteristic,
-                &pm10Characteristic); // PM sensor
-BMESensor bmeSensor(&temperatureCharacteristic,
-                &pressureCharacteristic,
-                &humidityCharacteristic,
-                &gasCharacteristic,
-                &altitudeCharacteristic); // BME sensor
+Bluetooth_module bluetoothModule; // Bluetooth module
+CO2Sensor co2Sensor(&bluetoothModule); // CO2 sensor
+PMSensor pmSensor(&bluetoothModule); // PM sensor
+BMESensor bmeSensor(&bluetoothModule); // BME sensor
 hw_timer_t *timer_read_sensors = NULL; // Timer for sensor readings
 uint8_t read_sensor = SENSORS::NO_SENSOR; // Which sensors to read?
 uint8_t pressed_button = BUTTONS::NO_BUTTON; // Which button was pressed?
 
-// Setup callbacks onConnect and onDisconnect
-class MyServerCallbacks: public BLEServerCallbacks {
-  void onConnect(BLEServer* envServer) {
-    logg("Client connected");
-    deviceConnected = true;
-    BLEDevice::startAdvertising();
-  };
-  void onDisconnect(BLEServer* envServer) {
-    deviceConnected = false;
-    logg("Client disconnected");
-    envServer->getAdvertising()->start();
-  }
-};
 
 // Function prototypes
-void init_BLE();
 void init_timer_read_sensors();
 void init_buttons();
 void handle_sensor_readings();
@@ -67,7 +43,7 @@ void setup() {
   // Initialize BME sensor
   bmeSensor.init();
   // Initialize BLE
-  init_BLE();
+  bluetoothModule.init();
 
   // Initialize timer for sensor reads
   init_timer_read_sensors();
@@ -79,10 +55,6 @@ void loop() {
 
   // Check if there is a button pressed
   handle_button_readings();
-
-  int val = 100;
-  pm10Characteristic.setValue(val);
-  pm10Characteristic.notify();
 }
 
 void handle_sensor_readings() {
@@ -184,61 +156,6 @@ void init_timer_read_sensors() {
   // Start timer
   timerStart(timer_read_sensors);
   logg("Timer initialized");
-}
-
-void init_BLE() {
-  // Create BLE device
-  BLEDevice::init(bleServerName);
-
-  // Create BLE server
-  envServer = BLEDevice::createServer();
-  envServer->setCallbacks(new MyServerCallbacks());
-
-  // Create BLE service
-  envService = envServer->createService(SERVICE_UUID);
-
-  // Set BLE descriptors values
-  temperatureDescriptor.setValue("Temperature");
-  carbonDioxideDescriptor.setValue("Carbon dioxide");
-  pm1Descriptor.setValue("PM1");
-  pm2_5Descriptor.setValue("PM2.5");
-  pm10Descriptor.setValue("PM10");
-  gasDescriptor.setValue("Gas");
-  humidityDescriptor.setValue("Humidity");
-  pressureDescriptor.setValue("Pressure");
-  altitudeDescriptor.setValue("Altitude");
-  
-  // Configure BLE characteristics
-  temperatureCharacteristic.addDescriptor(&temperatureDescriptor);
-  carbonDioxideCharacteristic.addDescriptor(&carbonDioxideDescriptor);
-  pm1Characteristic.addDescriptor(&pm1Descriptor);
-  pm2_5Characteristic.addDescriptor(&pm2_5Descriptor);
-  pm10Characteristic.addDescriptor(&pm10Descriptor);
-  gasCharacteristic.addDescriptor(&gasDescriptor);
-  humidityCharacteristic.addDescriptor(&humidityDescriptor);
-  pressureCharacteristic.addDescriptor(&pressureDescriptor);
-  altitudeCharacteristic.addDescriptor(&altitudeDescriptor);
-
-  // Add BLE characteristics to BLE service
-  envService->addCharacteristic(&temperatureCharacteristic);
-  envService->addCharacteristic(&carbonDioxideCharacteristic);
-  envService->addCharacteristic(&pm1Characteristic);
-  envService->addCharacteristic(&pm2_5Characteristic);
-  envService->addCharacteristic(&pm10Characteristic);
-  envService->addCharacteristic(&gasCharacteristic);
-  envService->addCharacteristic(&humidityCharacteristic);
-  envService->addCharacteristic(&pressureCharacteristic);
-  envService->addCharacteristic(&altitudeCharacteristic);
-
-  // Start BLE service
-  envService->start();
-
-  // Start advertising BLE service
-  BLEAdvertising* envAdvertising = envServer->getAdvertising();
-  envAdvertising->addServiceUUID(SERVICE_UUID);
-  envAdvertising->start();
-
-  logg("Waiting a client connection to notify...");
 }
 
 void init_buttons() {

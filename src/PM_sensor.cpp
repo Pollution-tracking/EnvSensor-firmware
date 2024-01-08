@@ -1,12 +1,8 @@
 #include "PM_sensor.h"
 
 // Construct PM sensor
-PMSensor::PMSensor(BLECharacteristic *pm1Characteristic,
-                BLECharacteristic *pm2_5Characteristic,
-                BLECharacteristic *pm10Characteristic)
-    : pm1Characteristic(pm1Characteristic),
-      pm2_5Characteristic(pm2_5Characteristic),
-      pm10Characteristic(pm10Characteristic) {
+PMSensor::PMSensor(Bluetooth_module *bluetoothModule)
+    : bluetoothModule(bluetoothModule) {
     pms = new SerialPM(PMSA003, PM_RX_PIN, PM_TX_PIN);
 }
 
@@ -66,14 +62,9 @@ uint16_t PMSensor::getPM10() {
 void PMSensor::updateCharacteristics() {
     logg("Updating PM characteristics");
 
-    this->pm1Characteristic->setValue(this->pm1);
-    this->pm1Characteristic->notify();
-
-    this->pm2_5Characteristic->setValue(this->pm2_5);
-    this->pm2_5Characteristic->notify();
-
-    this->pm10Characteristic->setValue(this->pm10);
-    this->pm10Characteristic->notify();
+    bluetoothModule->updatePM1Characteristic(this->pm1);
+    bluetoothModule->updatePM2_5Characteristic(this->pm2_5);
+    bluetoothModule->updatePM10Characteristic(this->pm10);
 }
 
 void PMSensor::checkErrors(SerialPM::STATUS status) {

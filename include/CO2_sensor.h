@@ -6,12 +6,12 @@
 #include "pins.h"
 #include "constants.h"
 #include <logger.h>
-#include <BLECharacteristic.h>
+#include "Bluetooth_module.h"
 
 
 class CO2Sensor {
   public:
-    CO2Sensor(BLECharacteristic* co2Characteristic);
+    CO2Sensor(Bluetooth_module *bluetoothModule);
     ~CO2Sensor();
     void update();
     void init();
@@ -21,7 +21,7 @@ class CO2Sensor {
     bool errorTemperature = false;
     bool sensorFound = false;
   private:
-    BLECharacteristic* co2Characteristic;
+    Bluetooth_module *bluetoothModule;
     uint16_t co2;
     uint16_t temperature;
     HardwareSerial* mhz19Serial;
