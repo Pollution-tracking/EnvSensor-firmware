@@ -40,6 +40,9 @@ const uint64_t WAIT_TIME_REENABLE_SLEEP = 5000003;
 const uint16_t DEBOUNCE_TIME        = 100;
 const uint16_t LONG_PRESS_THRESHOLD = 1000;
 
+// Button debounce time (in ms)
+const uint16_t DEBOUNCE_TIME = 500;
+
 // Sea level pressure (in h200Pa)
 const float seaLevel = 1013.25;
 
@@ -61,6 +64,17 @@ namespace BUTTON_STATES {
 enum class BUTTONS {
     LEFT,
     RIGHT
+};
+
+namespace SCREENMODE {
+    const uint8_t MAIN_SCREEN  = 0b10000000;
+    const uint8_t BLUETOOTH    = 0b01000000;
+    const uint8_t TEMPERATURE  = 0b00100000;
+    const uint8_t PM           = 0b00010000;
+    const uint8_t CO2          = 0b00001000;
+    const uint8_t HUMIDITY     = 0b00000100;
+    const uint8_t PRESSURE     = 0b00000010;
+    const uint8_t ALTITUDE     = 0b00000001;
 };
 
 namespace SCREENMODE {
