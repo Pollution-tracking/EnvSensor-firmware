@@ -52,6 +52,10 @@ uint16_t CO2Sensor::getTemperature() {
 
 // Internal functions
 void CO2Sensor::updateCharacteristic() {
+  if (!bluetoothModule->isConnected() || !bluetoothModule->isEnabled()) {
+    return;
+  }
+
   logg("Updating CO2 characteristic");
   
   bluetoothModule->updateCO2Characteristic(this->co2);

@@ -7,15 +7,19 @@
 #include <PM_sensor.h>
 #include <BME_sensor.h>
 #include <Bluetooth_module.h>
+#include <Display.h>
 
 // Global variables
 Bluetooth_module bluetoothModule; // Bluetooth module
 CO2Sensor co2Sensor(&bluetoothModule); // CO2 sensor
 PMSensor pmSensor(&bluetoothModule); // PM sensor
 BMESensor bmeSensor(&bluetoothModule); // BME sensor
+Display display(&bmeSensor, &pmSensor, &co2Sensor, &bluetoothModule); // Display
+
 hw_timer_t *timer_read_sensors = NULL; // Timer for sensor readings
 uint8_t read_sensor = SENSORS::NO_SENSOR; // Which sensors to read?
 uint8_t pressed_button = BUTTONS::NO_BUTTON; // Which button was pressed?
+unsigned long lastInterruptTime = 0; // Last time a button was pressed
 
 
 // Function prototypes
@@ -33,17 +37,23 @@ void IRAM_ATTR ISR_button_Y();
 void IRAM_ATTR ISR_button_R();
 
 void setup() {
+  // Configure serial
   Serial.begin(115200);
+  // Configure SPI
+  SPI.begin(CLK_PIN, MISO_PIN, MOSI_PIN);
   // Init buttons
   init_buttons();
   // Init CO2 sensor (serial0)
   // co2Sensor.init();
   // Initialize PM sensor (serial1)
-  pmSensor.init();
+  // pmSensor.init();
   // Initialize BME sensor
   bmeSensor.init();
   // Initialize BLE
   bluetoothModule.init();
+  // Initialize display
+  display.init();
+  display.updateScreen();
 
   // Initialize timer for sensor reads
   init_timer_read_sensors();
@@ -67,6 +77,9 @@ void handle_sensor_readings() {
 
     // Read BME sensor (BLE updates are sent automatically)
     check_BME_sensor();
+
+    // Update display
+    display.updateScreen();
   }
 }
 
@@ -101,25 +114,44 @@ void handle_button_readings() {
   if (pressed_button != BUTTONS::NO_BUTTON) {
     // Button blue pressed
     if (pressed_button & BUTTONS::BUTTON_B) {
-      // treat button pressed
-      logg("Button B pressed");
       // Clear flag
       pressed_button &= ~BUTTONS::BUTTON_B;
+
+      // treat button pressed
+      logg("Button B pressed");
+      display.changeScreenLeft();
     }
+
     // Button yellow pressed
     if (pressed_button & BUTTONS::BUTTON_Y) {
-      // treat button pressed
-      logg("Button Y pressed");
       // Clear flag
       pressed_button &= ~BUTTONS::BUTTON_Y;
+
+      // treat button pressed
+      logg("Button Y pressed");
+      // Check if screen is interactive
+      if (display.getScreenMode() == SCREENMODE::BLUETOOTH) {
+        // Change BLE state
+        if (bluetoothModule.isEnabled()) {
+          bluetoothModule.disable();
+        } else {
+          bluetoothModule.enable();
+        }
+      }
     }
+
     // Button red pressed
     if (pressed_button & BUTTONS::BUTTON_R) {
-      // treat button pressed
-      logg("Button R pressed");
       // Clear flag
       pressed_button &= ~BUTTONS::BUTTON_R;
+      
+      // treat button pressed
+      logg("Button R pressed");
+      display.changeScreenRight();
     }
+
+    // Update display
+    display.updateScreen();
   }
 }
 
@@ -132,17 +164,32 @@ void IRAM_ATTR ISR_sensors_read() {
 
 // Button blue pressed
 void IRAM_ATTR ISR_button_B() {
-  pressed_button |= BUTTONS::BUTTON_B;
+  unsigned long interruptTime = millis();
+  // If interrupts come faster than 500ms, assume it's a bounce and ignore
+  if (interruptTime - lastInterruptTime > DEBOUNCE_TIME) {
+    pressed_button |= BUTTONS::BUTTON_B;
+  }
+  lastInterruptTime = interruptTime;
 }
 
 // Button yellow pressed
 void IRAM_ATTR ISR_button_Y(){
-  pressed_button |= BUTTONS::BUTTON_Y;
+  unsigned long interruptTime = millis();
+  // If interrupts come faster than 500ms, assume it's a bounce and ignore
+  if (interruptTime - lastInterruptTime > DEBOUNCE_TIME) {
+    pressed_button |= BUTTONS::BUTTON_Y;
+  }
+  lastInterruptTime = interruptTime;
 }
 
 // Button red pressed
 void IRAM_ATTR ISR_button_R(){
-  pressed_button |= BUTTONS::BUTTON_R;
+  unsigned long interruptTime = millis();
+  // If interrupts come faster than 500ms, assume it's a bounce and ignore
+  if (interruptTime - lastInterruptTime > DEBOUNCE_TIME) {
+    pressed_button |= BUTTONS::BUTTON_R;
+  }
+  lastInterruptTime = interruptTime;
 }
 
 void init_timer_read_sensors() {

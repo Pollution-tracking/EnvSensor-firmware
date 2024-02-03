@@ -3,14 +3,11 @@
 // Construct BME sensor
 BMESensor::BMESensor(Bluetooth_module *bluetoothModule)
     : bluetoothModule(bluetoothModule) {
-    theWire = new TwoWire(0);
-    theWire->begin(BME680_SDA_PIN, CLK_PIN);
-    bme = new Adafruit_BME680(theWire);
+    bme = new Adafruit_BME680(BME680_CS_PIN);
 }
 
 BMESensor::~BMESensor() {
     delete bme;
-    delete theWire;
 }
 
 // Routine to initialize BME sensor
@@ -83,6 +80,10 @@ float BMESensor::getAltitude() {
 
 // Internal functions
 void BMESensor::updateCharacteristics() {
+    if (!bluetoothModule->isConnected() || !bluetoothModule->isEnabled()) {
+        return;
+    }
+
     logg("Updating BME characteristics");
     
     bluetoothModule->updateTemperatureCharacteristic(data.temperature);

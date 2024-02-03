@@ -35,6 +35,9 @@ const uint16_t CO2_ERROR = 0xFFFF;
 // Time between sensor reads (in us -> chosen to be prime numbers)
 const uint64_t WAIT_TIME_READ_SENSORS = 20000009;
 
+// Button debounce time (in ms)
+const uint16_t DEBOUNCE_TIME = 500;
+
 // Sea level pressure (in h200Pa)
 const float seaLevel = 1013.25;
 
@@ -52,6 +55,17 @@ namespace BUTTONS {
     const uint8_t BUTTON_B = 0b001;
     const uint8_t BUTTON_Y = 0b010;
     const uint8_t BUTTON_R = 0b100;
+};
+
+namespace SCREENMODE {
+    const uint8_t MAIN_SCREEN  = 0b10000000;
+    const uint8_t BLUETOOTH    = 0b01000000;
+    const uint8_t TEMPERATURE  = 0b00100000;
+    const uint8_t PM           = 0b00010000;
+    const uint8_t CO2          = 0b00001000;
+    const uint8_t HUMIDITY     = 0b00000100;
+    const uint8_t PRESSURE     = 0b00000010;
+    const uint8_t ALTITUDE     = 0b00000001;
 };
 
 struct BMEData {

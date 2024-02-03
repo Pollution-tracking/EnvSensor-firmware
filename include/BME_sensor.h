@@ -27,7 +27,6 @@ class BMESensor {
   private:
     Bluetooth_module *bluetoothModule;
     Adafruit_BME680 *bme;
-    TwoWire *theWire;
     BMEData data;
     void updateCharacteristics();
     void checkErrors(bool status);
