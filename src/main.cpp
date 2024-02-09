@@ -35,6 +35,9 @@ void handle_button_readings();
 void check_CO2_sensor();
 void check_PM_sensor();
 void check_BME_sensor();
+void button_left_press();
+void button_right_press();
+void button_long_press();
 
 void setup() {
   // Disable WiFi
@@ -121,51 +124,63 @@ void handle_button_readings() {
   // Left button short press
   if (buttonLeft.getButtonState() == BUTTON_STATES::SHORT_PRESS) {
     buttonPressed = true;
-    // Clear flag
-    buttonLeft.resetButtonState();
-
-    // Treat button pressed
-    logg("Button Left short press");
-    display.changeScreenLeft();
+    button_left_press();
   }
 
   // Right button short press
   if (buttonRight.getButtonState() == BUTTON_STATES::SHORT_PRESS) {
     buttonPressed = true;
-    // Clear flag
-    buttonRight.resetButtonState();
-
-    // Treat button pressed
-    logg("Button Right short press");
-    display.changeScreenLeft();
+    button_right_press();
   }
 
   // Any button long press
   if (buttonLeft.getButtonState() == BUTTON_STATES::LONG_PRESS ||
       buttonRight.getButtonState() == BUTTON_STATES::LONG_PRESS) {
     buttonPressed = true;
-    // Clear flag
-    buttonLeft.resetButtonState();
-    buttonRight.resetButtonState();
-
-    logg("Button long press");
-
-    // Check if screen is interactive (blueooth screen)
-    if (display.getScreenMode() == SCREENMODE::BLUETOOTH) {
-      // Change BLE state
-      if (bluetoothModule.isEnabled()) {
-        bluetoothModule.disable();
-        allow_sleep = true;
-      } else {
-        bluetoothModule.enable();
-        allow_sleep = false;
-      }
-    }
+    button_long_press();
   }
 
   // Update display
   if (buttonPressed) {
     display.updateScreen();
+  }
+}
+
+void button_left_press() {
+  // Clear flag
+  buttonLeft.resetButtonState();
+
+  // Treat button pressed
+  logg("Button Left short press");
+  display.changeScreenLeft();
+}
+
+void button_right_press() {
+  // Clear flag
+  buttonRight.resetButtonState();
+
+  // Treat button pressed
+  logg("Button Right short press");
+  display.changeScreenLeft();
+}
+
+void button_long_press() {
+  // Clear flag
+  buttonLeft.resetButtonState();
+  buttonRight.resetButtonState();
+
+  logg("Button long press");
+
+  // Check if screen is interactive (blueooth screen)
+  if (display.getScreenMode() == SCREENMODE::BLUETOOTH) {
+    // Change BLE state
+    if (bluetoothModule.isEnabled()) {
+      bluetoothModule.disable();
+      allow_sleep = true;
+    } else {
+      bluetoothModule.enable();
+      allow_sleep = false;
+    }
   }
 }
 
