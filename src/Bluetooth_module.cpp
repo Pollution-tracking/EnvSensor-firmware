@@ -70,7 +70,33 @@ void Bluetooth_module::init() {
 
 // Routine to start advertising BLE service
 void Bluetooth_module::startAdvertising() {
+    bleEnabled = true;
     envServer->getAdvertising()->start();
+}
+
+// Routine to stop advertising BLE service
+void Bluetooth_module::stopAdvertising() {
+    bleEnabled = false;
+    envServer->getAdvertising()->stop();
+}
+
+// Routine to enable BLE
+void Bluetooth_module::enable() {
+    logg("Enabling BLE");
+    bleEnabled = true;
+    startAdvertising();
+}
+
+// Routine to disable BLE
+void Bluetooth_module::disable() {
+    logg("Disabling BLE");
+    bleEnabled = false;
+    stopAdvertising();
+}
+
+// Routine to check if BLE is enabled
+bool Bluetooth_module::isEnabled() {
+    return this->bleEnabled;
 }
 
 // Routine to check if client is connected

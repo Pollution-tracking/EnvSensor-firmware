@@ -9,6 +9,14 @@ CO2Sensor::~CO2Sensor() {
   delete mhz19Serial;
 }
 
+bool CO2Sensor::sensorFound() {
+    return this->_sensorFound;
+}
+
+bool CO2Sensor::sensorError() {
+    return this->_errorCO2 || this->_errorTemperature;
+}
+
 // Routine to initialize CO2 sensor
 void CO2Sensor::init() {
   mhz19Serial->begin(9600, SERIAL_8N1, CO2_RX_PIN, CO2_TX_PIN);
@@ -19,13 +27,13 @@ void CO2Sensor::init() {
     logg("Could not initialize MH-Z19 sensor, check wiring!");
   } else {
     logg("MH-Z19 initialized");
-    sensorFound = true;
+    _sensorFound = true;
   }
 }
 
 // Routine to update CO2 and temperature values
 void CO2Sensor::update() {
-  if (!this->sensorFound) {
+  if (!this->_sensorFound) {
     return;
   }
 
@@ -37,7 +45,7 @@ void CO2Sensor::update() {
 
   this->checkErrors();
   
-  if (!this->errorCO2 && !this->errorTemperature)
+  if (!this->_errorCO2 && !this->_errorTemperature)
     this->updateCharacteristic();
 }
 
@@ -52,6 +60,10 @@ uint16_t CO2Sensor::getTemperature() {
 
 // Internal functions
 void CO2Sensor::updateCharacteristic() {
+  if (!bluetoothModule->isConnected() || !bluetoothModule->isEnabled()) {
+    return;
+  }
+
   logg("Updating CO2 characteristic");
   
   bluetoothModule->updateCO2Characteristic(this->co2);
@@ -60,15 +72,15 @@ void CO2Sensor::updateCharacteristic() {
 void CO2Sensor::checkErrors() {
   if (this->co2 == 0) {
     logg("MHZ19 CO2 error");
-    this->errorCO2 = true;
+    this->_errorCO2 = true;
   } else {
-    this->errorCO2 = false;
+    this->_errorCO2 = false;
   }
 
   if (this->temperature == -273.15) {
     logg("MHZ19 temperature error");
-    this->errorTemperature = true;
+    this->_errorTemperature = true;
   } else {
-    this->errorTemperature = false;
+    this->_errorTemperature = false;
   }
 }
