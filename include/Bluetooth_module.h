@@ -10,13 +10,19 @@
 #include <BLEUtils.h>
 #include <nvs_flash.h>
 
+// TODO anounce display to update device connected state
+
 class Bluetooth_module {
     public:
         Bluetooth_module();
         ~Bluetooth_module();
         void init();
         void startAdvertising();
+        void stopAdvertising();
         bool isConnected();
+        bool isEnabled();
+        void enable();
+        void disable();
         void updatePM1Characteristic(uint16_t pm1);
         void updatePM2_5Characteristic(uint16_t pm2_5);
         void updatePM10Characteristic(uint16_t pm10);
@@ -28,6 +34,7 @@ class Bluetooth_module {
         void updateAltitudeCharacteristic(float altitude);
     private:
         bool deviceConnected = false;  // Client conneted to server?
+        bool bleEnabled = true; // Is BLE enabled?
         BLEServer* envServer; // BLE server
         BLEService* envService; // BLE service
         // BLE characteristics
@@ -61,7 +68,10 @@ class Bluetooth_module {
             void onDisconnect(BLEServer* envServer) {
                 outerClass->deviceConnected = false;
                 logg("Client disconnected");
-                envServer->getAdvertising()->start();
+                if (outerClass->isEnabled()) {
+                    // If user didn't disable BLE, start advertising again
+                    outerClass->startAdvertising();
+                }
             };
         private:
             Bluetooth_module *outerClass;

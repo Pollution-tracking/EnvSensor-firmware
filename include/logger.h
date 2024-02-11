@@ -6,5 +6,6 @@
 extern bool loggingEnabled;
 
 void logg(String message);
+void forcePrint();
 
 #endif // LOGGER_H

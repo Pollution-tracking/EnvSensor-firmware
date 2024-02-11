@@ -7,3 +7,7 @@ void logg(String message) {
     Serial.println(message);
   }
 }
+
+void forcePrint() {
+  Serial.flush();
+}
