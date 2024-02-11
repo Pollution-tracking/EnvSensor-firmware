@@ -10,16 +10,24 @@ PMSensor::~PMSensor() {
   delete pms;
 }
 
+bool PMSensor::sensorFound() {
+  return this->_sensorFound;
+}
+
+bool PMSensor::sensorError() {
+  return this->_errorPM;
+}
+
 // Routine to initialize PM sensor
 void PMSensor::init() {
   pms->init();
-  this->sensorFound = true;
+  this->_sensorFound = true;
   logg("PM sensor initialized");
 }
 
 // Routine to update PM values
 void PMSensor::update() {
-  if (!this->sensorFound) {
+  if (!this->_sensorFound) {
       return;
   }
   
@@ -27,10 +35,10 @@ void PMSensor::update() {
   SerialPM::STATUS status = pms->read();
   
   if (status != SerialPM::OK) {
-      this->errorPM = true;
+      this->_errorPM = true;
       this->checkErrors(status);
   } else {
-      this->errorPM = false;
+      this->_errorPM = false;
 
       this->pm1 = pms->pm01;
       logg("PMSA003 PM1: " + String(this->pm1));

@@ -10,12 +10,20 @@ BMESensor::~BMESensor() {
     delete bme;
 }
 
+bool BMESensor::sensorFound() {
+    return this->_sensorFound;
+}
+
+bool BMESensor::sensorError() {
+    return this->_errorBME;
+}
+
 // Routine to initialize BME sensor
 void BMESensor::init() {
     if(!bme->begin()) {
         logg("Could not find a valid BME680 sensor, check wiring!");
     } else {
-        sensorFound = true;
+        _sensorFound = true;
         bme->setTemperatureOversampling(BME680_OS_8X);
         bme->setHumidityOversampling(BME680_OS_2X);
         bme->setPressureOversampling(BME680_OS_4X);
@@ -27,7 +35,7 @@ void BMESensor::init() {
 
 // Routine to update BME values
 void BMESensor::update() {
-    if (!this->sensorFound) {
+    if (!this->_sensorFound) {
         return;
     }
 
@@ -36,7 +44,7 @@ void BMESensor::update() {
     bool status = bme->performReading();
     this->checkErrors(status);
 
-    if (!this->errorBME) {
+    if (!this->_errorBME) {
         
         data.temperature = bme->temperature;
         logg("BME680 temperature: " + String(data.temperature));
@@ -96,8 +104,8 @@ void BMESensor::updateCharacteristics() {
 void BMESensor::checkErrors(bool status) {
     if (!status) {
         logg("BME680 error");
-        this->errorBME = true;
+        this->_errorBME = true;
     } else {
-        this->errorBME = false;
+        this->_errorBME = false;
     }
 }

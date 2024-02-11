@@ -10,11 +10,14 @@
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
 #include "Bluetooth_module.h"
+#include "Sensor.h"
 
-class BMESensor {
+class BMESensor : public Sensor {
   public:
     BMESensor(Bluetooth_module *bluetoothModule);
     ~BMESensor();
+    bool sensorFound() override;
+    bool sensorError() override;
     void update();
     void init();
     uint32_t getTemperature();
@@ -22,12 +25,12 @@ class BMESensor {
     uint32_t getHumidity();
     uint32_t getGas();
     float getAltitude();
-    bool errorBME = false;
-    bool sensorFound = false;
   private:
     Bluetooth_module *bluetoothModule;
     Adafruit_BME680 *bme;
     BMEData data;
+    bool _errorBME = false;
+    bool _sensorFound = false;
     void updateCharacteristics();
     void checkErrors(bool status);
 };

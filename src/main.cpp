@@ -50,14 +50,14 @@ void setup() {
   // Init CO2 sensor (serial0)
   // co2Sensor.init();
   // Initialize PM sensor (serial1)
-  // pmSensor.init();
+  pmSensor.init();
   // Initialize BME sensor
   bmeSensor.init();
   // Initialize BLE
   bluetoothModule.init();
   // Initialize display
   display.init();
-  display.updateScreen();
+  // display.updateScreen();
 
   // Initialize timer for sensor reads
   init_timer_read_sensors();
@@ -65,6 +65,8 @@ void setup() {
   // Init buttons
   buttonLeft.init(BUTTONS::LEFT);
   buttonRight.init(BUTTONS::RIGHT);
+
+  display.updateScreen();
 }
 
 void loop() {
@@ -161,7 +163,7 @@ void button_right_press() {
 
   // Treat button pressed
   logg("Button Right short press");
-  display.changeScreenLeft();
+  display.changeScreenRight();
 }
 
 void button_long_press() {

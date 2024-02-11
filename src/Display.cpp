@@ -2,11 +2,10 @@
 
 // Construct display
 Display::Display(BMESensor *bmeSensor, PMSensor *pmSensor, CO2Sensor *co2Sensor, Bluetooth_module *bluetoothModule)
-    : io(SPI, DISPLAY_CS_PIN, DISPLAY_DC_PIN, DISPLAY_RST_PIN),
-      display(io, DISPLAY_RST_PIN, DISPLAY_BUSY_PIN) {
+    : display(GxEPD2_DRIVER_CLASS(DISPLAY_CS_PIN, DISPLAY_DC_PIN, DISPLAY_RST_PIN, DISPLAY_BUSY_PIN)) {
     // Set screen mode
-    currScreenMode = SCREENMODE::MAIN_SCREEN;
-    prevScreenMode = SCREENMODE::ALTITUDE;
+    currScreenMode = SCREENMODE::SENSORS;
+    prevScreenMode = SCREENMODE::BLUETOOTH;
     // Set sensors
     this->bmeSensor = bmeSensor;
     this->pmSensor = pmSensor;
@@ -16,18 +15,16 @@ Display::Display(BMESensor *bmeSensor, PMSensor *pmSensor, CO2Sensor *co2Sensor,
 
 // Routine to initialize display
 void Display::init() {
-    display.init(0); // disable serial logs
+    display.init(0, true, 10, false, SPI, SPISettings(4000000, MSBFIRST, SPI_MODE0));
     display.setRotation(2);
-    display.fillScreen(GxEPD_WHITE);
-    display.update();
-    display.powerDown();
+    display.setTextColor(GxEPD_BLACK);
 }
 
 // Routine to change screen to the right
 void Display::changeScreenRight() {
     prevScreenMode = currScreenMode;
-    if (currScreenMode == SCREENMODE::ALTITUDE) {
-        currScreenMode = SCREENMODE::MAIN_SCREEN;
+    if (currScreenMode == SCREENMODE::SENSORS) {
+        currScreenMode = SCREENMODE::BLUETOOTH;
     } else {
         currScreenMode = currScreenMode >> 1;
     }
@@ -36,8 +33,8 @@ void Display::changeScreenRight() {
 // Routine to change screen to the left
 void Display::changeScreenLeft() {
     prevScreenMode = currScreenMode;
-    if (currScreenMode == SCREENMODE::MAIN_SCREEN) {
-        currScreenMode = SCREENMODE::ALTITUDE;
+    if (currScreenMode == SCREENMODE::BLUETOOTH) {
+        currScreenMode = SCREENMODE::SENSORS;
     } else {
         currScreenMode = currScreenMode << 1;
     }
@@ -48,59 +45,33 @@ uint8_t Display::getScreenMode() {
     return currScreenMode;
 }
 
-// Routine to update screen
 void Display::updateScreen() {
-    if (currScreenMode == SCREENMODE::MAIN_SCREEN) {
-        updateMainScreen();
-        prevScreenMode = SCREENMODE::MAIN_SCREEN;
-    } else if (currScreenMode == SCREENMODE::BLUETOOTH) {
+    if (currScreenMode == SCREENMODE::BLUETOOTH) {
         updateBluetoothScreen();
         prevScreenMode = SCREENMODE::BLUETOOTH;
-    } else if (currScreenMode == SCREENMODE::TEMPERATURE) {
-        updateTemperatureScreen();
-        prevScreenMode = SCREENMODE::TEMPERATURE;
-    } else if (currScreenMode == SCREENMODE::PM) {
-        updatePMScreen();
-        prevScreenMode = SCREENMODE::PM;
-    } else if (currScreenMode == SCREENMODE::CO2) {
-        updateCO2Screen();
-        prevScreenMode = SCREENMODE::CO2;
-    } else if (currScreenMode == SCREENMODE::HUMIDITY) {
-        updateHumidityScreen();
-        prevScreenMode = SCREENMODE::HUMIDITY;
-    } else if (currScreenMode == SCREENMODE::PRESSURE) {
-        updatePressureScreen();
-        prevScreenMode = SCREENMODE::PRESSURE;
-    } else if (currScreenMode == SCREENMODE::ALTITUDE) {
-        updateAltitudeScreen();
-        prevScreenMode = SCREENMODE::ALTITUDE;
-    }
-}
-
-void Display::updateMainScreen() {
-    // No need to update
-    if (prevScreenMode == SCREENMODE::MAIN_SCREEN) {
-        return;
+    } else if (currScreenMode == SCREENMODE::SENSORS) {
+        updateSensorsScreen();
+        prevScreenMode = SCREENMODE::SENSORS;
     }
 
-    logg("Updating main screen");
-
-    display.fillScreen(GxEPD_WHITE);
-    display.setTextColor(GxEPD_BLACK);
-    display.setFont(&FreeMonoBold24pt7b);
-    display.setCursor(45, 80);
-    display.println("Home");
-    display.setCursor(15, 130);
-    display.println("screen");
-    display.update();
-    display.powerDown();
+    display.powerOff();
 }
 
 void Display::updateBluetoothScreen() {
     logg("Updating bluetooth screen");
 
+    if (prevScreenMode == SCREENMODE::BLUETOOTH) {
+        partialBluetoothScreen();
+    } else {
+        fullBluetoothScreen();
+    }
+}
+
+void Display::fullBluetoothScreen() {
+    logg("Full bluetooth screen");
+    
+    display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
-    display.setTextColor(GxEPD_BLACK);
     display.setFont(&FreeMonoBold18pt7b);
     display.setCursor(0, 30);
     display.println("Bluetooth");
@@ -119,267 +90,184 @@ void Display::updateBluetoothScreen() {
     display.setCursor(45, 190);
     display.println("toggle BLE");
 
-    if (prevScreenMode == SCREENMODE::BLUETOOTH) {
-        // TODO implement partial update
-    }
-    display.update();
-    display.powerDown();
+    display.display(false);
 }
 
-void Display::updateTemperatureScreen() {
-    logg("Updating temperature screen");
-
-    display.fillScreen(GxEPD_WHITE);
-    display.setTextColor(GxEPD_BLACK);
-    display.setFont(&FreeMonoBold12pt7b);
-    display.setCursor(20, 30);
-    display.println("Temperature");
-
-    // Check if BME sensor is connected
-    if (!bmeSensor->sensorFound) {
-        showSensorError();
-        return;
-    }
-
-    // Check if BME sensor has an error
-    if (bmeSensor->errorBME) {
-        showReadError();
-        return;
-    }
-
-    // Get temperature value
-    uint32_t temperature = bmeSensor->getTemperature();
-
-    display.setCursor(50, 130);
-    display.setFont(&FreeMonoBold24pt7b);
-    display.println(String(temperature) + " C");
-
-    if (prevScreenMode == SCREENMODE::TEMPERATURE) {
-        // TODO implement partial update
-    }
-    display.update();
-    display.powerDown();
-}
-
-void Display::updatePMScreen() {
-    logg("Updating PM screen");
-
-    display.fillScreen(GxEPD_WHITE);
-    display.setTextColor(GxEPD_BLACK);
-    display.setFont(&FreeMonoBold24pt7b);
-    display.setCursor(70, 30);
-    display.println("PM");
-
-    // Check if PM sensor is connected
-    if (!pmSensor->sensorFound) {
-        showSensorError();
-        return;
-    }
-
-    // Check if PM sensor has an error
-    if (pmSensor->errorPM) {
-        showReadError();
-        return;
-    }
-
-    // Get PM values
-    uint16_t pm1 = pmSensor->getPM1();
-    uint16_t pm2_5 = pmSensor->getPM2_5();
-    uint16_t pm10 = pmSensor->getPM10();
-
-    display.setCursor(0, 70);
-    display.setFont(&FreeMonoBold12pt7b);
-    display.print("PM1: ");
-    display.setFont(&FreeMonoBold18pt7b);
-    display.println(String(pm1));
-    display.setFont(&FreeMonoBold12pt7b);
-    display.print("PM2.5: ");
-    display.setFont(&FreeMonoBold18pt7b);
-    display.println(String(pm2_5));
-    display.setFont(&FreeMonoBold12pt7b);
-    display.print("PM10: ");
-    display.setFont(&FreeMonoBold18pt7b);
-    display.println(String(pm10));
-
-    display.setFont(&FreeMonoBold12pt7b);
-    display.println("Measuring unit");
-    display.setCursor(60, display.getCursorY() - 4);
-    display.println("ug/m3");
-
-    if (prevScreenMode == SCREENMODE::PM) {
-        // TODO implement partial update
-    }
-    display.update();
-    display.powerDown();
-}
-
-void Display::updateCO2Screen() {
-    logg("Updating CO2 screen");
-
-    display.fillScreen(GxEPD_WHITE);
-    display.setTextColor(GxEPD_BLACK);
-    display.setFont(&FreeMonoBold24pt7b);
-    display.setCursor(60, 30);
-    display.println("CO2");
-
-    // Check if CO2 sensor is connected
-    if (!co2Sensor->sensorFound) {
-        showSensorError();
-        return;
-    }
-
-    // Check if CO2 sensor has an error
-    if (co2Sensor->errorCO2) {
-        showReadError();
-        return;
-    }
-
-    // Get CO2 value
-    uint16_t co2 = co2Sensor->getCO2();
-
-    display.setCursor(0, 130);
-    display.println(String(co2) + " ppm");
-
-    if (prevScreenMode == SCREENMODE::CO2) {
-        // TODO implement partial update
-    }
-    display.update();
-    display.powerDown();
-}
-
-void Display::updateHumidityScreen() {
-    logg("Updating humidity screen");
-
-    display.fillScreen(GxEPD_WHITE);
-    display.setTextColor(GxEPD_BLACK);
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(10, 30);
-    display.println("Humidity");
-
-    // Check if BME sensor is connected
-    if (!bmeSensor->sensorFound) {
-        showSensorError();
-        return;
-    }
-
-    // Check if BME sensor has an error
-    if (bmeSensor->errorBME) {
-        showReadError();
-        return;
-    }
-
-    // Get humidity value
-    uint32_t humidity = bmeSensor->getHumidity();
-
-    display.setCursor(50, 130);
-    display.setFont(&FreeMonoBold24pt7b);
-    display.println(String(humidity) + " %");
-
-    if (prevScreenMode == SCREENMODE::HUMIDITY) {
-        // TODO implement partial update
-    }
-    display.update();
-    display.powerDown();
-}
-
-void Display::updatePressureScreen() {
-    logg("Updating pressure screen");
-
-    display.fillScreen(GxEPD_WHITE);
-    display.setTextColor(GxEPD_BLACK);
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(10, 30);
-    display.println("Pressure");
-
-    // Check if BME sensor is connected
-    if (!bmeSensor->sensorFound) {
-        showSensorError();
-        return;
-    }
-
-    // Check if BME sensor has an error
-    if (bmeSensor->errorBME) {
-        showReadError();
-        return;
-    }
-
-    // Get pressure value
-    uint32_t pressure = bmeSensor->getPressure();
-
-    display.setCursor(0, 130);
-    display.setFont(&FreeMonoBold24pt7b);
-    display.println(String(pressure) + " hPa");
-
-    if (prevScreenMode == SCREENMODE::PRESSURE) {
-        // TODO implement partial update
-    }
-    display.update();
-    display.powerDown();
-}
-
-void Display::updateAltitudeScreen() {
-    logg("Updating altitude screen");
-
-    display.fillScreen(GxEPD_WHITE);
-    display.setTextColor(GxEPD_BLACK);
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(15, 30);
-    display.println("Altitude");
-
-    // Check if BME sensor is connected
-    if (!bmeSensor->sensorFound) {
-        showSensorError();
-        return;
-    }
-
-    // Check if BME sensor has an error
-    if (bmeSensor->errorBME) {
-        showReadError();
-        return;
-    }
-
-    // Get altitude value
-    float altitude = bmeSensor->getAltitude();
-
-    display.setCursor(0, 130);
-    display.setFont(&FreeMonoBold24pt7b);
-    display.println(String(altitude) + " m");
-
-    if (prevScreenMode == SCREENMODE::ALTITUDE) {
-        // TODO implement partial update
-    }
-    display.update();
-    display.powerDown();
-}
-
-void Display::showSensorError() {
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(40, 100);
-    display.println("Sensor");
-    display.setCursor(50, 130);
-    display.println("error");
-    display.update();
-    display.powerDown();
-}
-
-void Display::showReadError() {
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(60, 100);
-    display.println("Read");
-    display.setCursor(50, 130);
-    display.println("error");
-    display.update();
-    display.powerDown();
-}
-
-// Routine to test display
-void Display::test() {
-    logg("Testing display");
+void Display::partialBluetoothScreen() {
+    logg("Partial bluetooth screen");
+    
+    display.setPartialWindow(0, 80, display.width(), 80);
+    display.firstPage();
     display.fillScreen(GxEPD_WHITE);
     display.setFont(&FreeMonoBold12pt7b);
-    display.setTextColor(GxEPD_BLACK);
-    display.setCursor(0, 50);
-    display.println("Hello world!");
-    display.update();
-    display.powerDown();
+
+    do {
+        display.setCursor(0, 100);
+        String line1 = "Enabled: " + String(bluetoothModule->isEnabled() ? "Yes" : "No");
+        display.println(line1);
+        display.setCursor(0, 130);
+        String line2 = "Connected: " + String(bluetoothModule->isConnected() ? "Yes" : "No");
+        display.println(line2);
+    } while (display.nextPage());
+}
+
+void Display::updateSensorsScreen() {
+    logg("Updating sensors screen");
+
+    
+
+    if (prevScreenMode == SCREENMODE::SENSORS) {
+        partialSensorsScreen();
+    } else {
+        fullSensorsScreen();
+    }
+}
+
+void Display::fullSensorsScreen() {
+    logg("Full sensors screen");
+
+    display.setFullWindow();
+    display.fillScreen(GxEPD_WHITE);
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(30, 20);
+    display.println("Sensors");
+
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setCursor(0, 45);
+
+    String line1 = "Temperature: " + readTemperature();
+    display.println(line1);
+    String line2 = "Humidity: " + readHumidity();
+    display.println(line2);
+    String line3 = "Pressure: " + readPressure();
+    display.println(line3);
+    String line4 = "Altitude: " + readAltitude();
+    display.println(line4);
+    String line5 = "CO2: " + readCO2();
+    display.println(line5);
+    String line6 = "PM1: " + readPM1();
+    display.println(line6);
+    String line7 = "PM2.5: " + readPM2_5();
+    display.println(line7);
+    String line8 = "PM10: " + readPM10();
+    display.println(line8);
+
+    display.display(false);
+}
+
+void Display::partialSensorsScreen() {
+    logg("Partial sensors screen");
+    
+    display.setPartialWindow(0, 30, display.width(), 160);
+    display.firstPage();
+    display.fillScreen(GxEPD_WHITE);
+    display.setFont(&FreeMonoBold9pt7b);
+
+    do {
+        display.setCursor(0, 45);
+        String line1 = "Temperature: " + readTemperature();
+        display.println(line1);
+        String line2 = "Humidity: " + readHumidity();
+        display.println(line2);
+        String line3 = "Pressure: " + readPressure();
+        display.println(line3);
+        String line4 = "Altitude: " + readAltitude();
+        display.println(line4);
+        String line5 = "CO2: " + readCO2();
+        display.println(line5);
+        String line6 = "PM1: " + readPM1();
+        display.println(line6);
+        String line7 = "PM2.5: " + readPM2_5();
+        display.println(line7);
+        String line8 = "PM10: " + readPM10();
+        display.println(line8);
+    } while (display.nextPage());
+}
+
+String Display::readTemperature() {
+    if (!checkSensorConnection(bmeSensor)) {
+        return String("sensor err");
+    } else if (checkSensorError(bmeSensor)) {
+        return String("read error");
+    } else {
+        return String(String(bmeSensor->getTemperature()) + " C");
+    }
+}
+
+String Display::readHumidity() {
+    if (!checkSensorConnection(bmeSensor)) {
+        return String("sensor err");
+    } else if (checkSensorError(bmeSensor)) {
+        return String("read error");
+    } else {
+        return String(String(bmeSensor->getHumidity()) + " %");
+    }
+}
+
+String Display::readPressure() {
+    if (!checkSensorConnection(bmeSensor)) {
+        return String("sensor err");
+    } else if (checkSensorError(bmeSensor)) {
+        return String("read error");
+    } else {
+        return String(String(bmeSensor->getPressure()) + " hPa");
+    }
+}
+
+String Display::readAltitude() {
+    if (!checkSensorConnection(bmeSensor)) {
+        return String("sensor err");
+    } else if (checkSensorError(bmeSensor)) {
+        return String("read error");
+    } else {
+        return String(String(bmeSensor->getAltitude()) + " m");
+    }
+}
+
+String Display::readCO2() {
+    if (!checkSensorConnection(co2Sensor)) {
+        return String("sensor err");
+    } else if (checkSensorError(co2Sensor)) {
+        return String("read error");
+    } else {
+        return String(String(co2Sensor->getCO2()) + " ppm");
+    }
+}
+
+String Display::readPM1() {
+    if (!checkSensorConnection(pmSensor)) {
+        return String("sensor err");
+    } else if (checkSensorError(pmSensor)) {
+        return String("read error");
+    } else {
+        return String(String(pmSensor->getPM1()) + " ug/m3");
+    }
+}
+
+String Display::readPM2_5() {
+    if (!checkSensorConnection(pmSensor)) {
+        return String("sensor err");
+    } else if (checkSensorError(pmSensor)) {
+        return String("read error");
+    } else {
+        return String(String(pmSensor->getPM2_5()) + " ug/m3");
+    }
+}
+
+String Display::readPM10() {
+    if (!checkSensorConnection(pmSensor)) {
+        return String("sensor err");
+    } else if (checkSensorError(pmSensor)) {
+        return String("read error");
+    } else {
+        return String(String(pmSensor->getPM10()) + " ug/m3");
+    }
+}
+
+bool Display::checkSensorConnection(Sensor *sensor) {
+    return sensor->sensorFound();
+}
+
+bool Display::checkSensorError(Sensor *sensor) {
+    return sensor->sensorError();
 }
