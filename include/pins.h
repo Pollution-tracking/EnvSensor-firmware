@@ -10,22 +10,23 @@
 #define PM_TX_PIN 7
 
 // GPIO buttons
-#define BUTTON_LEFT_PIN 4//20
+#define BUTTON_LEFT_PIN  4//20
 #define BUTTON_RIGHT_PIN 5//21
 
 // BME680 Sensor
 #define BME680_CS_PIN 8
 
 // Display
-#define DISPLAY_CS_PIN 18
-#define DISPLAY_DC_PIN 2
-#define DISPLAY_RST_PIN 1
+#define DISPLAY_CS_PIN   18
+#define DISPLAY_DC_PIN   2
+#define DISPLAY_RST_PIN  1
 #define DISPLAY_BUSY_PIN 0
 
 // SD Card
 #define SD_CS_PIN 19
 
-#define CLK_PIN 9
+// SPI
+#define CLK_PIN  9
 #define MOSI_PIN 3
 #define MISO_PIN 10
 
