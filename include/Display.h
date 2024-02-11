@@ -14,7 +14,8 @@
 // Display
 #include <GxEPD2_BW.h>
 #define GxEPD2_DISPLAY_CLASS GxEPD2_BW
-#define GxEPD2_DRIVER_CLASS GxEPD2_154_D67
+// #define GxEPD2_DRIVER_CLASS GxEPD2_154_D67
+#define GxEPD2_DRIVER_CLASS GxEPD2_150_BN
 #define MAX_DISPLAY_BUFFER_SIZE 65536ul
 #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
 // Fonts
@@ -50,6 +51,9 @@ class Display {
         void partialSensorsScreen();
         bool checkSensorConnection(Sensor *sensor); // true if connected, false otherwise
         bool checkSensorError(Sensor *sensor); // true if error, false otherwise
+        uint16_t centerText_X(String text);
+        void printBLEStatus();
+        void printSensorsStatus();
         String readTemperature();
         String readHumidity();
         String readPressure();

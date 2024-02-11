@@ -9,6 +9,7 @@
 #include <Bluetooth_module.h>
 #include <Display.h>
 #include <Button.h>
+#include <SDcard.h>
 #include "esp_sleep.h"
 #include "esp_wifi.h"
 
@@ -17,6 +18,7 @@ Bluetooth_module bluetoothModule; // Bluetooth module
 CO2Sensor co2Sensor(&bluetoothModule); // CO2 sensor
 PMSensor pmSensor(&bluetoothModule); // PM sensor
 BMESensor bmeSensor(&bluetoothModule); // BME sensor
+SDcard sdCard; // SD card
 Display display(&bmeSensor, &pmSensor, &co2Sensor, &bluetoothModule); // Display
 Button buttonLeft(BUTTON_LEFT_PIN); // Left button
 Button buttonRight(BUTTON_RIGHT_PIN); // Right button
@@ -65,7 +67,7 @@ void setup() {
   buttonRight.init(BUTTONS::RIGHT);
   
   // Configure SPI
-  SPI.begin(CLK_PIN, MISO_PIN, MOSI_PIN);
+  // SPI.begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN, SD_CS_PIN);
   
   // Init CO2 sensor (serial0)
   // co2Sensor.init();
@@ -75,6 +77,9 @@ void setup() {
   
   // Initialize BME sensor
   bmeSensor.init();
+
+  // Init SD card
+  sdCard.init();
   
   // Initialize BLE
   bluetoothModule.init();

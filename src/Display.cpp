@@ -15,7 +15,7 @@ Display::Display(BMESensor *bmeSensor, PMSensor *pmSensor, CO2Sensor *co2Sensor,
 
 // Routine to initialize display
 void Display::init() {
-    display.init(0, true, 10, false, SPI, SPISettings(4000000, MSBFIRST, SPI_MODE0));
+    display.init(0, true, 2, false, SPI, SPISettings(4000000, MSBFIRST, SPI_MODE0));
     display.setRotation(2);
     display.setTextColor(GxEPD_BLACK);
     updateScreen();
@@ -72,50 +72,43 @@ void Display::fullBluetoothScreen() {
     logg("Full bluetooth screen");
     
     display.setFullWindow();
-    display.fillScreen(GxEPD_WHITE);
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(0, 30);
-    display.println("Bluetooth");
+    display.firstPage();
 
-    display.setFont(&FreeMonoBold12pt7b);
-    display.setCursor(0, 100);
-    String line1 = "Enabled: " + String(bluetoothModule->isEnabled() ? "Yes" : "No");
-    display.println(line1);
-    display.setCursor(0, 130);
-    String line2 = "Connected: " + String(bluetoothModule->isConnected() ? "Yes" : "No");
-    display.println(line2);
+    do {
+        // Write title
+        display.fillScreen(GxEPD_WHITE);
+        display.setFont(&FreeMonoBold18pt7b);
+        display.setCursor(centerText_X("Bluetooth"), 30);
+        display.print("Bluetooth");
 
-    display.setFont(&FreeMonoBold9pt7b);
-    display.setCursor(0, 170);
-    display.println(" Press button to");
-    display.setCursor(45, 190);
-    display.println("toggle BLE");
+        printBLEStatus();
 
-    display.display(false);
+        // Write instructions
+        display.setFont(&FreeMonoBold9pt7b);
+        display.setCursor(centerText_X("Press button to"), 170);
+        display.print("Press button to");
+        display.setCursor(centerText_X("toggle BLE"), 190);
+        display.print("toggle BLE");
+    } while (display.nextPage());
 }
 
 void Display::partialBluetoothScreen() {
     logg("Partial bluetooth screen");
     
-    display.setPartialWindow(0, 80, display.width(), 80);
+    // Work over text area that may change
+    display.setPartialWindow(0, 72, display.width(), 80);
     display.firstPage();
-    display.fillScreen(GxEPD_WHITE);
-    display.setFont(&FreeMonoBold12pt7b);
 
     do {
-        display.setCursor(0, 100);
-        String line1 = "Enabled: " + String(bluetoothModule->isEnabled() ? "Yes" : "No");
-        display.println(line1);
-        display.setCursor(0, 130);
-        String line2 = "Connected: " + String(bluetoothModule->isConnected() ? "Yes" : "No");
-        display.println(line2);
+        // Cover previous text
+        display.fillRect(0, 72, display.width(), 80, GxEPD_WHITE);
+        // Print new text
+        printBLEStatus();
     } while (display.nextPage());
 }
 
 void Display::updateSensorsScreen() {
     logg("Updating sensors screen");
-
-    
 
     if (prevScreenMode == SCREENMODE::SENSORS) {
         partialSensorsScreen();
@@ -128,60 +121,38 @@ void Display::fullSensorsScreen() {
     logg("Full sensors screen");
 
     display.setFullWindow();
-    display.fillScreen(GxEPD_WHITE);
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(30, 20);
-    display.println("Sensors");
+    display.firstPage();
 
-    display.setFont(&FreeMonoBold9pt7b);
-    display.setCursor(0, 45);
+    do {
+        // Write title
+        display.fillScreen(GxEPD_WHITE);
+        display.setFont(&FreeMonoBold18pt7b);
+        display.setCursor(centerText_X("Sensors"), 30);
+        display.print("Sensors");
 
-    String line1 = "Temperature: " + readTemperature();
-    display.println(line1);
-    String line2 = "Humidity: " + readHumidity();
-    display.println(line2);
-    String line3 = "Pressure: " + readPressure();
-    display.println(line3);
-    String line4 = "Altitude: " + readAltitude();
-    display.println(line4);
-    String line5 = "CO2: " + readCO2();
-    display.println(line5);
-    String line6 = "PM1: " + readPM1();
-    display.println(line6);
-    String line7 = "PM2.5: " + readPM2_5();
-    display.println(line7);
-    String line8 = "PM10: " + readPM10();
-    display.println(line8);
-
-    display.display(false);
+        printSensorsStatus();
+    } while (display.nextPage());
 }
 
 void Display::partialSensorsScreen() {
     logg("Partial sensors screen");
     
-    display.setPartialWindow(0, 30, display.width(), 160);
+    display.setPartialWindow(0, 0, display.width(), display.height());
     display.firstPage();
-    display.fillScreen(GxEPD_WHITE);
-    display.setFont(&FreeMonoBold9pt7b);
-
     do {
-        display.setCursor(0, 45);
-        String line1 = "Temperature: " + readTemperature();
-        display.println(line1);
-        String line2 = "Humidity: " + readHumidity();
-        display.println(line2);
-        String line3 = "Pressure: " + readPressure();
-        display.println(line3);
-        String line4 = "Altitude: " + readAltitude();
-        display.println(line4);
-        String line5 = "CO2: " + readCO2();
-        display.println(line5);
-        String line6 = "PM1: " + readPM1();
-        display.println(line6);
-        String line7 = "PM2.5: " + readPM2_5();
-        display.println(line7);
-        String line8 = "PM10: " + readPM10();
-        display.println(line8);
+        // Cover previous text
+        display.fillRect(0, 40, display.width(), 160, GxEPD_WHITE);
+    } while (display.nextPage());
+
+    // display.setPartialWindow(0, 40, display.width(), 160);
+    display.firstPage();
+    do {
+        // Re-print title
+        display.setFont(&FreeMonoBold18pt7b);
+        display.setCursor(centerText_X("Sensors"), 30);
+        display.print("Sensors");
+        // Print new text
+        printSensorsStatus();
     } while (display.nextPage());
 }
 
@@ -221,7 +192,7 @@ String Display::readAltitude() {
     } else if (checkSensorError(bmeSensor)) {
         return String("read error");
     } else {
-        return String(String(bmeSensor->getAltitude()) + " m");
+        return String(String(static_cast<int>(bmeSensor->getAltitude())) + " m");
     }
 }
 
@@ -271,4 +242,46 @@ bool Display::checkSensorConnection(Sensor *sensor) {
 
 bool Display::checkSensorError(Sensor *sensor) {
     return sensor->sensorError();
+}
+
+uint16_t Display::centerText_X(String text) {
+    int16_t x_text, y_text;
+    uint16_t w_text, h_text, x_centered, y_centered;
+
+    display.getTextBounds(text, 0, 0, &x_text, &y_text, &w_text, &h_text);
+    x_centered = ((display.width() - w_text) / 2) - x_text;
+
+    return x_centered;
+}
+
+void Display::printSensorsStatus() {
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setCursor(0, 50);
+    String line1 = "Temperature: " + readTemperature();
+    display.println(line1);
+    String line2 = "Humidity: " + readHumidity();
+    display.println(line2);
+    String line3 = "Pressure: " + readPressure();
+    display.println(line3);
+    String line4 = "Altitude: " + readAltitude();
+    display.println(line4);
+    String line5 = "CO2: " + readCO2();
+    display.println(line5);
+    String line6 = "PM1: " + readPM1();
+    display.println(line6);
+    String line7 = "PM2.5: " + readPM2_5();
+    display.println(line7);
+    String line8 = "PM10: " + readPM10();
+    display.println(line8);
+}
+
+void Display::printBLEStatus() {
+    display.setFont(&FreeMonoBold12pt7b);
+    String line1 = "Enabled: " + String(bluetoothModule->isEnabled() ? "Yes" : "No");
+    display.setCursor(centerText_X(line1), 90);
+    display.print(line1);
+
+    String line2 = "Connected: " + String(bluetoothModule->isConnected() ? "Yes" : "No");
+    display.setCursor(centerText_X(line2), 120);
+    display.print(line2);
 }
