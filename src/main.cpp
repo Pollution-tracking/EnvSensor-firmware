@@ -78,6 +78,11 @@ void setup() {
   
   // Initialize BLE
   bluetoothModule.init();
+
+  // Do an initial read of the sensors
+  co2Sensor.update();
+  pmSensor.update();
+  bmeSensor.update();
   
   // Initialize display
   display.init();
