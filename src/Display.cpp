@@ -137,12 +137,14 @@ void Display::fullSensorsScreen() {
 void Display::partialSensorsScreen() {
     logg("Partial sensors screen");
     
-    display.setPartialWindow(0, 0, display.width(), display.height());
-    display.firstPage();
-    do {
+    // display.setPartialWindow(0, 0, display.width(), display.height());
+    // display.firstPage();
+    // do {
         // Cover previous text
-        display.fillRect(0, 40, display.width(), 160, GxEPD_WHITE);
-    } while (display.nextPage());
+        // display.fillRect(0, 40, display.width(), 160, GxEPD_WHITE);
+    // } while (display.nextPage());
+    display.fillScreen(GxEPD_WHITE);
+    display.display(true);
 
     // display.setPartialWindow(0, 40, display.width(), 160);
     display.firstPage();
