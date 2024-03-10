@@ -27,26 +27,26 @@ void Bluetooth_module::init() {
     envService = envServer->createService(SERVICE_UUID);
 
     // Set BLE descriptors values
-    temperatureDescriptor->setValue(temperatureDescriptorValue);
-    carbonDioxideDescriptor->setValue(carbonDioxideDescriptorValue);
-    pm1Descriptor->setValue(pm1DescriptorValue);
-    pm2_5Descriptor->setValue(pm2_5DescriptorValue);
-    pm10Descriptor->setValue(pm10DescriptorValue);
-    gasDescriptor->setValue(gasDescriptorValue);
-    humidityDescriptor->setValue(humidityDescriptorValue);
-    pressureDescriptor->setValue(pressureDescriptorValue);
-    altitudeDescriptor->setValue(altitudeDescriptorValue);
+    temperatureDescriptor   ->setValue(temperatureDescriptorValue);
+    carbonDioxideDescriptor ->setValue(carbonDioxideDescriptorValue);
+    pm1Descriptor           ->setValue(pm1DescriptorValue);
+    pm2_5Descriptor         ->setValue(pm2_5DescriptorValue);
+    pm10Descriptor          ->setValue(pm10DescriptorValue);
+    gasDescriptor           ->setValue(gasDescriptorValue);
+    humidityDescriptor      ->setValue(humidityDescriptorValue);
+    pressureDescriptor      ->setValue(pressureDescriptorValue);
+    altitudeDescriptor      ->setValue(altitudeDescriptorValue);
     
     // Configure BLE characteristics
-    temperatureCharacteristic->addDescriptor(temperatureDescriptor);
-    carbonDioxideCharacteristic->addDescriptor(carbonDioxideDescriptor);
-    pm1Characteristic->addDescriptor(pm1Descriptor);
-    pm2_5Characteristic->addDescriptor(pm2_5Descriptor);
-    pm10Characteristic->addDescriptor(pm10Descriptor);
-    gasCharacteristic->addDescriptor(gasDescriptor);
-    humidityCharacteristic->addDescriptor(humidityDescriptor);
-    pressureCharacteristic->addDescriptor(pressureDescriptor);
-    altitudeCharacteristic->addDescriptor(altitudeDescriptor);
+    temperatureCharacteristic   ->addDescriptor(temperatureDescriptor);
+    carbonDioxideCharacteristic ->addDescriptor(carbonDioxideDescriptor);
+    pm1Characteristic           ->addDescriptor(pm1Descriptor);
+    pm2_5Characteristic         ->addDescriptor(pm2_5Descriptor);
+    pm10Characteristic          ->addDescriptor(pm10Descriptor);
+    gasCharacteristic           ->addDescriptor(gasDescriptor);
+    humidityCharacteristic      ->addDescriptor(humidityDescriptor);
+    pressureCharacteristic      ->addDescriptor(pressureDescriptor);
+    altitudeCharacteristic      ->addDescriptor(altitudeDescriptor);
 
     // Add BLE characteristics to BLE service
     envService->addCharacteristic(temperatureCharacteristic);
@@ -63,9 +63,10 @@ void Bluetooth_module::init() {
     envService->start();
 
     // Start advertising BLE service
-    this->startAdvertising();
-
-    logg("Waiting a client connection to notify...");
+    if (this->isEnabled()) {
+        this->startAdvertising();
+        logg("Waiting a client connection to notify...");
+    }
 }
 
 // Routine to start advertising BLE service
@@ -96,7 +97,7 @@ void Bluetooth_module::disable() {
 
 // Routine to check if BLE is enabled
 bool Bluetooth_module::isEnabled() {
-    return this->bleEnabled;
+    return bleEnabled;
 }
 
 // Routine to check if client is connected
@@ -174,37 +175,37 @@ void Bluetooth_module::updateAltitudeCharacteristic(float altitude) {
 
 // Routine to create BLE characteristics
 void Bluetooth_module::createCharacteristics() {
-    temperatureCharacteristic = new BLECharacteristic(TEMPERATURE_CHARACTERISTIC_UUID,
-                                                      BLECharacteristic::PROPERTY_NOTIFY);
+    temperatureCharacteristic   = new BLECharacteristic(TEMPERATURE_CHARACTERISTIC_UUID,
+                                                        BLECharacteristic::PROPERTY_NOTIFY);
     carbonDioxideCharacteristic = new BLECharacteristic(CARBON_DIOXIDE_CHARACTERISTIC_UUID,
                                                         BLECharacteristic::PROPERTY_NOTIFY);
-    pm1Characteristic = new BLECharacteristic(PM1_CHARACTERISTIC_UUID,
-                                              BLECharacteristic::PROPERTY_NOTIFY);
-    pm2_5Characteristic = new BLECharacteristic(PM2_5_CHARACTERISTIC_UUID,
-                                                BLECharacteristic::PROPERTY_NOTIFY);
-    pm10Characteristic = new BLECharacteristic(PM10_CHARACTERISTIC_UUID,
-                                               BLECharacteristic::PROPERTY_NOTIFY);
-    gasCharacteristic = new BLECharacteristic(GAS_CHARACTERISTIC_UUID,
-                                              BLECharacteristic::PROPERTY_NOTIFY);
-    humidityCharacteristic = new BLECharacteristic(HUMIDITY_CHARACTERISTIC_UUID,
-                                                   BLECharacteristic::PROPERTY_NOTIFY);
-    pressureCharacteristic = new BLECharacteristic(PRESSURE_CHARACTERISTIC_UUID,
-                                                   BLECharacteristic::PROPERTY_NOTIFY);
-    altitudeCharacteristic = new BLECharacteristic(ALTITUDE_CHARACTERISTIC_UUID,
-                                                   BLECharacteristic::PROPERTY_NOTIFY);
+    pm1Characteristic           = new BLECharacteristic(PM1_CHARACTERISTIC_UUID,
+                                                        BLECharacteristic::PROPERTY_NOTIFY);
+    pm2_5Characteristic         = new BLECharacteristic(PM2_5_CHARACTERISTIC_UUID,
+                                                        BLECharacteristic::PROPERTY_NOTIFY);
+    pm10Characteristic          = new BLECharacteristic(PM10_CHARACTERISTIC_UUID,
+                                                        BLECharacteristic::PROPERTY_NOTIFY);
+    gasCharacteristic           = new BLECharacteristic(GAS_CHARACTERISTIC_UUID,
+                                                        BLECharacteristic::PROPERTY_NOTIFY);
+    humidityCharacteristic      = new BLECharacteristic(HUMIDITY_CHARACTERISTIC_UUID,
+                                                        BLECharacteristic::PROPERTY_NOTIFY);
+    pressureCharacteristic      = new BLECharacteristic(PRESSURE_CHARACTERISTIC_UUID,
+                                                        BLECharacteristic::PROPERTY_NOTIFY);
+    altitudeCharacteristic      = new BLECharacteristic(ALTITUDE_CHARACTERISTIC_UUID,
+                                                        BLECharacteristic::PROPERTY_NOTIFY);
 }
 
 // Routine to create BLE descriptors
 void Bluetooth_module::createDescriptors() {
-    temperatureDescriptor = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    temperatureDescriptor   = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
     carbonDioxideDescriptor = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-    pm1Descriptor = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-    pm2_5Descriptor = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-    pm10Descriptor = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-    gasDescriptor = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-    humidityDescriptor = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-    pressureDescriptor = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-    altitudeDescriptor = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    pm1Descriptor           = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    pm2_5Descriptor         = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    pm10Descriptor          = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    gasDescriptor           = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    humidityDescriptor      = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    pressureDescriptor      = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    altitudeDescriptor      = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
 }
 
 // Routine to destroy BLE characteristics

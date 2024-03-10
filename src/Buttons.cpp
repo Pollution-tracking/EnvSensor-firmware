@@ -10,7 +10,7 @@ void IRAM_ATTR ISR_button_left() {
     // If interrupts come faster than debounce time, assume it's a bounce and ignore
     if (interruptTime - lastInterruptTime > DEBOUNCE_TIME) {
         // Button being pressed
-        pressed_button |= BUTTONS::BUTTON_LEFT;
+        pressed_button = BUTTONS::BUTTON_LEFT;
 
         // Store last treated interrupt time
         lastInterruptTime = interruptTime;
@@ -24,7 +24,7 @@ void IRAM_ATTR ISR_button_center() {
     // If interrupts come faster than debounce time, assume it's a bounce and ignore
     if (interruptTime - lastInterruptTime > DEBOUNCE_TIME) {
         // Button being pressed
-        pressed_button |= BUTTONS::BUTTON_CENTER;
+        pressed_button = BUTTONS::BUTTON_CENTER;
 
         // Store last treated interrupt time
         lastInterruptTime = interruptTime;
@@ -38,7 +38,7 @@ void IRAM_ATTR ISR_button_right() {
     // If interrupts come faster than debounce time, assume it's a bounce and ignore
     if (interruptTime - lastInterruptTime > DEBOUNCE_TIME) {
         // Button being pressed
-        pressed_button |= BUTTONS::BUTTON_RIGHT;
+        pressed_button = BUTTONS::BUTTON_RIGHT;
 
         // Store last treated interrupt time
         lastInterruptTime = interruptTime;
@@ -50,9 +50,9 @@ void init_buttons() {
     pinMode(BUTTON_CENTER_PIN, INPUT);
     pinMode(BUTTON_RIGHT_PIN, INPUT);
 
-    attachInterrupt(BUTTON_LEFT_PIN, ISR_button_left, FALLING);
-    attachInterrupt(BUTTON_CENTER_PIN, ISR_button_center, FALLING);
-    attachInterrupt(BUTTON_RIGHT_PIN, ISR_button_right, FALLING);
+    attachInterrupt(BUTTON_LEFT_PIN, ISR_button_left, ONHIGH);
+    attachInterrupt(BUTTON_CENTER_PIN, ISR_button_center, ONHIGH);
+    attachInterrupt(BUTTON_RIGHT_PIN, ISR_button_right, ONHIGH);
 }
 
 void handle_button_readings() {
@@ -70,49 +70,43 @@ void handle_button_readings() {
     // Right button press
     check_right_button();
 
+    // Clear flag
+    pressed_button = BUTTONS::NO_BUTTON;
+
     // Restart timer for reenabling sleep mode if needed
     if (sleepUtils.is_cooldown_enabled()) {
         restart_timer_reenable_sleep();
     }
-
-    // Update display
-    display.updateScreen();
 }
 
 void check_left_button() {
-    if (pressed_button & BUTTONS::BUTTON_LEFT) {
-        // Clear flag
-        pressed_button &= ~BUTTONS::BUTTON_LEFT;
-
+    if (pressed_button == BUTTONS::BUTTON_LEFT) {
         treat_left_button();
     }
 }
 
 void check_center_button() {
-    if (pressed_button & BUTTONS::BUTTON_CENTER) {
-        // Clear flag
-        pressed_button &= ~BUTTONS::BUTTON_CENTER;
-
+    if (pressed_button == BUTTONS::BUTTON_CENTER) {
         treat_center_button();
     }
 }
 
 void check_right_button() {
-    if (pressed_button & BUTTONS::BUTTON_RIGHT) {
-        // Clear flag
-        pressed_button &= ~BUTTONS::BUTTON_RIGHT;
-
+    if (pressed_button == BUTTONS::BUTTON_RIGHT) {
         treat_right_button();
     }
 }
 
 void treat_left_button() {
-    logg("Button Left press");
+    logg("Button Left action");
     display.changeScreenLeft();
+
+    // Update display
+    display.updateScreen();
 }
 
 void treat_center_button() {
-    logg("Button Center press");
+    logg("Button Center action");
     // Check if screen is interactive (blueooth screen)
     if (display.getScreenMode() == SCREENMODE::BLUETOOTH) {
         // Change BLE state
@@ -125,12 +119,21 @@ void treat_center_button() {
             // When reenabling BLE after sleep, disable cooldown and reactivate timer for sensors
             sleepUtils.disable_cooldown();
             disable_timer_reenable_sleep();
-            init_timer_read_sensors();
         }
+
+        // Update display
+        display.updateScreen(SCREENUPDATE::BLUETOOTH);
     }
 }
 
 void treat_right_button() {
-    logg("Button Right press");
+    logg("Button Right action");
     display.changeScreenRight();
+
+    // Update display
+    display.updateScreen();
+}
+
+void press_button(uint8_t button) {
+    pressed_button = button;
 }

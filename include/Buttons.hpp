@@ -7,6 +7,7 @@
 #include <logger.h>
 #include <Display.h>
 #include <Timers.hpp>
+#include <RTC_values.hpp>
 #include <Bluetooth_module.h>
 
 extern Display display;
@@ -19,6 +20,8 @@ void IRAM_ATTR ISR_button_right();
 
 void init_buttons();
 void handle_button_readings();
+
+void press_button(uint8_t button);
 
 void check_left_button();
 void check_center_button();

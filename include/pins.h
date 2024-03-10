@@ -10,12 +10,9 @@
 #define PM_TX_PIN 2
 
 // GPIO buttons
-#define BUTTON_LEFT_PIN     21
-#define BUTTON_CENTER_PIN   20
-#define BUTTON_RIGHT_PIN    19
-#define GPIO_BUTTON_LEFT    GPIO_NUM_21
-#define GPIO_BUTTON_CENTER  GPIO_NUM_20
-#define GPIO_BUTTON_RIGHT   GPIO_NUM_19
+#define BUTTON_LEFT_PIN     18
+#define BUTTON_CENTER_PIN   8
+#define BUTTON_RIGHT_PIN    3
 
 // BME680 Sensor
 #define BME680_CS_PIN 14

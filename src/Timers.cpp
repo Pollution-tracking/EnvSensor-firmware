@@ -4,76 +4,89 @@ hw_timer_t *timer_read_sensors = NULL; // Timer for sensor readings
 hw_timer_t *timer_reenable_sleep = NULL; // Timer for reenabling sleep mode
 
 // Mark all sensors to be read
-void IRAM_ATTR ISR_sensors_read() {
+bool IRAM_ATTR ISR_sensors_read(void *args) {
   read_sensor |= SENSORS::SENSOR_PM;
   read_sensor |= SENSORS::SENSOR_CO2;
   read_sensor |= SENSORS::SENSOR_BME;
+
+  return true;
 }
 
 // Cooldown ended, reenable sleep mode
-void IRAM_ATTR ISR_reenable_sleep() {
+bool IRAM_ATTR ISR_reenable_sleep(void *args) {
   sleepUtils.allow_sleep();
   sleepUtils.disable_cooldown();
   disable_timer_reenable_sleep();
+
+  return true;
 }
 
 void init_timer_read_sensors() {
+  timer_config_t config = {
+    .alarm_en = TIMER_ALARM_EN,
+    .counter_en = TIMER_PAUSE,
+    .counter_dir = TIMER_COUNT_UP,
+    .auto_reload = TIMER_AUTORELOAD_EN,
+    .divider = 80 // 1 us per tick
+  };
+
   // Initialize timer
-  timer_read_sensors = timerBegin(1, 80, true);
+  timer_init(TIMER_GROUP_0, TIMER_0, &config);
+  timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
   // Setup timer interrupt for sensor readings
-  timerAttachInterrupt(timer_read_sensors, &ISR_sensors_read, true);
-  timerAlarmWrite(timer_read_sensors, WAIT_TIME_READ_SENSORS, true);
-  timerAlarmEnable(timer_read_sensors);
-  
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, WAIT_TIME_READ_SENSORS);
+  timer_enable_intr(TIMER_GROUP_0, TIMER_0);
+  timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, ISR_sensors_read, NULL, 0);
   // Start timer
-  timerStart(timer_read_sensors);
+  timer_start(TIMER_GROUP_0, TIMER_0);
+
   logg("Timer for sensor readings initialized");
 }
 
 void disable_timer_read_sensors() {
-  // Check if timer is already disabled
-  if (timer_read_sensors == nullptr || !timerStarted(timer_read_sensors)) {
-    return;
-  }
-
-  // Stop timer
-  timerStop(timer_read_sensors);
+  // Disable timer
+  timer_pause(TIMER_GROUP_0, TIMER_0);
   // Detach interrupt
-  timerDetachInterrupt(timer_read_sensors);
+  timer_disable_intr(TIMER_GROUP_0, TIMER_0);
   // Delete timer
-  timerEnd(timer_read_sensors);
-  timer_read_sensors = nullptr;
+  timer_deinit(TIMER_GROUP_0, TIMER_0);
 
   logg("Timer for sensor readings disabled");
 }
 
 void init_timer_reanable_sleep() {
+  timer_config_t config = {
+    .alarm_en = TIMER_ALARM_EN,
+    .counter_en = TIMER_PAUSE,
+    .counter_dir = TIMER_COUNT_UP,
+    .auto_reload = TIMER_AUTORELOAD_DIS,
+    .divider = 80 // 1 us per tick
+  };
+
   // Initialize timer
-  timer_reenable_sleep = timerBegin(0, 80, true);
-  // Setup timer interrupt for reenabling sleep mode
-  timerAttachInterrupt(timer_reenable_sleep, &ISR_reenable_sleep, true);
-  timerAlarmWrite(timer_reenable_sleep, WAIT_TIME_REENABLE_SLEEP, true);
-  timerAlarmEnable(timer_reenable_sleep);
-  
+  timer_init(TIMER_GROUP_0, TIMER_1, &config);
+  timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);
+  // Setup timer interrupt for reenabling sleep mode after cooldown
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, WAIT_TIME_REENABLE_SLEEP);
+  timer_enable_intr(TIMER_GROUP_0, TIMER_1);
+  timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, ISR_reenable_sleep, NULL, 0);
   // Start timer
-  timerStart(timer_reenable_sleep);
+  timer_start(TIMER_GROUP_0, TIMER_1);
+
+  logg("Timer for cooldown initialized");
 }
 
 void restart_timer_reenable_sleep() {
-  timerRestart(timer_reenable_sleep);
+  timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);
 }
 
 void disable_timer_reenable_sleep() {
-  // Check if timer is already disabled
-  if (timer_reenable_sleep == nullptr || !timerStarted(timer_reenable_sleep)) {
-    return;
-  }
-
-  // Stop timer
-  timerStop(timer_reenable_sleep);
+  // Disable timer
+  timer_pause(TIMER_GROUP_0, TIMER_1);
   // Detach interrupt
-  timerDetachInterrupt(timer_reenable_sleep);
+  timer_disable_intr(TIMER_GROUP_0, TIMER_1);
   // Delete timer
-  timerEnd(timer_reenable_sleep);
-  timer_reenable_sleep = nullptr;
+  timer_deinit(TIMER_GROUP_0, TIMER_1);
+
+  logg("Timer for cooldown disabled");
 }

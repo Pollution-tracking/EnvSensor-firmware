@@ -28,13 +28,12 @@ void handle_sensor_readings() {
     check_BME_sensor();
 
     // Update display
-    display.updateScreen();
+    display.updateScreen(SCREENUPDATE::SENSORS);
 }
 
 void read_all_sensors() {
-    co2Sensor.update();
-    pmSensor.update();
-    bmeSensor.update();
+    read_sensor = SENSORS::SENSOR_BME | SENSORS::SENSOR_CO2 | SENSORS::SENSOR_PM;
+    handle_sensor_readings();
 }
 
 void check_CO2_sensor() {

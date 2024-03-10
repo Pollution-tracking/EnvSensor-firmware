@@ -1,11 +1,14 @@
 #include "Display.h"
 
+extern RTC_DATA_ATTR bool bleEnabled;
+
 // Construct display
 Display::Display(BMESensor *bmeSensor, PMSensor *pmSensor, CO2Sensor *co2Sensor, Bluetooth_module *bluetoothModule)
     : display(GxEPD2_DRIVER_CLASS(DISPLAY_CS_PIN, DISPLAY_DC_PIN, DISPLAY_RST_PIN, DISPLAY_BUSY_PIN)) {
     // Set screen mode
-    currScreenMode = SCREENMODE::SENSORS;
-    prevScreenMode = SCREENMODE::BLUETOOTH;
+    if (currScreenMode == SCREENMODE::NO_SCREEN) {
+        currScreenMode = SCREENMODE::SENSORS;
+    }
     // Set sensors
     this->bmeSensor = bmeSensor;
     this->pmSensor = pmSensor;
@@ -18,7 +21,6 @@ void Display::init() {
     display.init(0, true, 2, false, SPI, SPISettings(4000000, MSBFIRST, SPI_MODE0));
     display.setRotation(2);
     display.setTextColor(GxEPD_BLACK);
-    updateScreen();
 }
 
 // Routine to change screen to the right
@@ -46,16 +48,30 @@ uint8_t Display::getScreenMode() {
     return currScreenMode;
 }
 
-void Display::updateScreen() {
+void Display::updateScreen(SCREENUPDATE update) {
+    if (update == SCREENUPDATE::GENERAL || update == SCREENUPDATE::SENSORS) {
+        checkSensorsScreen();
+    }
+    
+    if (update == SCREENUPDATE::GENERAL || update == SCREENUPDATE::BLUETOOTH) {
+        checkBluetoothScreen();
+    }
+}
+
+void Display::checkSensorsScreen() {
+    if (currScreenMode == SCREENMODE::SENSORS) {
+        updateSensorsScreen();
+        prevScreenMode = SCREENMODE::SENSORS;
+        display.powerOff();
+    }
+}
+
+void Display::checkBluetoothScreen() {
     if (currScreenMode == SCREENMODE::BLUETOOTH) {
         updateBluetoothScreen();
         prevScreenMode = SCREENMODE::BLUETOOTH;
-    } else if (currScreenMode == SCREENMODE::SENSORS) {
-        updateSensorsScreen();
-        prevScreenMode = SCREENMODE::SENSORS;
+        display.powerOff();
     }
-
-    display.powerOff();
 }
 
 void Display::updateBluetoothScreen() {

@@ -10,6 +10,7 @@
 #include <CO2_sensor.h>
 #include <Bluetooth_module.h>
 #include <Sensor.h>
+#include <RTC_values.hpp>
 
 // Display
 #include <GxEPD2_BW.h>
@@ -34,15 +35,15 @@ class Display {
         void changeScreenRight();
         void changeScreenLeft();
         uint8_t getScreenMode();
-        void updateScreen();
+        void updateScreen(SCREENUPDATE update = SCREENUPDATE::GENERAL);
     private:
         GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> display;
-        uint8_t currScreenMode;
-        uint8_t prevScreenMode;
         BMESensor *bmeSensor;
         PMSensor *pmSensor;
         CO2Sensor *co2Sensor;
         Bluetooth_module *bluetoothModule;
+        void checkSensorsScreen();
+        void checkBluetoothScreen();
         void updateBluetoothScreen();
         void fullBluetoothScreen();
         void partialBluetoothScreen();

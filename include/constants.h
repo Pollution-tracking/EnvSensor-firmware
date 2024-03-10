@@ -2,6 +2,7 @@
 #define CONSTANTS_H
 
 #include <string>
+#include <pins.h>
 
 // BLE server name
 const std::string bleServerName = "ESP32_EnvMonitor";
@@ -34,10 +35,12 @@ const uint16_t CO2_ERROR = 0xFFFF;
 
 // Time between sensor reads (in us -> chosen to be prime numbers)
 const uint64_t WAIT_TIME_READ_SENSORS   = 20000009;
-const uint64_t WAIT_TIME_REENABLE_SLEEP = 7000003;
+const uint64_t WAIT_TIME_REENABLE_SLEEP = 8000003;
 
 // Button times (in ms)
 const uint16_t DEBOUNCE_TIME = 250;
+
+const uint64_t BUTTONS_MASK = (uint64_t)1 << BUTTON_LEFT_PIN | (uint64_t)1 << BUTTON_CENTER_PIN | (uint64_t)1 << BUTTON_RIGHT_PIN;
 
 // Sea level pressure (in h200Pa)
 const float seaLevel = 1013.25;
@@ -52,15 +55,22 @@ namespace SENSORS {
 
 // Each bit represents one of the buttons
 namespace BUTTONS {
-    const uint8_t NO_BUTTON = 0b000;
-    const uint8_t BUTTON_LEFT = 0b001;
-    const uint8_t BUTTON_CENTER = 0b010;
-    const uint8_t BUTTON_RIGHT = 0b100;
+    const uint8_t NO_BUTTON     = 0b00000000;
+    const uint8_t BUTTON_LEFT   = 0b11000000;
+    const uint8_t BUTTON_CENTER = 0b00011000;
+    const uint8_t BUTTON_RIGHT  = 0b00000011;
 };
 
 namespace SCREENMODE {
+    const uint8_t NO_SCREEN = 0b00;
     const uint8_t BLUETOOTH = 0b10;
     const uint8_t SENSORS   = 0b01;
+};
+
+enum class SCREENUPDATE {
+    GENERAL,
+    BLUETOOTH,
+    SENSORS
 };
 
 struct BMEData {
@@ -73,7 +83,7 @@ struct BMEData {
 
 struct SleepUtils {
 private:
-    bool allowSleep = false; // Enable sleep mode
+    bool allowSleep    = false; // Enable sleep mode
     bool sleepCooldown = false; // Cooldown after sleep
     
 public:

@@ -6,6 +6,7 @@
 #include <BLEServer.h>
 #include <logger.h>
 #include "constants.h"
+#include <RTC_values.hpp>
 #include <BLE2902.h>
 #include <BLEUtils.h>
 #include <nvs_flash.h>
@@ -34,7 +35,6 @@ class Bluetooth_module {
         void updateAltitudeCharacteristic(float altitude);
     private:
         bool deviceConnected = false;  // Client conneted to server?
-        bool bleEnabled = true; // Is BLE enabled?
         BLEServer* envServer; // BLE server
         BLEService* envService; // BLE service
         // BLE characteristics
@@ -68,7 +68,7 @@ class Bluetooth_module {
             void onDisconnect(BLEServer* envServer) {
                 outerClass->deviceConnected = false;
                 logg("Client disconnected");
-                if (outerClass->isEnabled()) {
+                if (bleEnabled) {
                     // If user didn't disable BLE, start advertising again
                     outerClass->startAdvertising();
                 }

@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "constants.h"
+#include "driver/timer.h"
 #include <logger.h>
 
 extern SleepUtils sleepUtils;
