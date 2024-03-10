@@ -2,7 +2,7 @@
 
 // Construct CO2 sensor
 CO2Sensor::CO2Sensor(Bluetooth_module *bluetoothModule): bluetoothModule(bluetoothModule) {
-  mhz19Serial = new HardwareSerial(0);
+  mhz19Serial = &Serial1;
 }
 
 CO2Sensor::~CO2Sensor() {
@@ -19,7 +19,7 @@ bool CO2Sensor::sensorError() {
 
 // Routine to initialize CO2 sensor
 void CO2Sensor::init() {
-  mhz19Serial->begin(9600, SERIAL_8N1, CO2_RX_PIN, CO2_TX_PIN);
+  mhz19Serial->begin(9600, SERIAL_8N1, CO2_TX_PIN, CO2_RX_PIN);
   mhz19.begin(*mhz19Serial);
   mhz19.autoCalibration();
 

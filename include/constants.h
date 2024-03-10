@@ -37,8 +37,7 @@ const uint64_t WAIT_TIME_READ_SENSORS   = 20000009;
 const uint64_t WAIT_TIME_REENABLE_SLEEP = 7000003;
 
 // Button times (in ms)
-const uint16_t DEBOUNCE_TIME        = 100;
-const uint16_t LONG_PRESS_THRESHOLD = 1000;
+const uint16_t DEBOUNCE_TIME = 250;
 
 // Sea level pressure (in h200Pa)
 const float seaLevel = 1013.25;
@@ -52,15 +51,11 @@ namespace SENSORS {
 }
 
 // Each bit represents one of the buttons
-namespace BUTTON_STATES {
-    const uint8_t NO_PRESS    = 0b00;
-    const uint8_t SHORT_PRESS = 0b01;
-    const uint8_t LONG_PRESS  = 0b10;
-};
-
-enum class BUTTONS {
-    LEFT,
-    RIGHT
+namespace BUTTONS {
+    const uint8_t NO_BUTTON = 0b000;
+    const uint8_t BUTTON_LEFT = 0b001;
+    const uint8_t BUTTON_CENTER = 0b010;
+    const uint8_t BUTTON_RIGHT = 0b100;
 };
 
 namespace SCREENMODE {
@@ -74,6 +69,37 @@ struct BMEData {
     int32_t humidity;
     int32_t gas;
     float altitude;
+};
+
+struct SleepUtils {
+private:
+    bool allowSleep = false; // Enable sleep mode
+    bool sleepCooldown = false; // Cooldown after sleep
+    
+public:
+    void allow_sleep() {
+        allowSleep = true;
+    }
+
+    void disable_sleep() {
+        allowSleep = false;
+    }
+
+    bool is_sleep_allowed() {
+        return allowSleep;
+    }
+
+    void enable_cooldown() {
+        sleepCooldown = true;
+    }
+
+    void disable_cooldown() {
+        sleepCooldown = false;
+    }
+
+    bool is_cooldown_enabled() {
+        return sleepCooldown;
+    }
 };
 
 #endif // CONSTANTS_H

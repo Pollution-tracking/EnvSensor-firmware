@@ -3,7 +3,7 @@
 // Construct PM sensor
 PMSensor::PMSensor(Bluetooth_module *bluetoothModule)
     : bluetoothModule(bluetoothModule) {
-  pms = new SerialPM(PMSA003, PM_RX_PIN, PM_TX_PIN);
+  pms = new SerialPM(PMSA003, PM_TX_PIN, PM_RX_PIN);
 }
 
 PMSensor::~PMSensor() {

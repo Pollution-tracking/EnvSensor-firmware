@@ -72,24 +72,23 @@ void Display::fullBluetoothScreen() {
     logg("Full bluetooth screen");
     
     display.setFullWindow();
-    display.firstPage();
+    display.fillScreen(GxEPD_WHITE);
 
-    do {
-        // Write title
-        display.fillScreen(GxEPD_WHITE);
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X("Bluetooth"), 30);
-        display.print("Bluetooth");
+    // Write title
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X("Bluetooth"), 30);
+    display.print("Bluetooth");
 
-        printBLEStatus();
+    printBLEStatus();
 
-        // Write instructions
-        display.setFont(&FreeMonoBold9pt7b);
-        display.setCursor(centerText_X("Press button to"), 170);
-        display.print("Press button to");
-        display.setCursor(centerText_X("toggle BLE"), 190);
-        display.print("toggle BLE");
-    } while (display.nextPage());
+    // Write instructions
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setCursor(centerText_X("Press button to"), 170);
+    display.print("Press button to");
+    display.setCursor(centerText_X("toggle BLE"), 190);
+    display.print("toggle BLE");
+
+    display.display(false);
 }
 
 void Display::partialBluetoothScreen() {
@@ -134,25 +133,48 @@ void Display::fullSensorsScreen() {
     } while (display.nextPage());
 }
 
+// works well for full screen refresh
+// void Display::fullSensorsScreen() {
+//     logg("Partial sensors screen");
+    
+//     display.setPartialWindow(0, 0, display.width(), display.height());
+//     display.firstPage();
+//     do {
+//         // Cover previous text
+//         display.fillScreen(GxEPD_WHITE);
+//     } while (display.nextPage());
+//     // display.fillScreen(GxEPD_WHITE);
+//     // display.display(true);
+
+//     // display.setPartialWindow(0, 40, display.width(), 160);
+//     display.firstPage();
+//     do {
+//         // Re-print title
+//         display.setFont(&FreeMonoBold18pt7b);
+//         display.setCursor(centerText_X("Sensors"), 30);
+//         display.print("Sensors");
+//         // Print new text
+//         printSensorsStatus();
+//     } while (display.nextPage());
+// }
+
 void Display::partialSensorsScreen() {
     logg("Partial sensors screen");
     
-    // display.setPartialWindow(0, 0, display.width(), display.height());
+    display.setPartialWindow(0, 0, display.width(), display.height());
     // display.firstPage();
     // do {
-        // Cover previous text
-        // display.fillRect(0, 40, display.width(), 160, GxEPD_WHITE);
+    //     // Cover previous text
+    //     display.fillScreen(GxEPD_WHITE);
     // } while (display.nextPage());
-    display.fillScreen(GxEPD_WHITE);
-    display.display(true);
 
     // display.setPartialWindow(0, 40, display.width(), 160);
     display.firstPage();
     do {
         // Re-print title
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X("Sensors"), 30);
-        display.print("Sensors");
+        // display.setFont(&FreeMonoBold18pt7b);
+        // display.setCursor(centerText_X("Sensors"), 30);
+        // display.print("Sensors");
         // Print new text
         printSensorsStatus();
     } while (display.nextPage());
