@@ -110,7 +110,7 @@ public:
 #elif defined(ESP32)
   SerialPM(PMS sensor, uint8_t rx, uint8_t tx) : pms(sensor), rx(rx), tx(tx)
   {
-    uart = &Serial1;
+    uart = &Serial2;
     hwSerial = serModeHardware;
   }
 #endif

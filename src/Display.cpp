@@ -72,38 +72,48 @@ void Display::fullBluetoothScreen() {
     logg("Full bluetooth screen");
     
     display.setFullWindow();
+    display.fillScreen(GxEPD_WHITE);
+
+    // Write title
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X("Bluetooth"), 30);
+    display.print("Bluetooth");
+
+    printBLEStatus();
+
+    // Write instructions
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setCursor(centerText_X("Press button to"), 170);
+    display.print("Press button to");
+    display.setCursor(centerText_X("toggle BLE"), 190);
+    display.print("toggle BLE");
+
+    display.display(false);
+}
+
+void Display::partialBluetoothScreen() {
+    logg("Partial bluetooth screen");
+    
+    display.setPartialWindow(0, 0, display.width(), display.height());
     display.firstPage();
+    do {
+        // Cover previous text
+        display.fillScreen(GxEPD_WHITE);
+    } while (display.nextPage());
 
     do {
         // Write title
-        display.fillScreen(GxEPD_WHITE);
         display.setFont(&FreeMonoBold18pt7b);
         display.setCursor(centerText_X("Bluetooth"), 30);
         display.print("Bluetooth");
-
+         // Print new text
         printBLEStatus();
-
         // Write instructions
         display.setFont(&FreeMonoBold9pt7b);
         display.setCursor(centerText_X("Press button to"), 170);
         display.print("Press button to");
         display.setCursor(centerText_X("toggle BLE"), 190);
         display.print("toggle BLE");
-    } while (display.nextPage());
-}
-
-void Display::partialBluetoothScreen() {
-    logg("Partial bluetooth screen");
-    
-    // Work over text area that may change
-    display.setPartialWindow(0, 72, display.width(), 80);
-    display.firstPage();
-
-    do {
-        // Cover previous text
-        display.fillRect(0, 72, display.width(), 80, GxEPD_WHITE);
-        // Print new text
-        printBLEStatus();
     } while (display.nextPage());
 }
 
@@ -137,17 +147,13 @@ void Display::fullSensorsScreen() {
 void Display::partialSensorsScreen() {
     logg("Partial sensors screen");
     
-    // display.setPartialWindow(0, 0, display.width(), display.height());
-    // display.firstPage();
-    // do {
-        // Cover previous text
-        // display.fillRect(0, 40, display.width(), 160, GxEPD_WHITE);
-    // } while (display.nextPage());
-    display.fillScreen(GxEPD_WHITE);
-    display.display(true);
-
-    // display.setPartialWindow(0, 40, display.width(), 160);
+    display.setPartialWindow(0, 0, display.width(), display.height());
     display.firstPage();
+    do {
+        // Cover previous text
+        display.fillScreen(GxEPD_WHITE);
+    } while (display.nextPage());
+
     do {
         // Re-print title
         display.setFont(&FreeMonoBold18pt7b);
