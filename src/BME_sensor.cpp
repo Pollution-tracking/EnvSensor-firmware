@@ -18,6 +18,10 @@ bool BMESensor::sensorError() {
     return this->_errorBME;
 }
 
+bool BMESensor::sensorInitialised() {
+    return this->_initialised;
+}
+
 // Routine to initialize BME sensor
 void BMESensor::init() {
     if(!bme->begin()) {
@@ -31,6 +35,8 @@ void BMESensor::init() {
         bme->setGasHeater(320, 150); // 320*C for 150 ms
         logg("BME680 initialized");
     }
+    
+    _initialised = true;
 }
 
 // Routine to update BME values

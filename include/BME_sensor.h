@@ -18,6 +18,7 @@ class BMESensor : public Sensor {
     ~BMESensor();
     bool sensorFound() override;
     bool sensorError() override;
+    bool sensorInitialised() override;
     void update();
     void init();
     uint32_t getTemperature();
@@ -31,6 +32,7 @@ class BMESensor : public Sensor {
     BMEData data;
     bool _errorBME = false;
     bool _sensorFound = false;
+    bool _initialised = false;
     void updateCharacteristics();
     void checkErrors(bool status);
 };

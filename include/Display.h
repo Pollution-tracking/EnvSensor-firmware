@@ -50,6 +50,7 @@ class Display {
         void updateSensorsScreen();
         void fullSensorsScreen();
         void partialSensorsScreen();
+        bool checkSensorInitialised(Sensor *sensor); // true if initialised, false otherwise
         bool checkSensorConnection(Sensor *sensor); // true if connected, false otherwise
         bool checkSensorError(Sensor *sensor); // true if error, false otherwise
         uint16_t centerText_X(String text);

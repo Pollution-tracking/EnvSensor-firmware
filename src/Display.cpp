@@ -181,83 +181,120 @@ void Display::partialSensorsScreen() {
 }
 
 String Display::readTemperature() {
-    if (!checkSensorConnection(bmeSensor)) {
-        return String("sensor err");
-    } else if (checkSensorError(bmeSensor)) {
-        return String("read error");
-    } else {
-        return String(String(bmeSensor->getTemperature()) + " C");
+    logg("---> " + String(String(bmeSensor->getTemperature()) + " C ") + checkSensorInitialised(bmeSensor) + checkSensorConnection(bmeSensor) + checkSensorError(bmeSensor));
+    if (checkSensorInitialised(bmeSensor)) {
+        if (!checkSensorConnection(bmeSensor)) {
+            strcpy(_temperature, "sensor err\0");
+        } else if (checkSensorError(bmeSensor)) {
+            strcpy(_temperature, "read error\0");
+        } else {
+            strcpy(_temperature, String(String(bmeSensor->getTemperature()) + " C").c_str());
+        }
     }
+
+    return String(_temperature);
 }
 
 String Display::readHumidity() {
-    if (!checkSensorConnection(bmeSensor)) {
-        return String("sensor err");
-    } else if (checkSensorError(bmeSensor)) {
-        return String("read error");
-    } else {
-        return String(String(bmeSensor->getHumidity()) + " %");
+    if (checkSensorInitialised(bmeSensor)) {
+        if (!checkSensorConnection(bmeSensor)) {
+            strcpy(_humidity, "sensor err\0");
+        } else if (checkSensorError(bmeSensor)) {
+            strcpy(_humidity, "read error\0");
+        } else {
+            strcpy(_humidity, String(String(bmeSensor->getHumidity()) + " %").c_str());
+        }
     }
+    
+    return String(_humidity);
 }
 
 String Display::readPressure() {
-    if (!checkSensorConnection(bmeSensor)) {
-        return String("sensor err");
-    } else if (checkSensorError(bmeSensor)) {
-        return String("read error");
-    } else {
-        return String(String(bmeSensor->getPressure()) + " hPa");
+    if (checkSensorInitialised(bmeSensor)) {
+        if (!checkSensorConnection(bmeSensor)) {
+            strcpy(_pressure, "sensor err\0");
+        } else if (checkSensorError(bmeSensor)) {
+            strcpy(_pressure, "read error\0");
+        } else {
+            strcpy(_pressure, String(String(bmeSensor->getPressure()) + " hPa").c_str());
+        }
     }
+    
+    return String(_pressure);
 }
 
 String Display::readAltitude() {
-    if (!checkSensorConnection(bmeSensor)) {
-        return String("sensor err");
-    } else if (checkSensorError(bmeSensor)) {
-        return String("read error");
-    } else {
-        return String(String(static_cast<int>(bmeSensor->getAltitude())) + " m");
+    if (checkSensorInitialised(bmeSensor)) {
+        if (!checkSensorConnection(bmeSensor)) {
+            strcpy(_altitude, "sensor err\0");
+        } else if (checkSensorError(bmeSensor)) {
+            strcpy(_altitude, "read error\0");
+        } else {
+            strcpy(_altitude, String(String(static_cast<int>(bmeSensor->getAltitude())) + " m").c_str());
+        }
     }
+    
+    return String(_altitude);
 }
 
 String Display::readCO2() {
-    if (!checkSensorConnection(co2Sensor)) {
-        return String("sensor err");
-    } else if (checkSensorError(co2Sensor)) {
-        return String("read error");
-    } else {
-        return String(String(co2Sensor->getCO2()) + " ppm");
+    if(checkSensorInitialised(co2Sensor)) {
+        if (!checkSensorConnection(co2Sensor)) {
+            strcpy(_co2, "sensor err\0");
+        } else if (checkSensorError(co2Sensor)) {
+            strcpy(_co2, "read error\0");
+        } else {
+            strcpy(_co2, String(String(co2Sensor->getCO2()) + " ppm").c_str());
+        }
     }
+
+    return String(_co2);
 }
 
 String Display::readPM1() {
-    if (!checkSensorConnection(pmSensor)) {
-        return String("sensor err");
-    } else if (checkSensorError(pmSensor)) {
-        return String("read error");
-    } else {
-        return String(String(pmSensor->getPM1()) + " ug/m3");
+    if(checkSensorInitialised(pmSensor)) {
+        if (!checkSensorConnection(pmSensor)) {
+            strcpy(_pm1, "sensor err\0");
+        } else if (checkSensorError(pmSensor)) {
+            strcpy(_pm1, "read error\0");
+        } else {
+            strcpy(_pm1, String(String(pmSensor->getPM1()) + " ug/m3").c_str());
+        }
     }
+
+    return String(_pm1);
 }
 
 String Display::readPM2_5() {
-    if (!checkSensorConnection(pmSensor)) {
-        return String("sensor err");
-    } else if (checkSensorError(pmSensor)) {
-        return String("read error");
-    } else {
-        return String(String(pmSensor->getPM2_5()) + " ug/m3");
+    if(checkSensorInitialised(pmSensor)) {
+        if (!checkSensorConnection(pmSensor)) {
+            strcpy(_pm2_5, "sensor err\0");
+        } else if (checkSensorError(pmSensor)) {
+            strcpy(_pm2_5, "read error\0");
+        } else {
+            strcpy(_pm2_5, String(String(pmSensor->getPM2_5()) + " ug/m3").c_str());
+        }
     }
+
+    return String(_pm2_5);
 }
 
 String Display::readPM10() {
-    if (!checkSensorConnection(pmSensor)) {
-        return String("sensor err");
-    } else if (checkSensorError(pmSensor)) {
-        return String("read error");
-    } else {
-        return String(String(pmSensor->getPM10()) + " ug/m3");
+    if(checkSensorInitialised(pmSensor)) {
+        if (!checkSensorConnection(pmSensor)) {
+            strcpy(_pm10, "sensor err\0");
+        } else if (checkSensorError(pmSensor)) {
+            strcpy(_pm10, "read error\0");
+        } else {
+            strcpy(_pm10, String(String(pmSensor->getPM10()) + " ug/m3").c_str());
+        }
     }
+
+    return String(_pm10);
+}
+
+bool Display::checkSensorInitialised(Sensor *sensor) {
+    return sensor->sensorInitialised();
 }
 
 bool Display::checkSensorConnection(Sensor *sensor) {

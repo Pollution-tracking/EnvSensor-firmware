@@ -1,8 +1,5 @@
 #include "Timers.hpp"
 
-hw_timer_t *timer_read_sensors = NULL; // Timer for sensor readings
-hw_timer_t *timer_reenable_sleep = NULL; // Timer for reenabling sleep mode
-
 // Mark all sensors to be read
 bool IRAM_ATTR ISR_sensors_read(void *args) {
   read_sensor |= SENSORS::SENSOR_PM;
@@ -87,6 +84,4 @@ void disable_timer_reenable_sleep() {
   timer_disable_intr(TIMER_GROUP_0, TIMER_1);
   // Delete timer
   timer_deinit(TIMER_GROUP_0, TIMER_1);
-
-  logg("Timer for cooldown disabled");
 }

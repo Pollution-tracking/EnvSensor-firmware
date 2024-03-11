@@ -15,6 +15,7 @@ class CO2Sensor : public Sensor{
     ~CO2Sensor();
     bool sensorFound() override;
     bool sensorError() override;
+    bool sensorInitialised() override;
     void update();
     void init();
     uint16_t getCO2();
@@ -28,6 +29,7 @@ class CO2Sensor : public Sensor{
     bool _errorCO2 = false;
     bool _errorTemperature = false;
     bool _sensorFound = false;
+    bool _initialised = false;
     void updateCharacteristic();
     void checkErrors();
 };

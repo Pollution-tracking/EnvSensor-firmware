@@ -32,8 +32,9 @@ void handle_sensor_readings() {
 }
 
 void read_all_sensors() {
-    read_sensor = SENSORS::SENSOR_BME | SENSORS::SENSOR_CO2 | SENSORS::SENSOR_PM;
-    handle_sensor_readings();
+    treat_CO2_sensor();
+    treat_PM_sensor();
+    treat_BME_sensor();
 }
 
 void check_CO2_sensor() {

@@ -115,10 +115,8 @@ void treat_center_button() {
             sleepUtils.allow_sleep();
         } else {
             bluetoothModule.enable();
-            sleepUtils.disable_sleep();
-            // When reenabling BLE after sleep, disable cooldown and reactivate timer for sensors
+            sleepUtils.disable_sleep(true);
             sleepUtils.disable_cooldown();
-            disable_timer_reenable_sleep();
         }
 
         // Update display

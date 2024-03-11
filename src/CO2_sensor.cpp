@@ -17,6 +17,10 @@ bool CO2Sensor::sensorError() {
     return this->_errorCO2 || this->_errorTemperature;
 }
 
+bool CO2Sensor::sensorInitialised() {
+    return this->_initialised;
+}
+
 // Routine to initialize CO2 sensor
 void CO2Sensor::init() {
   mhz19Serial->begin(9600, SERIAL_8N1, CO2_TX_PIN, CO2_RX_PIN);
@@ -29,6 +33,8 @@ void CO2Sensor::init() {
     logg("MH-Z19 initialized");
     _sensorFound = true;
   }
+
+  _initialised = true;
 }
 
 // Routine to update CO2 and temperature values

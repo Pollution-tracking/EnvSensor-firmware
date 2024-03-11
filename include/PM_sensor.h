@@ -15,6 +15,7 @@ class PMSensor : public Sensor{
     ~PMSensor();
     bool sensorFound() override;
     bool sensorError() override;
+    bool sensorInitialised() override;
     void update();
     void init();
     uint16_t getPM1();
@@ -28,6 +29,7 @@ class PMSensor : public Sensor{
     Bluetooth_module *bluetoothModule;
     bool _errorPM = false;
     bool _sensorFound = false;
+    bool _initialised = false;
     void updateCharacteristics();
     void checkErrors(SerialPM::STATUS status);
 };

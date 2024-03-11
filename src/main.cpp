@@ -29,7 +29,7 @@ SleepUtils sleepUtils;
 void enter_sleep_mode();
 void configure_wakeup_sources();
 void treat_wakeup_reason();
-void determine_wakeup_button();
+void act_on_wakeup_button();
 
 void setup() {
     // Disable WiFi
@@ -42,42 +42,33 @@ void setup() {
     // Configure SPI
     SPI.begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN, SD_CS_PIN);
 
-    // Initialize display
-    display.init();
-
-    // Initialize BLE
-    bluetoothModule.init();
-    
-    // Init SD card
-    sdCard.init();
-
-    // Initialize sensors
-    init_sensors();
-
-    // Treat wakeup reason
+    // Treat wakeup reason (also initializes modules)
     treat_wakeup_reason();
-
-    // Initialize buttons
-    init_buttons();
-
-    // Do an initial read of the sensors
-    read_all_sensors();
-
-    // Initialize timer for sensor reads
-    init_timer_read_sensors();
 }
 
 void loop() {
-  // Check if there is a sensor to read
-  handle_sensor_readings();
+    // Check if there is a sensor to read
+    handle_sensor_readings();
 
-  // Check if there is a button pressed
-  handle_button_readings();
+    // Check if there is a button pressed
+    handle_button_readings();
 
-  // Check if we can sleep
-  if (sleepUtils.is_sleep_allowed()) {
-    enter_sleep_mode();
-  }
+    // Check if we can sleep
+    if (sleepUtils.is_sleep_allowed()) {
+        enter_sleep_mode();
+    }
+
+    // Reactivate modules if sleep is over
+    if (sleepUtils.is_sleep_over()) {
+        sleepUtils.mark_sleep_treated();
+
+        disable_timer_reenable_sleep();
+        init_sensors();
+        init_timer_read_sensors();
+        sdCard.init();
+        read_all_sensors();
+        display.updateScreen(SCREENUPDATE::SENSORS);
+    }
 }
 
 void enter_sleep_mode() {
@@ -110,31 +101,47 @@ void treat_wakeup_reason() {
   switch (wakeup_reason) {
     case ESP_SLEEP_WAKEUP_TIMER:
         logg("Wakeup caused by timer");
-        // Read sensors, go back to sleep
-        init_sensors();
-        sdCard.init();
-        read_all_sensors();
+        // Read sensors, go back to sleep (BLE is off)
+        init_sensors();     // Initialize sensors
+        display.init();     // Initialize display
+        sdCard.init();      // Initialize SD card
+        read_all_sensors(); // Read sensors
+        display.updateScreen(SCREENUPDATE::SENSORS);
+
         configure_wakeup_sources();
         esp_deep_sleep_start();
         break;
+
     case ESP_SLEEP_WAKEUP_EXT1:
         logg("Wakeup caused by button press");
-        
         // Momentarily disable sleep mode (until cooldown is over)
         sleepUtils.disable_sleep();
         sleepUtils.enable_cooldown();
         init_timer_reanable_sleep();
 
-        // Determine which button was pressed
-        determine_wakeup_button();
+        // Screen needs to react first
+        bluetoothModule.init(); // Initialize BLE
+        display.init();         // Initialize display
+        act_on_wakeup_button(); // Determine which button was pressed
+        init_buttons();         // Initialize buttons
         break;
+
     default:
         logg("Wakeup was not caused by timer or GPIO");
+        // Normal boot
+        init_sensors();            // Initialize sensors
+        display.init();            // Initialize display
+        bluetoothModule.init();    // Initialize BLE
+        sdCard.init();             // Initialize SD card
+        init_buttons();            // Initialize buttons
+        read_all_sensors();        // Perform an initial read of the sensors
+        init_timer_read_sensors(); // Initialize timer for future sensor reads
+        display.updateScreen(SCREENUPDATE::SENSORS);
         break;
   }
 }
 
-void determine_wakeup_button() {
+void act_on_wakeup_button() {
     uint64_t wakeup_pin = esp_sleep_get_ext1_wakeup_status();
     wakeup_pin = log(wakeup_pin)/log(2);
 

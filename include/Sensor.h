@@ -7,6 +7,7 @@ class Sensor {
     public:
         virtual bool sensorFound() = 0;
         virtual bool sensorError() = 0;
+        virtual bool sensorInitialised() = 0;
 };
 
 #endif // SENSOR_H

@@ -18,11 +18,17 @@ bool PMSensor::sensorError() {
   return this->_errorPM;
 }
 
+bool PMSensor::sensorInitialised() {
+  return this->_initialised;
+}
+
 // Routine to initialize PM sensor
 void PMSensor::init() {
   pms->init();
   this->_sensorFound = true;
   logg("PM sensor initialized");
+  
+  this->_initialised = true;
 }
 
 // Routine to update PM values
