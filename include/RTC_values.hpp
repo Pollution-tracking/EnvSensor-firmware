@@ -5,6 +5,7 @@
 #include "constants.h"
 
 extern RTC_DATA_ATTR bool bleEnabled;
+extern RTC_DATA_ATTR bool bleConnected;
 
 extern RTC_DATA_ATTR uint8_t currScreenMode;
 extern RTC_DATA_ATTR uint8_t prevScreenMode;

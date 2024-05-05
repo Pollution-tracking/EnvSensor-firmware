@@ -27,21 +27,17 @@
 
 class Display {
     public:
-        Display(BMESensor *bmeSensor,
-                PMSensor *pmSensor,
-                CO2Sensor *co2Sensor,
-                Bluetooth_module *bluetoothModule);
+        Display();
+        ~Display();
         void init();
         void changeScreenRight();
         void changeScreenLeft();
         uint8_t getScreenMode();
         void updateScreen(SCREENUPDATE update = SCREENUPDATE::GENERAL);
+        void updateSensorsStats(String *data);
+        void updateBluetoothStats(bool enabled, bool connected);
     private:
         GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> display;
-        BMESensor *bmeSensor;
-        PMSensor *pmSensor;
-        CO2Sensor *co2Sensor;
-        Bluetooth_module *bluetoothModule;
         void checkSensorsScreen();
         void checkBluetoothScreen();
         void updateBluetoothScreen();
@@ -50,20 +46,18 @@ class Display {
         void updateSensorsScreen();
         void fullSensorsScreen();
         void partialSensorsScreen();
-        bool checkSensorInitialised(Sensor *sensor); // true if initialised, false otherwise
-        bool checkSensorConnection(Sensor *sensor); // true if connected, false otherwise
-        bool checkSensorError(Sensor *sensor); // true if error, false otherwise
         uint16_t centerText_X(String text);
         void printBLEStatus();
         void printSensorsStatus();
-        String readTemperature();
-        String readHumidity();
-        String readPressure();
-        String readAltitude();
-        String readCO2();
-        String readPM1();
-        String readPM2_5();
-        String readPM10();
+        void convertData(int idx, String data);
+        void convertTemperature(String data);
+        void convertHumidity(String data);
+        void convertPressure(String data);
+        void convertAltitude(String data);
+        void convertCO2(String data);
+        void convertPM1(String data);
+        void convertPM2_5(String data);
+        void convertPM10(String data);
 };
 
 #endif // DISPLAY_H

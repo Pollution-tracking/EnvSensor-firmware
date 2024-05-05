@@ -12,7 +12,13 @@ class SDcard {
     public:
         SDcard();
         void init();
+        bool isInitialised();
+        bool writeData(String path, String data);
     private:
+        bool _initialised = false;
+        bool fileExists(String path);
+        bool writeToFile(String path, String message);
+        bool appendToFile(String path, String message);
 };
 
 #endif // SDCARD_H

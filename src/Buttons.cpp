@@ -98,7 +98,7 @@ void check_right_button() {
 }
 
 void treat_left_button() {
-    logg("Button Left action");
+    logg("Button Left press");
     display.changeScreenLeft();
 
     // Update display
@@ -106,17 +106,17 @@ void treat_left_button() {
 }
 
 void treat_center_button() {
-    logg("Button Center action");
+    logg("Button Center press");
     // Check if screen is interactive (blueooth screen)
     if (display.getScreenMode() == SCREENMODE::BLUETOOTH) {
         // Change BLE state
         if (bluetoothModule.isEnabled()) {
-            bluetoothModule.disable();
             sleepUtils.allow_sleep();
+            bluetoothModule.disable();
         } else {
-            bluetoothModule.enable();
             sleepUtils.disable_sleep(true);
             sleepUtils.disable_cooldown();
+            bluetoothModule.enable();
         }
 
         // Update display
@@ -125,13 +125,13 @@ void treat_center_button() {
 }
 
 void treat_right_button() {
-    logg("Button Right action");
+    logg("Button Right press");
     display.changeScreenRight();
 
     // Update display
     display.updateScreen();
 }
 
-void press_button(uint8_t button) {
+void virtual_press_button(uint8_t button) {
     pressed_button = button;
 }

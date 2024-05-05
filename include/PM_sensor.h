@@ -6,32 +6,38 @@
 #include "pins.h"
 #include "constants.h"
 #include <logger.h>
-#include "Bluetooth_module.h"
 #include "Sensor.h"
+
+struct PMData : public SensorData {
+    int32_t pm1   = READ_ERROR;
+    int32_t pm2_5 = READ_ERROR;
+    int32_t pm10  = READ_ERROR;
+
+    String getData() override {
+        return String(pm1) + "," +
+               String(pm2_5) + "," +
+               String(pm10);
+    }
+};
 
 class PMSensor : public Sensor{
   public:
-    PMSensor(Bluetooth_module *bluetoothModule);
+    PMSensor();
     ~PMSensor();
     bool sensorFound() override;
     bool sensorError() override;
     bool sensorInitialised() override;
-    void update();
-    void init();
-    uint16_t getPM1();
-    uint16_t getPM2_5();
-    uint16_t getPM10();
+    void read() override;
+    void init() override;
+    PMData getData();
   private:
     SerialPM *pms;
-    uint16_t pm1;
-    uint16_t pm2_5;
-    uint16_t pm10;
-    Bluetooth_module *bluetoothModule;
+    PMData data;
     bool _errorPM = false;
     bool _sensorFound = false;
     bool _initialised = false;
-    void updateCharacteristics();
     void checkErrors(SerialPM::STATUS status);
+    void markError();
 };
 
 #endif // PM_SENSOR_H

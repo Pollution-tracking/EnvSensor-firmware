@@ -22,19 +22,18 @@ class Bluetooth_module {
         void stopAdvertising();
         bool isConnected();
         bool isEnabled();
-        void enable();
         void disable();
-        void updatePM1Characteristic(uint16_t pm1);
-        void updatePM2_5Characteristic(uint16_t pm2_5);
-        void updatePM10Characteristic(uint16_t pm10);
-        void updateCO2Characteristic(uint16_t co2);
+        void enable();
+        void updatePM1Characteristic(int32_t pm1);
+        void updatePM2_5Characteristic(int32_t pm2_5);
+        void updatePM10Characteristic(int32_t pm10);
+        void updateCO2Characteristic(int32_t co2);
         void updateTemperatureCharacteristic(int32_t temperature);
         void updateGasCharacteristic(int32_t gas);
         void updateHumidityCharacteristic(int32_t humidity);
         void updatePressureCharacteristic(int32_t pressure);
-        void updateAltitudeCharacteristic(float altitude);
+        void updateAltitudeCharacteristic(int32_t altitude);
     private:
-        bool deviceConnected = false;  // Client conneted to server?
         BLEServer* envServer; // BLE server
         BLEService* envService; // BLE service
         // BLE characteristics
@@ -62,11 +61,11 @@ class Bluetooth_module {
             MyServerCallbacks(Bluetooth_module *outerClass) : outerClass(outerClass) {};
             void onConnect(BLEServer* envServer) {
                 logg("Client connected");
-                outerClass->deviceConnected = true;
+                bleConnected = true;
                 outerClass->startAdvertising();
             };
             void onDisconnect(BLEServer* envServer) {
-                outerClass->deviceConnected = false;
+                bleConnected = false;
                 logg("Client disconnected");
                 if (bleEnabled) {
                     // If user didn't disable BLE, start advertising again

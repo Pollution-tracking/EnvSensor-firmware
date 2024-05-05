@@ -6,32 +6,38 @@
 #include "pins.h"
 #include "constants.h"
 #include <logger.h>
-#include "Bluetooth_module.h"
 #include "Sensor.h"
+
+struct CO2Data : public SensorData {
+    int32_t co2         = READ_ERROR;
+    int32_t temperature = READ_ERROR;
+
+    String getData() override {
+        return String(co2) + "," +
+               String(temperature);
+    }
+};
 
 class CO2Sensor : public Sensor{
   public:
-    CO2Sensor(Bluetooth_module *bluetoothModule);
+    CO2Sensor();
     ~CO2Sensor();
     bool sensorFound() override;
     bool sensorError() override;
     bool sensorInitialised() override;
-    void update();
-    void init();
-    uint16_t getCO2();
-    uint16_t getTemperature();
+    void read() override;
+    void init() override;
+    CO2Data getData();
   private:
-    Bluetooth_module *bluetoothModule;
-    uint16_t co2;
-    uint16_t temperature;
+    CO2Data data;
     HardwareSerial* mhz19Serial;
     MHZ19 mhz19;
     bool _errorCO2 = false;
     bool _errorTemperature = false;
     bool _sensorFound = false;
     bool _initialised = false;
-    void updateCharacteristic();
     void checkErrors();
+    void markError();
 };
 
 #endif // CO2_SENSOR_H

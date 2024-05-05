@@ -5,9 +5,8 @@
 #include <CO2_sensor.h>
 #include <PM_sensor.h>
 #include <BME_sensor.h>
-#include <Bluetooth_module.h>
 #include <Display.h>
-#include <SDcard.h>
+#include <SensorsReadAdapter.h>
 #include <Buttons.hpp>
 #include <Sensors.hpp>
 #include <Timers.hpp>
@@ -17,11 +16,13 @@
 
 // Global variables
 Bluetooth_module bluetoothModule; // Bluetooth module
-CO2Sensor co2Sensor(&bluetoothModule); // CO2 sensor
-PMSensor pmSensor(&bluetoothModule); // PM sensor
-BMESensor bmeSensor(&bluetoothModule); // BME sensor
-SDcard sdCard; // SD card
-Display display(&bmeSensor, &pmSensor, &co2Sensor, &bluetoothModule); // Display
+SDcard sdcard; // SD card
+SensorsReadAdapter sensorsReadAdapter(&bluetoothModule, &sdcard); // adapter that handles sensor data
+CO2Sensor co2Sensor; // CO2 sensor
+PMSensor pmSensor; // PM sensor
+BMESensor bmeSensor; // BME sensor
+
+Display display; // Display
 
 SleepUtils sleepUtils;
 
@@ -65,7 +66,7 @@ void loop() {
         disable_timer_reenable_sleep();
         init_sensors();
         init_timer_read_sensors();
-        sdCard.init();
+        sensorsReadAdapter.init();
         read_all_sensors();
         display.updateScreen(SCREENUPDATE::SENSORS);
     }
@@ -100,12 +101,14 @@ void treat_wakeup_reason() {
 
   switch (wakeup_reason) {
     case ESP_SLEEP_WAKEUP_TIMER:
-        logg("Wakeup caused by timer");
+        logg("@ Wakeup caused by timer");
         // Read sensors, go back to sleep (BLE is off)
-        init_sensors();     // Initialize sensors
-        display.init();     // Initialize display
-        sdCard.init();      // Initialize SD card
-        read_all_sensors(); // Read sensors
+        init_sensors();            // Initialize sensors
+        display.init();            // Initialize display
+        sensorsReadAdapter.init(); // Initialize SD card and BLE
+        read_all_sensors();        // Read sensors
+        display.updateSensorsStats(sensorsReadAdapter.getData()); // sent updated data to display
+        sensorsReadAdapter.storeData(); // store data to SD card if BLE is not connected
         display.updateScreen(SCREENUPDATE::SENSORS);
 
         configure_wakeup_sources();
@@ -113,28 +116,28 @@ void treat_wakeup_reason() {
         break;
 
     case ESP_SLEEP_WAKEUP_EXT1:
-        logg("Wakeup caused by button press");
+        logg("@ Wakeup caused by button press");
         // Momentarily disable sleep mode (until cooldown is over)
         sleepUtils.disable_sleep();
         sleepUtils.enable_cooldown();
         init_timer_reanable_sleep();
 
         // Screen needs to react first
-        bluetoothModule.init(); // Initialize BLE
         display.init();         // Initialize display
         act_on_wakeup_button(); // Determine which button was pressed
         init_buttons();         // Initialize buttons
         break;
 
     default:
-        logg("Wakeup was not caused by timer or GPIO");
+        logg("@ Wakeup was not caused by timer or GPIO");
         // Normal boot
         init_sensors();            // Initialize sensors
         display.init();            // Initialize display
-        bluetoothModule.init();    // Initialize BLE
-        sdCard.init();             // Initialize SD card
+        sensorsReadAdapter.init(); // Initialize SD card and BLE
         init_buttons();            // Initialize buttons
         read_all_sensors();        // Perform an initial read of the sensors
+        display.updateSensorsStats(sensorsReadAdapter.getData()); // sent updated data to display
+        sensorsReadAdapter.storeData(); // store data to SD card if BLE is not connected
         init_timer_read_sensors(); // Initialize timer for future sensor reads
         display.updateScreen(SCREENUPDATE::SENSORS);
         break;
@@ -146,14 +149,11 @@ void act_on_wakeup_button() {
     wakeup_pin = log(wakeup_pin)/log(2);
 
     if (wakeup_pin == BUTTON_LEFT_PIN) {
-        logg("Left button");
-        press_button(BUTTONS::BUTTON_LEFT);
+        virtual_press_button(BUTTONS::BUTTON_LEFT);
     } else if (wakeup_pin == BUTTON_CENTER_PIN) {
-        logg("Center button");
-        press_button(BUTTONS::BUTTON_CENTER);
+        virtual_press_button(BUTTONS::BUTTON_CENTER);
     } else if (wakeup_pin == BUTTON_RIGHT_PIN) {
-        logg("Right button");
-        press_button(BUTTONS::BUTTON_RIGHT);
+        virtual_press_button(BUTTONS::BUTTON_RIGHT);
     }
 
     // Force screen update

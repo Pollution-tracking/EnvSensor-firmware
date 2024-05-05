@@ -9,19 +9,17 @@
 #include <CO2_sensor.h>
 #include <PM_sensor.h>
 #include <BME_sensor.h>
+#include <SensorsReadAdapter.h>
 
 extern Display display;
 extern CO2Sensor co2Sensor;
 extern PMSensor pmSensor;
 extern BMESensor bmeSensor;
+extern SensorsReadAdapter sensorsReadAdapter;
 
 void init_sensors();
 void handle_sensor_readings();
 void read_all_sensors();
-
-void check_CO2_sensor();
-void check_PM_sensor();
-void check_BME_sensor();
 
 void treat_CO2_sensor();
 void treat_PM_sensor();

@@ -16,6 +16,11 @@ Bluetooth_module::~Bluetooth_module() {
 
 // Routine to initialize Bluetooth module
 void Bluetooth_module::init() {
+    // BLE purposesly disabled
+    if (!this->isEnabled()) {
+        return;
+    }
+
     // Create BLE device
     BLEDevice::init(bleServerName);
 
@@ -63,10 +68,8 @@ void Bluetooth_module::init() {
     envService->start();
 
     // Start advertising BLE service
-    if (this->isEnabled()) {
-        this->startAdvertising();
-        logg("Waiting a client connection to notify...");
-    }
+    this->startAdvertising();
+    logg("Waiting a client connection to notify...");
 }
 
 // Routine to start advertising BLE service
@@ -81,18 +84,17 @@ void Bluetooth_module::stopAdvertising() {
     envServer->getAdvertising()->stop();
 }
 
-// Routine to enable BLE
-void Bluetooth_module::enable() {
-    logg("Enabling BLE");
-    bleEnabled = true;
-    startAdvertising();
-}
-
 // Routine to disable BLE
 void Bluetooth_module::disable() {
-    logg("Disabling BLE");
+    logg("[BLE] Disabling BLE");
     bleEnabled = false;
-    stopAdvertising();
+    bleConnected = false;
+}
+
+// Routine to enable BLE
+void Bluetooth_module::enable() {
+    logg("[BLE] Enabling BLE");
+    bleEnabled = true;
 }
 
 // Routine to check if BLE is enabled
@@ -102,36 +104,36 @@ bool Bluetooth_module::isEnabled() {
 
 // Routine to check if client is connected
 bool Bluetooth_module::isConnected() {
-    return this->deviceConnected;
+    return bleConnected;
 }
 
 // Routines to update characteristics
-void Bluetooth_module::updatePM1Characteristic(uint16_t pm1) {
+void Bluetooth_module::updatePM1Characteristic(int32_t pm1) {
     pm1Characteristic->setValue(pm1);
     pm1Characteristic->notify();
 
-    logg("Updated PM1 characteristic");
+    logg("[BLE] Updated PM1 characteristic");
 }
 
-void Bluetooth_module::updatePM2_5Characteristic(uint16_t pm2_5) {
+void Bluetooth_module::updatePM2_5Characteristic(int32_t pm2_5) {
     pm2_5Characteristic->setValue(pm2_5);
     pm2_5Characteristic->notify();
 
-    logg("Updated PM2.5 characteristic");
+    logg("[BLE] Updated PM2.5 characteristic");
 }
 
-void Bluetooth_module::updatePM10Characteristic(uint16_t pm10) {
+void Bluetooth_module::updatePM10Characteristic(int32_t pm10) {
     pm10Characteristic->setValue(pm10);
     pm10Characteristic->notify();
 
-    logg("Updated PM10 characteristic");
+    logg("[BLE] Updated PM10 characteristic");
 }
 
-void Bluetooth_module::updateCO2Characteristic(uint16_t co2) {
+void Bluetooth_module::updateCO2Characteristic(int32_t co2) {
     carbonDioxideCharacteristic->setValue(co2);
     carbonDioxideCharacteristic->notify();
 
-    logg("Updated CO2 characteristic");
+    logg("[BLE] Updated CO2 characteristic");
 }
 
 void Bluetooth_module::updateTemperatureCharacteristic(int32_t temperature) {
@@ -139,7 +141,7 @@ void Bluetooth_module::updateTemperatureCharacteristic(int32_t temperature) {
     temperatureCharacteristic->setValue(cast_temp);
     temperatureCharacteristic->notify();
 
-    logg("Updated temperature characteristic");
+    logg("[BLE] Updated temperature characteristic");
 }
 
 void Bluetooth_module::updateGasCharacteristic(int32_t gas) {
@@ -147,7 +149,7 @@ void Bluetooth_module::updateGasCharacteristic(int32_t gas) {
     gasCharacteristic->setValue(cast_gas);
     gasCharacteristic->notify();
 
-    logg("Updated gas characteristic");
+    logg("[BLE] Updated gas characteristic");
 }
 
 void Bluetooth_module::updateHumidityCharacteristic(int32_t humidity) {
@@ -155,7 +157,7 @@ void Bluetooth_module::updateHumidityCharacteristic(int32_t humidity) {
     humidityCharacteristic->setValue(cast_hum);
     humidityCharacteristic->notify();
 
-    logg("Updated humidity characteristic");
+    logg("[BLE] Updated humidity characteristic");
 }
 
 void Bluetooth_module::updatePressureCharacteristic(int32_t pressure) {
@@ -163,36 +165,36 @@ void Bluetooth_module::updatePressureCharacteristic(int32_t pressure) {
     pressureCharacteristic->setValue(cast_press);
     pressureCharacteristic->notify();
 
-    logg("Updated pressure characteristic");
+    logg("[BLE] Updated pressure characteristic");
 }
 
-void Bluetooth_module::updateAltitudeCharacteristic(float altitude) {
+void Bluetooth_module::updateAltitudeCharacteristic(int32_t altitude) {
     altitudeCharacteristic->setValue(altitude);
     altitudeCharacteristic->notify();
 
-    logg("Updated altitude characteristic");
+    logg("[BLE] Updated altitude characteristic");
 }
 
 // Routine to create BLE characteristics
 void Bluetooth_module::createCharacteristics() {
     temperatureCharacteristic   = new BLECharacteristic(TEMPERATURE_CHARACTERISTIC_UUID,
-                                                        BLECharacteristic::PROPERTY_NOTIFY);
+                                                        CHARACTERISTIC_PROPERTIES);
     carbonDioxideCharacteristic = new BLECharacteristic(CARBON_DIOXIDE_CHARACTERISTIC_UUID,
-                                                        BLECharacteristic::PROPERTY_NOTIFY);
+                                                        CHARACTERISTIC_PROPERTIES);
     pm1Characteristic           = new BLECharacteristic(PM1_CHARACTERISTIC_UUID,
-                                                        BLECharacteristic::PROPERTY_NOTIFY);
+                                                        CHARACTERISTIC_PROPERTIES);
     pm2_5Characteristic         = new BLECharacteristic(PM2_5_CHARACTERISTIC_UUID,
-                                                        BLECharacteristic::PROPERTY_NOTIFY);
+                                                        CHARACTERISTIC_PROPERTIES);
     pm10Characteristic          = new BLECharacteristic(PM10_CHARACTERISTIC_UUID,
-                                                        BLECharacteristic::PROPERTY_NOTIFY);
+                                                        CHARACTERISTIC_PROPERTIES);
     gasCharacteristic           = new BLECharacteristic(GAS_CHARACTERISTIC_UUID,
-                                                        BLECharacteristic::PROPERTY_NOTIFY);
+                                                        CHARACTERISTIC_PROPERTIES);
     humidityCharacteristic      = new BLECharacteristic(HUMIDITY_CHARACTERISTIC_UUID,
-                                                        BLECharacteristic::PROPERTY_NOTIFY);
+                                                        CHARACTERISTIC_PROPERTIES);
     pressureCharacteristic      = new BLECharacteristic(PRESSURE_CHARACTERISTIC_UUID,
-                                                        BLECharacteristic::PROPERTY_NOTIFY);
+                                                        CHARACTERISTIC_PROPERTIES);
     altitudeCharacteristic      = new BLECharacteristic(ALTITUDE_CHARACTERISTIC_UUID,
-                                                        BLECharacteristic::PROPERTY_NOTIFY);
+                                                        CHARACTERISTIC_PROPERTIES);
 }
 
 // Routine to create BLE descriptors

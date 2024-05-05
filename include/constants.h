@@ -3,10 +3,13 @@
 
 #include <string>
 #include <pins.h>
+#include <BLECharacteristic.h>
 
 // BLE server name
 const std::string bleServerName = "ESP32_EnvMonitor";
 
+const uint32_t CHARACTERISTIC_PROPERTIES = BLECharacteristic::PROPERTY_READ |
+                                           BLECharacteristic::PROPERTY_NOTIFY;
 // UUIDs
 #define SERVICE_UUID                       (BLEUUID((uint16_t)0x181A))
 #define CLIENT_CHARACTERISTIC_CONFIG_UUID  (BLEUUID((uint16_t)0x2902))
@@ -30,8 +33,23 @@ const std::string gasDescriptorValue           = "Gas resistance";
 const std::string humidityDescriptorValue      = "Humidity";
 const std::string pressureDescriptorValue      = "Pressure";
 const std::string altitudeDescriptorValue      = "Altitude";
-// MH-Z19 sensor read error
-const uint16_t CO2_ERROR = 0xFFFF;
+
+// Sensor errors
+const int32_t READ_ERROR = INT32_MIN;
+const int32_t SENSOR_ERROR = INT32_MAX;
+
+// CSV data values
+const int NR_VALUES = 9;
+const int BME_TEMPERATURE_INDEX = 0;
+const int BME_HUMIDITY_INDEX = 1;
+const int BME_PRESSURE_INDEX = 2;
+const int BME_GAS_INDEX = 3;
+const int BME_ALTITUDE_INDEX = 4;
+const int CO2_CO2_INDEX = 5;
+const int PM_PM1_INDEX = 6;
+const int PM_PM2_5_INDEX = 7;
+const int PM_PM10_INDEX = 8;
+const String dataPath = "/SensorsData.csv";
 
 // Time between sensor reads (in us -> chosen to be prime numbers)
 const uint64_t WAIT_TIME_READ_SENSORS   = 20000009;
@@ -47,10 +65,11 @@ const float seaLevel = 1013.25;
 
 // Each bit represents one of the sensors to be read
 namespace SENSORS {
-    const uint8_t NO_SENSOR  = 0b000;
-    const uint8_t SENSOR_PM  = 0b001;
-    const uint8_t SENSOR_CO2 = 0b010;
-    const uint8_t SENSOR_BME = 0b100;
+    const uint8_t NO_SENSOR    = 0b000;
+    const uint8_t ALL_SENSORS  = 0b111;
+    const uint8_t SENSOR_PM    = 0b001;
+    const uint8_t SENSOR_CO2   = 0b010;
+    const uint8_t SENSOR_BME   = 0b100;
 }
 
 // Each bit represents one of the buttons
@@ -71,14 +90,6 @@ enum class SCREENUPDATE {
     GENERAL,
     BLUETOOTH,
     SENSORS
-};
-
-struct BMEData {
-    int32_t temperature;
-    int32_t pressure;
-    int32_t humidity;
-    int32_t gas;
-    float altitude;
 };
 
 struct SleepUtils {

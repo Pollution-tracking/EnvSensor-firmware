@@ -1,7 +1,7 @@
 #include "CO2_sensor.h"
 
 // Construct CO2 sensor
-CO2Sensor::CO2Sensor(Bluetooth_module *bluetoothModule): bluetoothModule(bluetoothModule) {
+CO2Sensor::CO2Sensor() {
   mhz19Serial = &Serial1;
 }
 
@@ -28,9 +28,9 @@ void CO2Sensor::init() {
   mhz19.autoCalibration();
 
   if (mhz19.errorCode != RESULT_OK) {
-    logg("Could not initialize MH-Z19 sensor, check wiring!");
+    logg("[CO2] Could not initialize MH-Z19 sensor, check wiring!");
   } else {
-    logg("MH-Z19 initialized");
+    logg("[CO2] MH-Z19 initialized");
     _sensorFound = true;
   }
 
@@ -38,55 +38,48 @@ void CO2Sensor::init() {
 }
 
 // Routine to update CO2 and temperature values
-void CO2Sensor::update() {
+void CO2Sensor::read() {
   if (!this->_sensorFound) {
+    this->markError();
     return;
   }
 
-  logg("MH-Z19 reading...");
-  this->co2 = mhz19.getCO2();
-  logg("MH-Z19 CO2: " + String(this->co2));
-  this->temperature = mhz19.getTemperature();
-  logg("MH-Z19 temperature: " + String(this->temperature));
+  logg("\tMH-Z19 reading...");
+  this->data.co2 = mhz19.getCO2();
+  logg("\tMH-Z19 CO2: " + String(this->data.co2));
+  this->data.temperature = mhz19.getTemperature();
+  logg("\tMH-Z19 temperature: " + String(this->data.temperature));
 
   this->checkErrors();
-  
-  if (!this->_errorCO2 && !this->_errorTemperature)
-    this->updateCharacteristic();
 }
 
 // Getters
-uint16_t CO2Sensor::getCO2() {
-  return this->co2;
-}
-
-uint16_t CO2Sensor::getTemperature() {
-  return this->temperature;
+CO2Data CO2Sensor::getData() {
+  return data;
 }
 
 // Internal functions
-void CO2Sensor::updateCharacteristic() {
-  if (!bluetoothModule->isConnected() || !bluetoothModule->isEnabled()) {
-    return;
-  }
-
-  logg("Updating CO2 characteristic");
-  
-  bluetoothModule->updateCO2Characteristic(this->co2);
-}
-
 void CO2Sensor::checkErrors() {
-  if (this->co2 == 0) {
-    logg("MHZ19 CO2 error");
+  if (this->data.co2 == 0) {
+    logg("[CO2] MHZ19 CO2 error");
     this->_errorCO2 = true;
+    this->data.co2 = READ_ERROR;
   } else {
     this->_errorCO2 = false;
   }
 
-  if (this->temperature == -273.15) {
-    logg("MHZ19 temperature error");
+  if (this->data.temperature == -273.15) {
+    logg("[CO2] MHZ19 temperature error");
     this->_errorTemperature = true;
+    this->data.temperature = READ_ERROR;
   } else {
     this->_errorTemperature = false;
   }
+}
+
+void CO2Sensor::markError() {
+  this->_errorCO2 = true;
+  this->_errorTemperature = true;
+  this->data.co2 = READ_ERROR;
+  this->data.temperature = READ_ERROR;
 }

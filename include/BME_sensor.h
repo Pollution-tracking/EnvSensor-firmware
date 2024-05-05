@@ -9,32 +9,42 @@
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
-#include "Bluetooth_module.h"
 #include "Sensor.h"
+
+struct BMEData : public SensorData {
+    int32_t temperature = READ_ERROR;
+    int32_t pressure    = READ_ERROR;
+    int32_t humidity    = READ_ERROR;
+    int32_t gas         = READ_ERROR;
+    int32_t altitude    = READ_ERROR;
+
+    String getData() override {
+        return String(temperature) + "," +
+               String(pressure) + "," +
+               String(humidity) + "," +
+               String(gas) + "," +
+               String(altitude);
+    }
+};
 
 class BMESensor : public Sensor {
   public:
-    BMESensor(Bluetooth_module *bluetoothModule);
+    BMESensor();
     ~BMESensor();
     bool sensorFound() override;
     bool sensorError() override;
     bool sensorInitialised() override;
-    void update();
-    void init();
-    uint32_t getTemperature();
-    uint32_t getPressure();
-    uint32_t getHumidity();
-    uint32_t getGas();
-    float getAltitude();
+    void read() override;
+    void init() override;
+    BMEData getData();
   private:
-    Bluetooth_module *bluetoothModule;
     Adafruit_BME680 *bme;
     BMEData data;
     bool _errorBME = false;
     bool _sensorFound = false;
     bool _initialised = false;
-    void updateCharacteristics();
     void checkErrors(bool status);
+    void markError();
 };
 
 #endif // BME_SENSOR_H

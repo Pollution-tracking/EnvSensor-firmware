@@ -3,75 +3,56 @@
 uint8_t read_sensor = SENSORS::NO_SENSOR; // Which sensors to read?
 
 void init_sensors() {
-    // Initialize CO2 sensor (serial1)
-    co2Sensor.init();
-    
-    // Initialize PM sensor (serial2)
-    pmSensor.init();
-    
-    // Initialize BME sensor
-    bmeSensor.init();
+  // Initialize CO2 sensor (serial1)
+  co2Sensor.init();
+  
+  // Initialize PM sensor (serial2)
+  pmSensor.init();
+  
+  // Initialize BME sensor
+  bmeSensor.init();
 }
 
 void handle_sensor_readings() {
-    if (read_sensor == SENSORS::NO_SENSOR) {
-        return;
-    }
+  if (read_sensor == SENSORS::NO_SENSOR) {
+    return;
+  }
+  
+  if (read_sensor == SENSORS::ALL_SENSORS) {
+    // Reset flag
+    read_sensor = SENSORS::NO_SENSOR;
     
-    // Read CO2 sensor (BLE updates are sent automatically)
-    check_CO2_sensor();
+    // Update sensor values (BLE updates sent if connected)
+    read_all_sensors();
 
-    // Read PM sensor (BLE updates are sent automatically)
-    check_PM_sensor();
-
-    // Read BME sensor (BLE updates are sent automatically)
-    check_BME_sensor();
-
-    // Update display
+    // Update display data and view
+    display.updateSensorsStats(sensorsReadAdapter.getData());
     display.updateScreen(SCREENUPDATE::SENSORS);
+
+    // Store data to SD card if bluetooth is not connected
+    sensorsReadAdapter.storeData();
+  }
 }
 
+// Force reading all sensors
 void read_all_sensors() {
-    treat_CO2_sensor();
-    treat_PM_sensor();
-    treat_BME_sensor();
+  treat_CO2_sensor();
+  treat_PM_sensor();
+  treat_BME_sensor();
 }
 
-void check_CO2_sensor() {
-  if (read_sensor & SENSORS::SENSOR_CO2) {
-    // Clear flag
-    read_sensor &= ~SENSORS::SENSOR_CO2;
-
-    treat_CO2_sensor();
-  }
-}
-
-void check_PM_sensor() {
-  if (read_sensor & SENSORS::SENSOR_PM) {
-    // Clear flag
-    read_sensor &= ~SENSORS::SENSOR_PM;
-
-    treat_PM_sensor();
-  }
-}
-
-void check_BME_sensor() {
-  if (read_sensor & SENSORS::SENSOR_BME) {
-    // Clear flag
-    read_sensor &= ~SENSORS::SENSOR_BME;
-
-    treat_BME_sensor();
-  }
-}
-
+// Update sensors with fresh readings and send data to Adapter (will either write to SD card or send via Bluetooth)
 void treat_CO2_sensor() {
-    co2Sensor.update();
+  co2Sensor.read();
+  sensorsReadAdapter.updateCO2Sensor(co2Sensor.getData());
 }
 
 void treat_PM_sensor() {
-    pmSensor.update();
+  pmSensor.read();
+  sensorsReadAdapter.updatePMSensor(pmSensor.getData());
 }
 
 void treat_BME_sensor() {
-    bmeSensor.update();
+  bmeSensor.read();
+  sensorsReadAdapter.updateBMESensor(bmeSensor.getData());
 }
