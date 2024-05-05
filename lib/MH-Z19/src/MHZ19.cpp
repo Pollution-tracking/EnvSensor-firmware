@@ -223,7 +223,7 @@ float MHZ19::getTemperature(bool force)
             return (float)(((int)this->storage.responses.CO2UNLIM[2] << 8) | this->storage.responses.CO2UNLIM[3]) / 100;
     }
 
-    return -273.15;    
+    return 273.15;    
 }
 
 int MHZ19::getRange()
