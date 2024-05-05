@@ -2,8 +2,8 @@
 #define SDCARD_H
 
 #include <Arduino.h>
-#include "pins.h"
-#include <logger.h>
+#include "Resources/pins.h"
+#include <Logger/logger.h>
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"

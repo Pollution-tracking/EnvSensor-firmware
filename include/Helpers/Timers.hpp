@@ -2,9 +2,10 @@
 #define TIMERS_HPP
 
 #include <Arduino.h>
-#include "constants.h"
+#include "Resources/constants.h"
 #include "driver/timer.h"
-#include <logger.h>
+#include <Logger/logger.h>
+#include <Helpers/SleepUtils.hpp>
 
 extern SleepUtils sleepUtils;
 extern uint8_t read_sensor;

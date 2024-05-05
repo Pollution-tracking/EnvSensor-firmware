@@ -1,4 +1,4 @@
-#include "BME_sensor.h"
+#include "Sensors/BME_sensor.h"
 
 // Construct BME sensor
 BMESensor::BMESensor() {

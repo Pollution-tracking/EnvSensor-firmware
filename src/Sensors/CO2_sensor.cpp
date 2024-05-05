@@ -1,4 +1,4 @@
-#include "CO2_sensor.h"
+#include "Sensors/CO2_sensor.h"
 
 // Construct CO2 sensor
 CO2Sensor::CO2Sensor() {

@@ -4,9 +4,9 @@
 #include <Arduino.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
-#include <logger.h>
-#include "constants.h"
-#include <RTC_values.hpp>
+#include <Logger/logger.h>
+#include "Resources/constants.h"
+#include <Resources/RTC_values.hpp>
 #include <BLE2902.h>
 #include <BLEUtils.h>
 #include <nvs_flash.h>

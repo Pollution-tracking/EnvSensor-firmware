@@ -3,10 +3,10 @@
 
 #include <Arduino.h>
 #include "PMserial.h"
-#include "pins.h"
-#include "constants.h"
-#include <logger.h>
-#include "Sensor.h"
+#include "Resources/pins.h"
+#include "Resources/constants.h"
+#include <Logger/logger.h>
+#include "Sensors/Sensor.h"
 
 struct PMData : public SensorData {
     int32_t pm1   = READ_ERROR;

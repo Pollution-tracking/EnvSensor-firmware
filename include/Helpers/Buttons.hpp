@@ -2,13 +2,14 @@
 #define BUTTONS_HPP
 
 #include <Arduino.h>
-#include "pins.h"
-#include "constants.h"
-#include <logger.h>
-#include <Display.h>
-#include <Timers.hpp>
-#include <RTC_values.hpp>
-#include <Bluetooth_module.h>
+#include "Resources/pins.h"
+#include "Resources/constants.h"
+#include <Logger/logger.h>
+#include <Modules/Display.h>
+#include <Helpers/Timers.hpp>
+#include <Resources/RTC_values.hpp>
+#include <Modules/Bluetooth_module.h>
+#include <Helpers/SleepUtils.hpp>
 
 extern Display display;
 extern Bluetooth_module bluetoothModule;

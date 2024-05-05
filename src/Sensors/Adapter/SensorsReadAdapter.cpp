@@ -1,4 +1,4 @@
-#include <SensorsReadAdapter.h>
+#include <Sensors/Adapter/SensorsReadAdapter.h>
 
 SensorsReadAdapter::SensorsReadAdapter(Bluetooth_module *bluetoothModule, SDcard *sdcard) {
     this->bluetoothModule = bluetoothModule;

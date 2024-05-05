@@ -2,7 +2,7 @@
 #define RTC_VALUES_HPP
 
 #include <Arduino.h>
-#include "constants.h"
+#include "Resources/constants.h"
 
 extern RTC_DATA_ATTR bool bleEnabled;
 extern RTC_DATA_ATTR bool bleConnected;

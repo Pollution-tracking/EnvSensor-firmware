@@ -1,4 +1,4 @@
-#include "PM_sensor.h"
+#include "Sensors/PM_sensor.h"
 
 // Construct PM sensor
 PMSensor::PMSensor() {

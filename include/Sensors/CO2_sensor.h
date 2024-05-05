@@ -3,10 +3,10 @@
 
 #include <Arduino.h>
 #include "MHZ19.h"
-#include "pins.h"
-#include "constants.h"
-#include <logger.h>
-#include "Sensor.h"
+#include "Resources/pins.h"
+#include "Resources/constants.h"
+#include <Logger/logger.h>
+#include "Sensors/Sensor.h"
 
 struct CO2Data : public SensorData {
     int32_t co2         = READ_ERROR;

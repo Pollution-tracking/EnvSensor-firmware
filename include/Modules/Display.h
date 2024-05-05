@@ -2,15 +2,10 @@
 #define DISPLAY_H
 
 #include <Arduino.h>
-#include "pins.h"
-#include <logger.h>
-#include "constants.h"
-#include <BME_sensor.h>
-#include <PM_sensor.h>
-#include <CO2_sensor.h>
-#include <Bluetooth_module.h>
-#include <Sensor.h>
-#include <RTC_values.hpp>
+#include "Resources/pins.h"
+#include <Logger/logger.h>
+#include "Resources/constants.h"
+#include <Resources/RTC_values.hpp>
 
 // Display
 #include <GxEPD2_BW.h>
