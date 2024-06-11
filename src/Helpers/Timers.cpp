@@ -21,6 +21,7 @@ bool IRAM_ATTR ISR_reenable_sleep(void *args) {
   return true;
 }
 
+// Timer that triggers sensor readings
 void init_timer_read_sensors() {
   timer_config_t config = {
     .alarm_en = TIMER_ALARM_EN,
@@ -66,6 +67,7 @@ void restart_timer_read_sensors() {
   loggWithContext("Timer resumed", "Sensor readings");
 }
 
+// Timer that triggers reenabling sleep mode after cooldown when buttons are pressed (occurs in sleep mode)
 void init_timer_reanable_sleep() {
   timer_config_t config = {
     .alarm_en = TIMER_ALARM_EN,

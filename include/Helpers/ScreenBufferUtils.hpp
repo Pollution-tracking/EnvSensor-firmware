@@ -2,7 +2,8 @@
 #define SCREENBUFFERUTILS_HPP
 
 #include <Arduino.h>
-#include "Resources/constants.h"
+
+#include <Resources/Constants.h>
 #include <Resources/RTC_values.hpp>
 
 void convertData(int idx, String data);

@@ -3,21 +3,6 @@
 #define logg(message) loggWithBase(message, "DISPLAY")
 #define loggWithContext(message, context) loggWithContext(message, context, "DISPLAY")
 
-extern RTC_DATA_ATTR bool bleEnabled;
-extern RTC_DATA_ATTR bool bleConnected;
-extern RTC_DATA_ATTR String bleServerName;
-extern RTC_DATA_ATTR uint8_t currScreenMode;
-extern RTC_DATA_ATTR uint8_t prevScreenMode;
-extern RTC_DATA_ATTR char _battery[12];
-extern RTC_DATA_ATTR char _temperature[12];
-extern RTC_DATA_ATTR char _humidity[12];
-extern RTC_DATA_ATTR char _pressure[12];
-extern RTC_DATA_ATTR char _altitude[12];
-extern RTC_DATA_ATTR char _co2[12];
-extern RTC_DATA_ATTR char _pm1[12];
-extern RTC_DATA_ATTR char _pm2_5[12];
-extern RTC_DATA_ATTR char _pm10[12];
-
 // Construct display
 Display::Display() : display(GxEPD2_DRIVER_CLASS(DISPLAY_CS_PIN, DISPLAY_DC_PIN, DISPLAY_RST_PIN, DISPLAY_BUSY_PIN)) {
     // Set initial screen mode
@@ -206,7 +191,7 @@ void Display::partialSensorsScreen() {
     } while (display.nextPage());
 }
 
-
+// Routine to center text on the X axis
 uint16_t Display::centerText_X(String text) {
     int16_t x_text, y_text;
     uint16_t w_text, h_text, x_centered, y_centered;
@@ -229,6 +214,7 @@ uint8_t Display::getScreenMode() {
     return currScreenMode;
 }
 
+// Sensors screen data printer
 void Display::printSensorsStatus() {
     // Print line by line sensor data
     display.setFont(&FreeMonoBold9pt7b);
@@ -256,6 +242,7 @@ void Display::printSensorsStatus() {
     display.println("Battery: " + String(_battery));
 }
 
+// BLE screen data printer
 void Display::printBLEStatus() {
     // Print action status
     display.setFont(&FreeMonoBold12pt7b);

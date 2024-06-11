@@ -2,14 +2,18 @@
 #define BME_SENSOR_H
 
 #include <Arduino.h>
-#include "Resources/pins.h"
-#include "Resources/constants.h"
-#include <Logger/logger.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <Adafruit_Sensor.h>
+
+#include "Wire.h"
+#include "SPI.h"
+#include "Adafruit_Sensor.h"
 #include "Adafruit_BME680.h"
-#include "Sensors/Sensor.h"
+
+#include <Resources/Pins.h>
+#include <Resources/Constants.h>
+
+#include <Logger/Logger.h>
+
+#include <Sensors/Sensor.h>
 
 struct BMEData : public SensorData {
     int32_t temperature = READ_ERROR;

@@ -2,11 +2,15 @@
 #define PM_SENSOR_H
 
 #include <Arduino.h>
+
 #include "PMserial.h"
-#include "Resources/pins.h"
-#include "Resources/constants.h"
-#include <Logger/logger.h>
-#include "Sensors/Sensor.h"
+
+#include <Resources/Pins.h>
+#include <Resources/Constants.h>
+
+#include <Logger/Logger.h>
+
+#include <Sensors/Sensor.h>
 
 struct PMData : public SensorData {
     int32_t pm1   = READ_ERROR;

@@ -1,23 +1,29 @@
 #include <Arduino.h>
-#include "Resources/pins.h"
-#include "Resources/constants.h"
-#include <Logger/logger.h>
-#include <Sensors/CO2_sensor.h>
-#include <Sensors/PM_sensor.h>
-#include <Sensors/BME_sensor.h>
-#include <Modules/Display.h>
-#include <Modules/Bluetooth_module.h>
-#include <Modules/RTC.h>
-#include <Sensors/Adapter/SensorsReadAdapter.h>
-#include <Helpers/Buttons.hpp>
-#include <Helpers/Sensors.hpp>
-#include <Helpers/Timers.hpp>
-#include <Resources/RTC_values.hpp>
-#include <Helpers/SleepUtils.hpp>
+
 #include "esp_sleep.h"
 #include "esp_wifi.h"
 #include "hal/wdt_hal.h"
 #include "soc/rtc.h"
+
+#include <Resources/Pins.h>
+#include <Resources/Constants.h>
+#include <Resources/RTC_values.hpp>
+
+#include <Helpers/Buttons.hpp>
+#include <Helpers/Sensors.hpp>
+#include <Helpers/Timers.hpp>
+#include <Helpers/SleepUtils.hpp>
+
+#include <Logger/Logger.h>
+
+#include <Sensors/CO2_sensor.h>
+#include <Sensors/PM_sensor.h>
+#include <Sensors/BME_sensor.h>
+#include <Sensors/Adapter/SensorsReadAdapter.h>
+
+#include <Modules/Display.h>
+#include <Modules/Bluetooth_module.h>
+#include <Modules/RTC.h>
 
 #define logg(message) loggWithBase(message, "MAIN")
 #define loggWithContext(message, context) loggWithContext(message, context, "MAIN")
@@ -26,7 +32,7 @@
 Bluetooth_module bluetoothModule; // Bluetooth module
 RTC rtc; // RTC module
 SDcard sdcard; // SD card
-SensorsReadAdapter sensorsReadAdapter(&bluetoothModule, &sdcard, &rtc); // adapter that handles sensor data
+SensorsReadAdapter sensorsReadAdapter(&bluetoothModule, &sdcard, &rtc); // Adapter that handles sensor data
 CO2Sensor co2Sensor; // CO2 sensor
 PMSensor pmSensor; // PM sensor
 BMESensor bmeSensor; // BME sensor
@@ -202,8 +208,8 @@ void treat_wakeup_reason() {
 		display.init();            // Initialize display
 		sensorsReadAdapter.init(); // Initialize SD card (BLE is still off)
 		read_all_sensors();        // Read sensors
-		display.updateSensorsStats(sensorsReadAdapter.getData()); // sent updated data to display
-		sensorsReadAdapter.storeData(); // store data to SD card (BLE is not connected)
+		display.updateSensorsStats(sensorsReadAdapter.getData()); // Send updated data to display
+		sensorsReadAdapter.storeData(); // Store data to SD card (BLE is not connected)
 
 		// Update screen
 		display.updateScreen(SCREENUPDATE::SENSORS);
@@ -237,7 +243,7 @@ void treat_wakeup_reason() {
 		init_buttons();            // Initialize buttons
 		read_all_sensors();        // Perform an initial read of the sensors
 		display.updateSensorsStats(sensorsReadAdapter.getData()); // send updated data to display
-		sensorsReadAdapter.storeData(); // store data to SD card if BLE is not connected
+		sensorsReadAdapter.storeData(); // Store data to SD card if BLE is not connected
 		init_timer_read_sensors(); // Initialize timer for future sensor reads
 
 		// Update screen

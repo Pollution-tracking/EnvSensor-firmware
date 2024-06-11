@@ -2,14 +2,17 @@
 #define BUTTONS_HPP
 
 #include <Arduino.h>
-#include "Resources/pins.h"
-#include "Resources/constants.h"
-#include <Logger/logger.h>
-#include <Modules/Display.h>
-#include <Helpers/Timers.hpp>
+
+#include <Resources/Pins.h>
+#include <Resources/Constants.h>
 #include <Resources/RTC_values.hpp>
-#include <Modules/Bluetooth_module.h>
+
+#include <Helpers/Timers.hpp>
 #include <Helpers/SleepUtils.hpp>
+#include <Logger/Logger.h>
+
+#include <Modules/Display.h>
+#include <Modules/Bluetooth_module.h>
 
 extern Display display;
 extern Bluetooth_module bluetoothModule;
@@ -31,5 +34,7 @@ void check_right_button();
 void treat_left_button();
 void treat_center_button();
 void treat_right_button();
+
+void interact_BLE();
 
 #endif // BUTTONS_HPP

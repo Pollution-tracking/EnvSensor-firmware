@@ -2,12 +2,16 @@
 #define SDCARD_H
 
 #include <Arduino.h>
-#include "Resources/pins.h"
-#include "Resources/constants.h"
-#include <Logger/logger.h>
+
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
+
+#include <Resources/Pins.h>
+#include <Resources/Constants.h>
+
+#include <Logger/Logger.h>
+
 
 class SDcard {
     public:

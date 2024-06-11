@@ -32,12 +32,14 @@ bool SDcard::isInitialised() {
     return _initialised;
 }
 
+// Routine to write historical data updates to SD card
 bool SDcard::writeHistoricalData(String data) {
     loggWithContext("Storing to file", "HistoricalData");
 
     return writeData(dataPath, data);
 }
 
+// Routine to check if historical data are stored on SD card
 bool SDcard::haveHistoricalData() {
     if (!isInitialised()) {
         return false;
@@ -46,6 +48,7 @@ bool SDcard::haveHistoricalData() {
     return fileExists(dataPath);
 }
 
+// Routine to delete all historical data from SD card
 bool SDcard::deleteHistoricalData() {
     if (!isInitialised()) {
         return false;

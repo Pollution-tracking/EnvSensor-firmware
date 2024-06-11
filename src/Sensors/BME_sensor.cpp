@@ -8,24 +8,9 @@ BMESensor::BMESensor() {
     bme = new Adafruit_BME680(BME680_CS_PIN);
 }
 
+// Destruct BME sensor
 BMESensor::~BMESensor() {
     delete bme;
-}
-
-bool BMESensor::sensorFound() {
-    return this->_sensorFound;
-}
-
-bool BMESensor::sensorError() {
-    return this->_errorBME;
-}
-
-bool BMESensor::sensorInitialised() {
-    return this->_initialised;
-}
-
-String BMESensor::getName() {
-    return "BME680";
 }
 
 // Routine to initialize BME sensor
@@ -79,7 +64,23 @@ void BMESensor::read() {
 // Getters
 BMEData BMESensor::getData() {
   return data;
-} 
+}
+
+bool BMESensor::sensorFound() {
+    return this->_sensorFound;
+}
+
+bool BMESensor::sensorError() {
+    return this->_errorBME;
+}
+
+bool BMESensor::sensorInitialised() {
+    return this->_initialised;
+}
+
+String BMESensor::getName() {
+    return "BME680";
+}
 
 // Internal functions
 void BMESensor::checkErrors(bool status) {

@@ -2,12 +2,15 @@
 #define RTC_H
 
 #include <Arduino.h>
-#include "Resources/pins.h"
-#include <Logger/logger.h>
+
 #include "RV-3028-C7.h"
 #include "Wire.h"
-#include "Resources/constants.h"
-#include "Resources/RTC_values.hpp"
+
+#include <Resources/Pins.h>
+#include <Resources/Constants.h>
+#include <Resources/RTC_values.hpp>
+
+#include <Logger/Logger.h>
 
 class RTC {
     public:

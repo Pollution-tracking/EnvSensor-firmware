@@ -2,25 +2,27 @@
 #define DISPLAY_H
 
 #include <Arduino.h>
-#include "Resources/pins.h"
-#include <Logger/logger.h>
-#include "Resources/constants.h"
-#include <Resources/RTC_values.hpp>
-#include <Helpers/ScreenBufferUtils.hpp>
 
-// Display
 #include <GxEPD2_BW.h>
-#define GxEPD2_DISPLAY_CLASS GxEPD2_BW
-// #define GxEPD2_DRIVER_CLASS GxEPD2_154_D67
-#define GxEPD2_DRIVER_CLASS GxEPD2_150_BN
-#define MAX_DISPLAY_BUFFER_SIZE 65536ul
-#define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
-// Fonts
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMonoBold24pt7b.h>
 #include <Fonts/FreeMono9pt7b.h>
+
+#include <Resources/Pins.h>
+#include <Resources/Constants.h>
+#include <Resources/RTC_values.hpp>
+
+#include <Helpers/ScreenBufferUtils.hpp>
+
+#include <Logger/Logger.h>
+
+#define GxEPD2_DISPLAY_CLASS GxEPD2_BW
+// #define GxEPD2_DRIVER_CLASS GxEPD2_154_D67
+#define GxEPD2_DRIVER_CLASS GxEPD2_150_BN
+#define MAX_DISPLAY_BUFFER_SIZE 65536ul
+#define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
 
 class Display {
     public:

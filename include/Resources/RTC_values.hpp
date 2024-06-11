@@ -2,7 +2,8 @@
 #define RTC_VALUES_HPP
 
 #include <Arduino.h>
-#include "Resources/constants.h"
+
+#include <Resources/Constants.h>
 
 // BLE server name
 extern RTC_DATA_ATTR String bleServerName;

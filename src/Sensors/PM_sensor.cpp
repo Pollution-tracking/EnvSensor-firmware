@@ -8,24 +8,9 @@ PMSensor::PMSensor() {
   pms = new SerialPM(PMSA003, PM_TX_PIN, PM_RX_PIN);
 }
 
+// Destruct PM sensor
 PMSensor::~PMSensor() {
   delete pms;
-}
-
-bool PMSensor::sensorFound() {
-  return this->_sensorFound;
-}
-
-bool PMSensor::sensorError() {
-  return this->_errorPM;
-}
-
-bool PMSensor::sensorInitialised() {
-  return this->_initialised;
-}
-
-String PMSensor::getName() {
-  return "PMSA003";
 }
 
 // Routine to initialize PM sensor
@@ -67,6 +52,22 @@ void PMSensor::read() {
 // Getters
 PMData PMSensor::getData() {
   return data;
+}
+
+bool PMSensor::sensorFound() {
+  return this->_sensorFound;
+}
+
+bool PMSensor::sensorError() {
+  return this->_errorPM;
+}
+
+bool PMSensor::sensorInitialised() {
+  return this->_initialised;
+}
+
+String PMSensor::getName() {
+  return "PMSA003";
 }
 
 // Internal functions

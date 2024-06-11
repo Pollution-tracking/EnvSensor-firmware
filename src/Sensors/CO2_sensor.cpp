@@ -10,24 +10,9 @@ CO2Sensor::CO2Sensor() {
   mhz19Serial = &Serial1;
 }
 
+// Destruct CO2 sensor
 CO2Sensor::~CO2Sensor() {
   delete mhz19Serial;
-}
-
-bool CO2Sensor::sensorFound() {
-    return this->_sensorFound;
-}
-
-bool CO2Sensor::sensorError() {
-    return this->_errorCO2 || this->_errorTemperature;
-}
-
-bool CO2Sensor::sensorInitialised() {
-    return this->_initialised;
-}
-
-String CO2Sensor::getName() {
-    return "MH-Z19";
 }
 
 // Routine to initialize CO2 sensor
@@ -66,6 +51,22 @@ void CO2Sensor::read() {
 // Getters
 CO2Data CO2Sensor::getData() {
   return data;
+}
+
+bool CO2Sensor::sensorFound() {
+    return this->_sensorFound;
+}
+
+bool CO2Sensor::sensorError() {
+    return this->_errorCO2 || this->_errorTemperature;
+}
+
+bool CO2Sensor::sensorInitialised() {
+    return this->_initialised;
+}
+
+String CO2Sensor::getName() {
+    return "MH-Z19";
 }
 
 // Internal functions

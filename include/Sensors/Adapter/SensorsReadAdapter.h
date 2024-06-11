@@ -2,15 +2,20 @@
 #define SENSORS_READ_ADAPTER_H
 
 #include <Arduino.h>
-#include <Logger/logger.h>
-#include <Resources/constants.h>
-#include <Modules/SDcard.h>
-#include <Modules/Bluetooth_module.h>
+
+#include <vector>
+
+#include <Resources/Constants.h>
+
+#include <Logger/Logger.h>
+
 #include <Sensors/BME_sensor.h>
 #include <Sensors/CO2_sensor.h>
 #include <Sensors/PM_sensor.h>
+
+#include <Modules/SDcard.h>
+#include <Modules/Bluetooth_module.h>
 #include <Modules/RTC.h>
-#include <vector>
 
 class SensorsReadAdapter {
     public:

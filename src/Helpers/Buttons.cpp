@@ -21,6 +21,7 @@ void IRAM_ATTR ISR_button_right() {
     pressed_button = BUTTONS::BUTTON_RIGHT;
 }
 
+// GPIO button initialization
 void init_buttons() {
     pinMode(BUTTON_LEFT_PIN, INPUT);
     pinMode(BUTTON_CENTER_PIN, INPUT);
@@ -33,6 +34,7 @@ void init_buttons() {
     logg("Initialized");
 }
 
+// Main loop handler for button readings
 void handle_button_readings() {
     // Early exit if no button was pressed
     if (pressed_button == BUTTONS::NO_BUTTON) {
@@ -48,7 +50,7 @@ void handle_button_readings() {
     // Right button press
     check_right_button();
 
-    // Clear flag
+    // Reset flag
     pressed_button = BUTTONS::NO_BUTTON;
 
     // Restart timer for reenabling sleep mode if needed
@@ -87,20 +89,24 @@ void treat_center_button() {
     loggWithContext("Pressed", "Center");
     // Check if screen is interactive (blueooth screen)
     if (display.getScreenMode() == SCREENMODE::BLUETOOTH) {
-        loggWithContext("Acting", "Center");
-        // Change BLE state
-        if (bluetoothModule.isEnabled()) {
-            sleepUtils.allow_sleep();
-            bluetoothModule.disable();
-        } else {
-            sleepUtils.disable_sleep(true);
-            sleepUtils.disable_cooldown();
-            bluetoothModule.enable();
-        }
-
-        // Update display
-        display.updateScreen(SCREENUPDATE::BLUETOOTH);
+        interact_BLE();
     }
+}
+
+void interact_BLE() {
+    loggWithContext("BLE action", "Center");
+    // Change BLE state
+    if (bluetoothModule.isEnabled()) {
+        sleepUtils.allow_sleep();
+        bluetoothModule.disable();
+    } else {
+        sleepUtils.disable_sleep(true);
+        sleepUtils.disable_cooldown();
+        bluetoothModule.enable();
+    }
+
+    // Update display
+    display.updateScreen(SCREENUPDATE::BLUETOOTH);
 }
 
 void treat_right_button() {
@@ -111,6 +117,7 @@ void treat_right_button() {
     display.updateScreen();
 }
 
+// Simulate button press in virtual mode
 void virtual_press_button(uint8_t button) {
     logg("Virtual button press");
     pressed_button = button;

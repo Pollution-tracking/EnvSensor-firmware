@@ -3,14 +3,17 @@
 #define logg(message) loggWithBase(message, "ADAPTER")
 #define loggWithContext(message, context) loggWithContext(message, context, "ADAPTER")
 
+// Construct adapter
 SensorsReadAdapter::SensorsReadAdapter(Bluetooth_module *bluetoothModule, SDcard *sdcard, RTC *rtc) {
     this->bluetoothModule = bluetoothModule;
     this->sdcard = sdcard;
     this->rtc = rtc;
 }
 
+// Destruct adapter
 SensorsReadAdapter::~SensorsReadAdapter() { }
 
+// Routine to initialize adapter
 void SensorsReadAdapter::init() {
     this->prepareCSVData();
     this->sdcard->init();
@@ -22,6 +25,7 @@ void SensorsReadAdapter::init() {
     logg("Initialized");
 }
 
+// Update local buffers with sensors data and send updates to BLE module
 void SensorsReadAdapter::updateCO2Sensor(CO2Data co2data) {
     loggWithContext("Handling data", "CO2");
 
@@ -91,6 +95,7 @@ void SensorsReadAdapter::updateBatteryStatus(float voltage) {
     }
 }
 
+// Routine to save historical data on SD card
 void SensorsReadAdapter::storeData() {
     // Need to store data on SD card
     if (!bluetoothModule->isConnected() || !bluetoothModule->isEnabled()) {
@@ -111,10 +116,12 @@ void SensorsReadAdapter::storeData() {
     this->prepareCSVData();
 }
 
+// Routine to check if historical data can be sent via BLE
 bool SensorsReadAdapter::ableToSendHistoricalData() {
     return rtc->isRTCUpdated() && bluetoothModule->isConnected() && sdcard->haveHistoricalData();
 }
 
+// Routine to send historical data via BLE batch by batch
 void SensorsReadAdapter::sendHistoricalData() {
     // Open the historical data file
     File file = SD.open(dataPath, FILE_READ);
@@ -137,6 +144,35 @@ void SensorsReadAdapter::sendHistoricalData() {
         logg("Error deleting HistoricalData file");
     }
     
+}
+
+String* SensorsReadAdapter::getData() {
+    return this->csvData;
+}
+
+// Internal functions
+void SensorsReadAdapter::prepareCSVData() {
+    for (int i = 0; i < NR_VALUES; i++) {
+        csvData[i] = String(SENSOR_ERROR);
+    }
+}
+
+String SensorsReadAdapter::convertDataToCSV() {
+    // Add timestamp to the CSV data
+    csvData[TIMESTAMP_INDEX] = rtc->getTimestamp();
+    
+    String csv = "";
+
+    for (int i = 0; i < NR_VALUES; i++) {
+        csv += csvData[i];
+        if (i < NR_VALUES - 1) {
+            csv += ",";
+        }
+    }
+    
+    loggWithContext(csv, "CSV data");
+
+    return csv;
 }
 
 void SensorsReadAdapter::handleCSVData(String csvData) {
@@ -169,6 +205,7 @@ void SensorsReadAdapter::handleCSVData(String csvData) {
     }
 }
 
+// Decoder for CSV stored data lines
 std::vector<String> SensorsReadAdapter::decodeCSVData(String str) {
     // std::vector<String> result;
     // int found = str.indexOf(",");
@@ -197,33 +234,4 @@ std::vector<String> SensorsReadAdapter::decodeCSVData(String str) {
     result.push_back(str);
 
     return result;
-}
-
-String* SensorsReadAdapter::getData() {
-    return this->csvData;
-}
-
-// Internal functions
-void SensorsReadAdapter::prepareCSVData() {
-    for (int i = 0; i < NR_VALUES; i++) {
-        csvData[i] = String(SENSOR_ERROR);
-    }
-}
-
-String SensorsReadAdapter::convertDataToCSV() {
-    // Add timestamp to the CSV data
-    csvData[TIMESTAMP_INDEX] = rtc->getTimestamp();
-    
-    String csv = "";
-
-    for (int i = 0; i < NR_VALUES; i++) {
-        csv += csvData[i];
-        if (i < NR_VALUES - 1) {
-            csv += ",";
-        }
-    }
-    
-    loggWithContext(csv, "CSV data");
-
-    return csv;
 }

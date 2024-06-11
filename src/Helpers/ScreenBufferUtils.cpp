@@ -34,15 +34,16 @@ void convertData(int idx, String data) {
     }
 }
 
+// Interpret raw data from sensors and update screen buffers
 void convertBattery(String data) {
     float batt_val = data.toFloat();
 
     switch ((int)batt_val) {
         case READ_ERROR:
-            strcpy(_battery, "read error\0");
+            strcpy(_battery, READ_ERROR_STRING);
             break;
         case SENSOR_ERROR:
-            strcpy(_battery, "sensor err\0");
+            strcpy(_battery, SENSOR_ERROR_STRING);
             break;
         default:
             strcpy(_battery, String(String(batt_val) + " V").c_str());
@@ -55,10 +56,10 @@ void convertTemperature(String data) {
 
     switch (temp_val) {
         case READ_ERROR:
-            strcpy(_temperature, "read error\0");
+            strcpy(_temperature, READ_ERROR_STRING);
             break;
         case SENSOR_ERROR:
-            strcpy(_temperature, "sensor err\0");
+            strcpy(_temperature, SENSOR_ERROR_STRING);
             break;
         default:
             strcpy(_temperature, String(String(temp_val) + " C").c_str());
@@ -71,10 +72,10 @@ void convertHumidity(String data) {
 
     switch (humidity_val) {
         case READ_ERROR:
-            strcpy(_humidity, "read error\0");
+            strcpy(_humidity, READ_ERROR_STRING);
             break;
         case SENSOR_ERROR:
-            strcpy(_humidity, "sensor err\0");
+            strcpy(_humidity, SENSOR_ERROR_STRING);
             break;
         default:
             strcpy(_humidity, String(String(humidity_val) + " %").c_str());
@@ -87,10 +88,10 @@ void convertPressure(String data) {
 
     switch (pressure_val) {
         case READ_ERROR:
-            strcpy(_pressure, "read error\0");
+            strcpy(_pressure, READ_ERROR_STRING);
             break;
         case SENSOR_ERROR:
-            strcpy(_pressure, "sensor err\0");
+            strcpy(_pressure, SENSOR_ERROR_STRING);
             break;
         default:
             strcpy(_pressure, String(String(pressure_val) + " hPa").c_str());
@@ -103,10 +104,10 @@ void convertAltitude(String data) {
 
     switch (altitude_val) {
         case READ_ERROR:
-            strcpy(_altitude, "read error\0");
+            strcpy(_altitude, READ_ERROR_STRING);
             break;
         case SENSOR_ERROR:
-            strcpy(_altitude, "sensor err\0");
+            strcpy(_altitude, SENSOR_ERROR_STRING);
             break;
         default:
             strcpy(_altitude, String(String(altitude_val) + " m").c_str());
@@ -119,10 +120,10 @@ void convertCO2(String data) {
 
     switch (co2_val) {
         case READ_ERROR:
-            strcpy(_co2, "read error\0");
+            strcpy(_co2, READ_ERROR_STRING);
             break;
         case SENSOR_ERROR:
-            strcpy(_co2, "sensor err\0");
+            strcpy(_co2, SENSOR_ERROR_STRING);
             break;
         default:
             strcpy(_co2, String(String(co2_val) + " ppm").c_str());
@@ -135,10 +136,10 @@ void convertPM1(String data) {
 
     switch (pm1_val) {
         case READ_ERROR:
-            strcpy(_pm1, "read error\0");
+            strcpy(_pm1, READ_ERROR_STRING);
             break;
         case SENSOR_ERROR:
-            strcpy(_pm1, "sensor err\0");
+            strcpy(_pm1, SENSOR_ERROR_STRING);
             break;
         default:
             strcpy(_pm1, String(String(pm1_val) + " ug/m3").c_str());
@@ -151,10 +152,10 @@ void convertPM2_5(String data) {
 
     switch (pm2_5_val) {
         case READ_ERROR:
-            strcpy(_pm2_5, "read error\0");
+            strcpy(_pm2_5, READ_ERROR_STRING);
             break;
         case SENSOR_ERROR:
-            strcpy(_pm2_5, "sensor err\0");
+            strcpy(_pm2_5, SENSOR_ERROR_STRING);
             break;
         default:
             strcpy(_pm2_5, String(String(pm2_5_val) + " ug/m3").c_str());
@@ -167,10 +168,10 @@ void convertPM10(String data) {
 
     switch (pm10_val) {
         case READ_ERROR:
-            strcpy(_pm10, "read error\0");
+            strcpy(_pm10, READ_ERROR_STRING);
             break;
         case SENSOR_ERROR:
-            strcpy(_pm10, "sensor err\0");
+            strcpy(_pm10, SENSOR_ERROR_STRING);
             break;
         default:
             strcpy(_pm10, String(String(pm10_val) + " ug/m3").c_str());

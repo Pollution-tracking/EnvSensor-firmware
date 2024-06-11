@@ -6,17 +6,19 @@
 uint8_t read_sensor = SENSORS::NO_SENSOR; // Which sensors to read?
 
 void init_sensors() {
-  // Initialize PM sensor (serial2)
+  // Initialize PM sensor (Serial2)
   pmSensor.init();
   
   // Initialize BME sensor
   bmeSensor.init();
 
-  // Initialize CO2 sensor (serial1)
+  // Initialize CO2 sensor (Serial1)
   co2Sensor.init();
 }
 
+// Main loop handler for sensor readings
 void handle_sensor_readings() {
+  // Early exit if no sensor was selected
   if (read_sensor == SENSORS::NO_SENSOR) {
     return;
   }
@@ -45,8 +47,9 @@ void read_all_sensors() {
   treat_Battery();
 }
 
-// Update sensors with fresh readings and send data to Adapter (will either write to SD card or send via Bluetooth)
+// Read sensors and send data to Adapter (will either write to SD card or send via Bluetooth)
 void treat_CO2_sensor() {
+  // Try to recover from sensor failure
   if (co2Sensor.sensorError() || !co2Sensor.sensorInitialised()) {
     recover_from_failure(&co2Sensor);
   }
@@ -56,6 +59,7 @@ void treat_CO2_sensor() {
 }
 
 void treat_PM_sensor() {
+  // Try to recover from sensor failure
   if (pmSensor.sensorError() || !pmSensor.sensorInitialised()) {
     recover_from_failure(&pmSensor);
   }
@@ -65,6 +69,7 @@ void treat_PM_sensor() {
 }
 
 void treat_BME_sensor() {
+  // Try to recover from sensor failure
   if (bmeSensor.sensorError() || !bmeSensor.sensorInitialised()) {
     recover_from_failure(&bmeSensor);
   }
@@ -83,6 +88,7 @@ void treat_Battery() {
   sensorsReadAdapter.updateBatteryStatus(batteryVoltage);
 }
 
+// Reinitialize sensor after failure detected
 void recover_from_failure(Sensor *sensor) {
   loggWithContext("Trying to recover sensor from failure", sensor->getName());
   sensor->init();

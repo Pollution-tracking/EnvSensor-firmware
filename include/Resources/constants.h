@@ -2,8 +2,9 @@
 #define CONSTANTS_H
 
 #include <string>
-#include <Resources/pins.h>
 #include <BLECharacteristic.h>
+
+#include <Resources/Pins.h>
 
 const uint32_t CHARACTERISTIC_PROPERTIES = BLECharacteristic::PROPERTY_READ |
                                            BLECharacteristic::PROPERTY_NOTIFY;
@@ -43,13 +44,14 @@ const uint8_t ADC_RESOLUTION          = 12;
 const uint16_t ADC_MAX_VALUE          = (1 << ADC_RESOLUTION) - 1;
 
 // Sensor errors
-const int32_t READ_ERROR = INT32_MIN;
+const int32_t READ_ERROR   = INT32_MIN;
 const int32_t SENSOR_ERROR = INT32_MAX;
+const char SENSOR_ERROR_STRING[] = "Sensor err\0";
+const char READ_ERROR_STRING[]   = "Read err\0";
 
 // Time errors
-const uint8_t TIME_ERROR_8 = 255;
+const uint8_t TIME_ERROR_8   = 255;
 const uint16_t TIME_ERROR_16 = 65535;
-const uint8_t TIME_VECTOR_LENGTH = 19;
 
 // CSV data values
 const int NR_VALUES             = 11;
@@ -73,7 +75,9 @@ const uint64_t WAIT_TIME_REENABLE_SLEEP = 8000003;
 // Button times (in ms)
 const uint16_t DEBOUNCE_TIME = 250;
 
-const uint64_t BUTTONS_MASK = (uint64_t)1 << BUTTON_LEFT_PIN | (uint64_t)1 << BUTTON_CENTER_PIN | (uint64_t)1 << BUTTON_RIGHT_PIN;
+const uint64_t BUTTONS_MASK = (uint64_t)1 << BUTTON_LEFT_PIN |
+                              (uint64_t)1 << BUTTON_CENTER_PIN |
+                              (uint64_t)1 << BUTTON_RIGHT_PIN;
 
 // Sea level pressure (in h200Pa)
 const float seaLevel = 1013.25;

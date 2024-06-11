@@ -1,4 +1,4 @@
-#include <Logger/logger.h>
+#include <Logger/Logger.h>
 
 bool loggingEnabled = true; // Enable/disable logging
 
@@ -20,7 +20,6 @@ void loggWithContext(String message, String context, String base) {
     Serial.print("[" + base + "] {" + context + "} ");
     Serial.println(message);
   }
-
 }
 
 void forcePrint() {

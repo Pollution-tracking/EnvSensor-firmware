@@ -2,14 +2,17 @@
 #define BLUETOOTH_MODULE_H
 
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <Logger/logger.h>
-#include "Resources/constants.h"
+
+#include "BLE2902.h"
+#include "BLEUtils.h"
+#include "nvs_flash.h"
+#include "BLEDevice.h"
+#include "BLEServer.h"
+
+#include <Resources/Constants.h>
 #include <Resources/RTC_values.hpp>
-#include <BLE2902.h>
-#include <BLEUtils.h>
-#include <nvs_flash.h>
+
+#include <Logger/Logger.h>
 
 class Bluetooth_module {
     public:
@@ -65,17 +68,24 @@ class Bluetooth_module {
         BLEDescriptor *altitudeDescriptor;
         BLEDescriptor *batteryDescriptor;
         BLEDescriptor *timestampDescriptor;
+        void createCharacteristics();
+        void createDescriptors();
+        void destroyCharacteristics();
+        void destroyDescriptors();
+        void updateTimestamp(std::string timestamp);
         class MyServerCallbacks: public BLEServerCallbacks {
         public:
             MyServerCallbacks(Bluetooth_module *outerClass) : outerClass(outerClass) {};
             void onConnect(BLEServer* envServer) {
                 logg("[SERVER_CALLBACK] Client connected");
+
                 bleConnected = true;
                 outerClass->status |= BLE_STATUS::CLIENT_UPDATE;
                 outerClass->startAdvertising();
             };
             void onDisconnect(BLEServer* envServer) {
                 logg("[SERVER_CALLBACK] Client disconnected");
+
                 bleConnected = false;
                 outerClass->status |= BLE_STATUS::CLIENT_UPDATE;
                 if (bleEnabled) {
@@ -91,6 +101,7 @@ class Bluetooth_module {
             MyCharacteristicCallbacks(Bluetooth_module *outerClass) : outerClass(outerClass) {};
             void onWrite(BLECharacteristic* characteristic) {
                 logg("[CHARACTERISTIC_CALLBACK] Received update");
+                
                 if (characteristic->getUUID().equals(TIMESTAMP_CHARACTERISTIC_UUID)) {
                     std::string timestamp = characteristic->getValue();
                     outerClass->updateTimestamp(timestamp);
@@ -100,11 +111,6 @@ class Bluetooth_module {
         private:
             Bluetooth_module *outerClass;
         };
-        void createCharacteristics();
-        void createDescriptors();
-        void destroyCharacteristics();
-        void destroyDescriptors();
-        void updateTimestamp(std::string timestamp);
 };
 
 #endif // BLUETOOTH_MODULE_H

@@ -10,6 +10,7 @@ Bluetooth_module::Bluetooth_module() {
     this->createDescriptors();
 }
 
+// Destruct Bluetooth module
 Bluetooth_module::~Bluetooth_module() {
     delete envServer;
     delete envService;
@@ -22,7 +23,7 @@ void Bluetooth_module::init() {
     loggWithContext(bleServerName, "Server name");
 
     this->status = BLE_STATUS::NO_UPDATE;
-    // BLE purposesly disabled
+    // BLE purposesly disabled => early exit
     if (!this->isEnabled()) {
         return;
     }
@@ -116,6 +117,7 @@ void Bluetooth_module::enable() {
     bleEnabled = true;
 }
 
+// Extract received timestamp from client
 std::string Bluetooth_module::getTimestamp() {
     return received_timestamp;
 }
@@ -138,6 +140,11 @@ uint8_t Bluetooth_module::getStatusUpdates() {
 // Routine to acknowledge status updates
 void Bluetooth_module::acknowledgeStatusUpdates(uint8_t status) {
     this->status &= ~status;
+}
+
+// Routine to update timestamp
+void Bluetooth_module::updateTimestamp(std::string timestamp) {
+    received_timestamp.assign(timestamp);
 }
 
 // Routines to update characteristics
@@ -204,7 +211,6 @@ void Bluetooth_module::updateAltitudeCharacteristic(int32_t altitude) {
     loggWithContext("Updated characteristic", "Altitude");
 }
 
-// Routine to update battery level
 void Bluetooth_module::updateBatteryCharacteristic(int32_t voltage) {
     batteryCharacteristic->setValue(voltage);
     batteryCharacteristic->notify();
@@ -289,9 +295,4 @@ void Bluetooth_module::destroyDescriptors() {
     delete altitudeDescriptor;
     delete batteryDescriptor;
     delete timestampDescriptor;
-}
-
-// Routine to update timestamp
-void Bluetooth_module::updateTimestamp(std::string timestamp) {
-    received_timestamp.assign(timestamp);
 }
