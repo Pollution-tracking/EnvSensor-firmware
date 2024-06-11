@@ -29,6 +29,7 @@ class PMSensor : public Sensor{
     bool sensorInitialised() override;
     void read() override;
     void init() override;
+    String getName() override;
     PMData getData();
   private:
     SerialPM *pms;

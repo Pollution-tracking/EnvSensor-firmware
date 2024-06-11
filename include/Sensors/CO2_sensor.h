@@ -27,6 +27,7 @@ class CO2Sensor : public Sensor{
     bool sensorInitialised() override;
     void read() override;
     void init() override;
+    String getName() override;
     CO2Data getData();
   private:
     CO2Data data;

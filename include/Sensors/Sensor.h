@@ -10,6 +10,7 @@ class Sensor {
         virtual bool sensorInitialised() = 0;
         virtual void read() = 0;
         virtual void init() = 0;
+        virtual String getName() = 0;
 };
 
 class SensorData {

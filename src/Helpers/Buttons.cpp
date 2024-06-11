@@ -1,48 +1,24 @@
 #include "Helpers/Buttons.hpp"
 
+#define logg(message) loggWithBase(message, "BUTTONS")
+#define loggWithContext(message, context) loggWithContext(message, context, "BUTTONS")
+
 uint64_t lastInterruptTime;
 uint8_t pressed_button = BUTTONS::NO_BUTTON;
 
 // Button left ISR
 void IRAM_ATTR ISR_button_left() {
-    uint64_t interruptTime = millis();
-    
-    // If interrupts come faster than debounce time, assume it's a bounce and ignore
-    if (interruptTime - lastInterruptTime > DEBOUNCE_TIME) {
-        // Button being pressed
-        pressed_button = BUTTONS::BUTTON_LEFT;
-
-        // Store last treated interrupt time
-        lastInterruptTime = interruptTime;
-    }
+    pressed_button = BUTTONS::BUTTON_LEFT;
 }
 
 // Button center ISR
 void IRAM_ATTR ISR_button_center() {
-    uint64_t interruptTime = millis();
-    
-    // If interrupts come faster than debounce time, assume it's a bounce and ignore
-    if (interruptTime - lastInterruptTime > DEBOUNCE_TIME) {
-        // Button being pressed
-        pressed_button = BUTTONS::BUTTON_CENTER;
-
-        // Store last treated interrupt time
-        lastInterruptTime = interruptTime;
-    }
+    pressed_button = BUTTONS::BUTTON_CENTER;
 }
 
 // Button right ISR
 void IRAM_ATTR ISR_button_right() {
-    uint64_t interruptTime = millis();
-
-    // If interrupts come faster than debounce time, assume it's a bounce and ignore
-    if (interruptTime - lastInterruptTime > DEBOUNCE_TIME) {
-        // Button being pressed
-        pressed_button = BUTTONS::BUTTON_RIGHT;
-
-        // Store last treated interrupt time
-        lastInterruptTime = interruptTime;
-    }
+    pressed_button = BUTTONS::BUTTON_RIGHT;
 }
 
 void init_buttons() {
@@ -53,6 +29,8 @@ void init_buttons() {
     attachInterrupt(BUTTON_LEFT_PIN, ISR_button_left, ONHIGH);
     attachInterrupt(BUTTON_CENTER_PIN, ISR_button_center, ONHIGH);
     attachInterrupt(BUTTON_RIGHT_PIN, ISR_button_right, ONHIGH);
+
+    logg("Initialized");
 }
 
 void handle_button_readings() {
@@ -98,7 +76,7 @@ void check_right_button() {
 }
 
 void treat_left_button() {
-    logg("Button Left press");
+    loggWithContext("Pressed", "Left");
     display.changeScreenLeft();
 
     // Update display
@@ -106,9 +84,10 @@ void treat_left_button() {
 }
 
 void treat_center_button() {
-    logg("Button Center press");
+    loggWithContext("Pressed", "Center");
     // Check if screen is interactive (blueooth screen)
     if (display.getScreenMode() == SCREENMODE::BLUETOOTH) {
+        loggWithContext("Acting", "Center");
         // Change BLE state
         if (bluetoothModule.isEnabled()) {
             sleepUtils.allow_sleep();
@@ -125,7 +104,7 @@ void treat_center_button() {
 }
 
 void treat_right_button() {
-    logg("Button Right press");
+    loggWithContext("Pressed", "Right");
     display.changeScreenRight();
 
     // Update display
@@ -133,5 +112,6 @@ void treat_right_button() {
 }
 
 void virtual_press_button(uint8_t button) {
+    logg("Virtual button press");
     pressed_button = button;
 }

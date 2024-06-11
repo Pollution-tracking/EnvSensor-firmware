@@ -6,6 +6,7 @@
 #include <Logger/logger.h>
 #include "Resources/constants.h"
 #include <Resources/RTC_values.hpp>
+#include <Helpers/ScreenBufferUtils.hpp>
 
 // Display
 #include <GxEPD2_BW.h>
@@ -19,6 +20,7 @@
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Fonts/FreeMonoBold24pt7b.h>
+#include <Fonts/FreeMono9pt7b.h>
 
 class Display {
     public:
@@ -30,7 +32,6 @@ class Display {
         uint8_t getScreenMode();
         void updateScreen(SCREENUPDATE update = SCREENUPDATE::GENERAL);
         void updateSensorsStats(String *data);
-        void updateBluetoothStats(bool enabled, bool connected);
     private:
         GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> display;
         void checkSensorsScreen();
@@ -44,15 +45,6 @@ class Display {
         uint16_t centerText_X(String text);
         void printBLEStatus();
         void printSensorsStatus();
-        void convertData(int idx, String data);
-        void convertTemperature(String data);
-        void convertHumidity(String data);
-        void convertPressure(String data);
-        void convertAltitude(String data);
-        void convertCO2(String data);
-        void convertPM1(String data);
-        void convertPM2_5(String data);
-        void convertPM10(String data);
 };
 
 #endif // DISPLAY_H

@@ -1,5 +1,8 @@
 #include "Sensors/BME_sensor.h"
 
+#define logg(message) loggWithBase(message, "BME")
+#define loggWithContext(message, context) loggWithContext(message, context, "BME")
+
 // Construct BME sensor
 BMESensor::BMESensor() {
     bme = new Adafruit_BME680(BME680_CS_PIN);
@@ -21,10 +24,15 @@ bool BMESensor::sensorInitialised() {
     return this->_initialised;
 }
 
+String BMESensor::getName() {
+    return "BME680";
+}
+
 // Routine to initialize BME sensor
 void BMESensor::init() {
     if(!bme->begin()) {
-        logg("[BME] Could not find a valid BME680 sensor, check wiring!");
+        logg("Initialization failed!");
+        return;
     } else {
         _sensorFound = true;
         bme->setTemperatureOversampling(BME680_OS_8X);
@@ -32,7 +40,7 @@ void BMESensor::init() {
         bme->setPressureOversampling(BME680_OS_4X);
         bme->setIIRFilterSize(BME680_FILTER_SIZE_3);
         bme->setGasHeater(320, 150); // 320*C for 150 ms
-        logg("[BME] BME680 initialized");
+        logg("Initialized");
     }
     
     _initialised = true;
@@ -40,31 +48,31 @@ void BMESensor::init() {
 
 // Routine to update BME values
 void BMESensor::read() {
-    if (!this->_sensorFound) {
+    if (!this->_initialised) {
         this->markError();
         return;
     }
 
-    logg("\tBME680 reading...");
+    logg("Reading");
     
     bool status = bme->performReading();
     this->checkErrors(status);
 
     if (!this->_errorBME) {
         data.temperature = bme->temperature;
-        logg("\tBME680 temperature: " + String(data.temperature));
+        loggWithContext(String(data.temperature), "Temperature");
 
         data.pressure = bme->pressure / 100.0; //hPa
-        logg("\tBME680 pressure: " + String(data.pressure));
+        loggWithContext(String(data.pressure), "Pressure");
 
         data.humidity = bme->humidity;
-        logg("\tBME680 humidity: " + String(data.humidity));
+        loggWithContext(String(data.humidity), "Humidity");
 
         data.gas = bme->gas_resistance / 1000.0;
-        logg("\tBME680 gas: " + String(data.gas));
+        loggWithContext(String(data.gas), "Gas");
 
         data.altitude = bme->readAltitude(seaLevel);
-        logg("\tBME680 altitude: " + String(data.altitude));
+        loggWithContext(String(data.altitude), "Altitude");
     }
 }
 
@@ -76,7 +84,7 @@ BMEData BMESensor::getData() {
 // Internal functions
 void BMESensor::checkErrors(bool status) {
     if (!status) {
-        logg("[BME] BME680 error");
+        logg("Read error");
         this->markError();
     } else {
         this->_errorBME = false;

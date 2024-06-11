@@ -331,6 +331,8 @@ void MHZ19::verify()
     /* construct common command (133) */
     constructCommand(CO2UNLIM);
 
+    delay(100);
+
     write(this->storage.constructedCommand);
 
     while (read(this->storage.responses.CO2UNLIM, CO2UNLIM) != RESULT_OK)

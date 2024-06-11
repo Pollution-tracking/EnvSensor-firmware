@@ -11,8 +11,6 @@
 #include <BLEUtils.h>
 #include <nvs_flash.h>
 
-// TODO anounce display to update device connected state
-
 class Bluetooth_module {
     public:
         Bluetooth_module();
@@ -22,8 +20,11 @@ class Bluetooth_module {
         void stopAdvertising();
         bool isConnected();
         bool isEnabled();
+        uint8_t getStatusUpdates();
+        void acknowledgeStatusUpdates(uint8_t status);
         void disable();
         void enable();
+        std::string getTimestamp();
         void updatePM1Characteristic(int32_t pm1);
         void updatePM2_5Characteristic(int32_t pm2_5);
         void updatePM10Characteristic(int32_t pm10);
@@ -33,8 +34,12 @@ class Bluetooth_module {
         void updateHumidityCharacteristic(int32_t humidity);
         void updatePressureCharacteristic(int32_t pressure);
         void updateAltitudeCharacteristic(int32_t altitude);
+        void updateBatteryCharacteristic(int32_t voltage);
+        void updateTimestampCharacteristic(String time);
     private:
-        BLEServer* envServer; // BLE server
+        uint8_t status;
+        std::string received_timestamp;
+        BLEServer* envServer;   // BLE server
         BLEService* envService; // BLE service
         // BLE characteristics
         BLECharacteristic *temperatureCharacteristic;
@@ -46,6 +51,8 @@ class Bluetooth_module {
         BLECharacteristic *humidityCharacteristic;
         BLECharacteristic *pressureCharacteristic;
         BLECharacteristic *altitudeCharacteristic;
+        BLECharacteristic *batteryCharacteristic;
+        BLECharacteristic *timestampCharacteristic;
         // BLE descriptors
         BLEDescriptor *temperatureDescriptor;
         BLEDescriptor *carbonDioxideDescriptor;
@@ -56,20 +63,38 @@ class Bluetooth_module {
         BLEDescriptor *humidityDescriptor;
         BLEDescriptor *pressureDescriptor;
         BLEDescriptor *altitudeDescriptor;
+        BLEDescriptor *batteryDescriptor;
+        BLEDescriptor *timestampDescriptor;
         class MyServerCallbacks: public BLEServerCallbacks {
         public:
             MyServerCallbacks(Bluetooth_module *outerClass) : outerClass(outerClass) {};
             void onConnect(BLEServer* envServer) {
-                logg("Client connected");
+                logg("[SERVER_CALLBACK] Client connected");
                 bleConnected = true;
+                outerClass->status |= BLE_STATUS::CLIENT_UPDATE;
                 outerClass->startAdvertising();
             };
             void onDisconnect(BLEServer* envServer) {
+                logg("[SERVER_CALLBACK] Client disconnected");
                 bleConnected = false;
-                logg("Client disconnected");
+                outerClass->status |= BLE_STATUS::CLIENT_UPDATE;
                 if (bleEnabled) {
                     // If user didn't disable BLE, start advertising again
                     outerClass->startAdvertising();
+                }
+            };
+        private:
+            Bluetooth_module *outerClass;
+        };
+        class MyCharacteristicCallbacks: public BLECharacteristicCallbacks {
+        public:
+            MyCharacteristicCallbacks(Bluetooth_module *outerClass) : outerClass(outerClass) {};
+            void onWrite(BLECharacteristic* characteristic) {
+                logg("[CHARACTERISTIC_CALLBACK] Received update");
+                if (characteristic->getUUID().equals(TIMESTAMP_CHARACTERISTIC_UUID)) {
+                    std::string timestamp = characteristic->getValue();
+                    outerClass->updateTimestamp(timestamp);
+                    outerClass->status |= BLE_STATUS::TIMESTAMP_UPDATE;
                 }
             };
         private:
@@ -79,6 +104,7 @@ class Bluetooth_module {
         void createDescriptors();
         void destroyCharacteristics();
         void destroyDescriptors();
+        void updateTimestamp(std::string timestamp);
 };
 
 #endif // BLUETOOTH_MODULE_H

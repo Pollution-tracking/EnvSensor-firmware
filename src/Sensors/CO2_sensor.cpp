@@ -1,7 +1,12 @@
 #include "Sensors/CO2_sensor.h"
 
+#define logg(message) loggWithBase(message, "CO2")
+#define loggWithContext(message, context) loggWithContext(message, context, "CO2")
+
 // Construct CO2 sensor
 CO2Sensor::CO2Sensor() {
+  Serial1.flush();
+  Serial1.end();
   mhz19Serial = &Serial1;
 }
 
@@ -21,6 +26,10 @@ bool CO2Sensor::sensorInitialised() {
     return this->_initialised;
 }
 
+String CO2Sensor::getName() {
+    return "MH-Z19";
+}
+
 // Routine to initialize CO2 sensor
 void CO2Sensor::init() {
   mhz19Serial->begin(9600, SERIAL_8N1, CO2_TX_PIN, CO2_RX_PIN);
@@ -28,9 +37,10 @@ void CO2Sensor::init() {
   mhz19.autoCalibration();
 
   if (mhz19.errorCode != RESULT_OK) {
-    logg("[CO2] Could not initialize MH-Z19 sensor, check wiring!");
+    logg("Initialization failed!");
+    return;
   } else {
-    logg("[CO2] MH-Z19 initialized");
+    logg("Initialized");
     _sensorFound = true;
   }
 
@@ -39,16 +49,16 @@ void CO2Sensor::init() {
 
 // Routine to update CO2 and temperature values
 void CO2Sensor::read() {
-  if (!this->_sensorFound) {
+  if (!this->_initialised) {
     this->markError();
     return;
   }
 
-  logg("\tMH-Z19 reading...");
+  logg("Reading");
   this->data.co2 = mhz19.getCO2();
-  logg("\tMH-Z19 CO2: " + String(this->data.co2));
+  loggWithContext(String(this->data.co2), "CO2");
   this->data.temperature = mhz19.getTemperature();
-  logg("\tMH-Z19 temperature: " + String(this->data.temperature));
+  loggWithContext(String(this->data.temperature), "Temperature");
 
   this->checkErrors();
 }
@@ -61,7 +71,7 @@ CO2Data CO2Sensor::getData() {
 // Internal functions
 void CO2Sensor::checkErrors() {
   if (this->data.co2 == 0) {
-    logg("[CO2] MHZ19 CO2 error");
+    loggWithContext("Error", "CO2");
     this->_errorCO2 = true;
     this->data.co2 = READ_ERROR;
   } else {
@@ -69,7 +79,7 @@ void CO2Sensor::checkErrors() {
   }
 
   if (this->data.temperature == -273.15) {
-    logg("[CO2] MHZ19 temperature error");
+    loggWithContext("Error", "Temperature");
     this->_errorTemperature = true;
     this->data.temperature = READ_ERROR;
   } else {

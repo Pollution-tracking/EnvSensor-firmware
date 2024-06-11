@@ -1,10 +1,14 @@
 #include "Helpers/Timers.hpp"
 
+#define logg(message) loggWithBase(message, "TIMERS")
+#define loggWithContext(message, context) loggWithContext(message, context, "TIMERS")
+
 // Mark all sensors to be read
 bool IRAM_ATTR ISR_sensors_read(void *args) {
   read_sensor |= SENSORS::SENSOR_PM;
   read_sensor |= SENSORS::SENSOR_CO2;
   read_sensor |= SENSORS::SENSOR_BME;
+  read_sensor |= SENSORS::BATTERY;
 
   return true;
 }
@@ -13,7 +17,6 @@ bool IRAM_ATTR ISR_sensors_read(void *args) {
 bool IRAM_ATTR ISR_reenable_sleep(void *args) {
   sleepUtils.allow_sleep();
   sleepUtils.disable_cooldown();
-  disable_timer_reenable_sleep();
 
   return true;
 }
@@ -37,7 +40,7 @@ void init_timer_read_sensors() {
   // Start timer
   timer_start(TIMER_GROUP_0, TIMER_0);
 
-  logg("Timer for sensor readings initialized");
+  loggWithContext("Timer initialized", "Sensor readings");
 }
 
 void disable_timer_read_sensors() {
@@ -48,7 +51,19 @@ void disable_timer_read_sensors() {
   // Delete timer
   timer_deinit(TIMER_GROUP_0, TIMER_0);
 
-  logg("Timer for sensor readings disabled");
+  loggWithContext("Timer disabled", "Sensor readings");
+}
+
+void pause_timer_read_sensors() {
+  timer_pause(TIMER_GROUP_0, TIMER_0);
+
+  loggWithContext("Timer paused", "Sensor readings");
+}
+
+void restart_timer_read_sensors() {
+  timer_start(TIMER_GROUP_0, TIMER_0);
+
+  loggWithContext("Timer resumed", "Sensor readings");
 }
 
 void init_timer_reanable_sleep() {
@@ -70,11 +85,13 @@ void init_timer_reanable_sleep() {
   // Start timer
   timer_start(TIMER_GROUP_0, TIMER_1);
 
-  logg("Timer for cooldown initialized");
+  loggWithContext("Timer initialized", "Reenable sleep");
 }
 
 void restart_timer_reenable_sleep() {
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);
+
+  loggWithContext("Timer restarted", "Reenable sleep");
 }
 
 void disable_timer_reenable_sleep() {
@@ -84,4 +101,6 @@ void disable_timer_reenable_sleep() {
   timer_disable_intr(TIMER_GROUP_0, TIMER_1);
   // Delete timer
   timer_deinit(TIMER_GROUP_0, TIMER_1);
+
+  loggWithContext("Timer disabled", "Reenable sleep");
 }

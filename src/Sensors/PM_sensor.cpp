@@ -1,5 +1,8 @@
 #include "Sensors/PM_sensor.h"
 
+#define logg(message) loggWithBase(message, "PM")
+#define loggWithContext(message, context) loggWithContext(message, context, "PM")
+
 // Construct PM sensor
 PMSensor::PMSensor() {
   pms = new SerialPM(PMSA003, PM_TX_PIN, PM_RX_PIN);
@@ -21,23 +24,27 @@ bool PMSensor::sensorInitialised() {
   return this->_initialised;
 }
 
+String PMSensor::getName() {
+  return "PMSA003";
+}
+
 // Routine to initialize PM sensor
 void PMSensor::init() {
   pms->init();
   this->_sensorFound = true;
-  logg("[PM] PM sensor initialized");
+  logg("Initialized");
   
   this->_initialised = true;
 }
 
 // Routine to update PM values
 void PMSensor::read() {
-  if (!this->_sensorFound) {
+  if (!this->_initialised) {
     this->markError();
     return;
   }
   
-  logg("\tPMSA003 reading...");
+  logg("Reading");
   SerialPM::STATUS status = pms->read();
   
   if (status != SerialPM::OK) {
@@ -47,13 +54,13 @@ void PMSensor::read() {
     this->_errorPM = false;
 
     data.pm1 = pms->pm01;
-    logg("\tPMSA003 PM1: " + String(data.pm1));
+    loggWithContext(String(data.pm1), "PM1");
 
     data.pm2_5 = pms->pm25;
-    logg("\tPMSA003 PM2.5: " + String(data.pm2_5));
+    loggWithContext(String(data.pm2_5), "PM2.5");
 
     data.pm10 = pms->pm10;
-    logg("\tPMSA003 PM10: " + String(data.pm10));
+    loggWithContext(String(data.pm10), "PM10");
   }
 }
 

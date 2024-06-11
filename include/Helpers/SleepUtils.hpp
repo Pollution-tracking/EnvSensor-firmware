@@ -3,18 +3,18 @@
 
 struct SleepUtils {
 private:
-    bool allowSleep    = false; // Enable sleep mode
-    bool sleepCooldown = false; // Cooldown after sleep
-    bool sleepOver     = false; // Sleep mode over
+    bool allowSleep    = false; // True when sleep mode should start
+    bool sleepCooldown = false; // True when starting cooldown after sleep wake-up caused by buttons
+    bool sleepFinished = false; // True when sleep mode is over
     
 public:
     void allow_sleep() {
         allowSleep = true;
     }
 
-    void disable_sleep(bool sleep_over = false) {
+    void disable_sleep(bool sleep_finished = false) {
         allowSleep = false;
-        sleepOver = sleep_over;
+        sleepFinished = sleep_finished;
     }
 
     bool is_sleep_allowed() {
@@ -34,11 +34,11 @@ public:
     }
 
     bool is_sleep_over() {
-        return sleepOver;
+        return sleepFinished;
     }
 
     void mark_sleep_treated() {
-        sleepOver = false;
+        sleepFinished = false;
     }
 };
 

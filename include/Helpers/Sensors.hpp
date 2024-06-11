@@ -24,4 +24,7 @@ void read_all_sensors();
 void treat_CO2_sensor();
 void treat_PM_sensor();
 void treat_BME_sensor();
+void treat_Battery();
+
+void recover_from_failure(Sensor* sensor);
 #endif // SENSORS_HPP

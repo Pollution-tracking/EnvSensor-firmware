@@ -1,5 +1,8 @@
 #include "Modules/Bluetooth_module.h"
 
+#define logg(message) loggWithBase(message, "BLE")
+#define loggWithContext(message, context) loggWithContext(message, context, "BLE")
+
 // Construct Bluetooth module
 Bluetooth_module::Bluetooth_module() {
     // Create BLE characteristics and descriptors
@@ -16,20 +19,23 @@ Bluetooth_module::~Bluetooth_module() {
 
 // Routine to initialize Bluetooth module
 void Bluetooth_module::init() {
+    loggWithContext(bleServerName, "Server name");
+
+    this->status = BLE_STATUS::NO_UPDATE;
     // BLE purposesly disabled
     if (!this->isEnabled()) {
         return;
     }
 
     // Create BLE device
-    BLEDevice::init(bleServerName);
+    BLEDevice::init(bleServerName.c_str());
 
     // Create BLE server
     envServer = BLEDevice::createServer();
     envServer->setCallbacks(new MyServerCallbacks(this));
 
     // Create BLE service
-    envService = envServer->createService(SERVICE_UUID);
+    envService = envServer->createService(SERVICE_UUID, 70);
 
     // Set BLE descriptors values
     temperatureDescriptor   ->setValue(temperatureDescriptorValue);
@@ -41,6 +47,8 @@ void Bluetooth_module::init() {
     humidityDescriptor      ->setValue(humidityDescriptorValue);
     pressureDescriptor      ->setValue(pressureDescriptorValue);
     altitudeDescriptor      ->setValue(altitudeDescriptorValue);
+    timestampDescriptor     ->setValue(timestampDescriptorValue);
+    batteryDescriptor       ->setValue(batteryDescriptorValue);
     
     // Configure BLE characteristics
     temperatureCharacteristic   ->addDescriptor(temperatureDescriptor);
@@ -52,6 +60,8 @@ void Bluetooth_module::init() {
     humidityCharacteristic      ->addDescriptor(humidityDescriptor);
     pressureCharacteristic      ->addDescriptor(pressureDescriptor);
     altitudeCharacteristic      ->addDescriptor(altitudeDescriptor);
+    timestampCharacteristic     ->addDescriptor(timestampDescriptor);
+    batteryCharacteristic       ->addDescriptor(batteryDescriptor);
 
     // Add BLE characteristics to BLE service
     envService->addCharacteristic(temperatureCharacteristic);
@@ -63,19 +73,28 @@ void Bluetooth_module::init() {
     envService->addCharacteristic(humidityCharacteristic);
     envService->addCharacteristic(pressureCharacteristic);
     envService->addCharacteristic(altitudeCharacteristic);
+    envService->addCharacteristic(timestampCharacteristic);
+    envService->addCharacteristic(batteryCharacteristic);
+
+    // Add timestamp characteristic callback
+    timestampCharacteristic->setCallbacks(new MyCharacteristicCallbacks(this));
 
     // Start BLE service
     envService->start();
 
     // Start advertising BLE service
     this->startAdvertising();
-    logg("Waiting a client connection to notify...");
+    logg("Advertising started");
 }
 
 // Routine to start advertising BLE service
 void Bluetooth_module::startAdvertising() {
     bleEnabled = true;
-    envServer->getAdvertising()->start();
+    BLEAdvertising *pAdvertising = envServer->getAdvertising();
+    pAdvertising->addServiceUUID(SERVICE_UUID);
+    pAdvertising->setScanResponse(false);
+    pAdvertising->setMinPreferred(0x0);
+    BLEDevice::startAdvertising();
 }
 
 // Routine to stop advertising BLE service
@@ -86,15 +105,19 @@ void Bluetooth_module::stopAdvertising() {
 
 // Routine to disable BLE
 void Bluetooth_module::disable() {
-    logg("[BLE] Disabling BLE");
+    logg("Disabling");
     bleEnabled = false;
     bleConnected = false;
 }
 
 // Routine to enable BLE
 void Bluetooth_module::enable() {
-    logg("[BLE] Enabling BLE");
+    logg("Enabling");
     bleEnabled = true;
+}
+
+std::string Bluetooth_module::getTimestamp() {
+    return received_timestamp;
 }
 
 // Routine to check if BLE is enabled
@@ -107,72 +130,93 @@ bool Bluetooth_module::isConnected() {
     return bleConnected;
 }
 
+// Routine to check if there are status updates
+uint8_t Bluetooth_module::getStatusUpdates() {
+    return status;
+}
+
+// Routine to acknowledge status updates
+void Bluetooth_module::acknowledgeStatusUpdates(uint8_t status) {
+    this->status &= ~status;
+}
+
 // Routines to update characteristics
 void Bluetooth_module::updatePM1Characteristic(int32_t pm1) {
     pm1Characteristic->setValue(pm1);
     pm1Characteristic->notify();
 
-    logg("[BLE] Updated PM1 characteristic");
+    loggWithContext("Updated characteristic", "PM1");
 }
 
 void Bluetooth_module::updatePM2_5Characteristic(int32_t pm2_5) {
     pm2_5Characteristic->setValue(pm2_5);
     pm2_5Characteristic->notify();
 
-    logg("[BLE] Updated PM2.5 characteristic");
+    loggWithContext("Updated characteristic", "PM2.5");
 }
 
 void Bluetooth_module::updatePM10Characteristic(int32_t pm10) {
     pm10Characteristic->setValue(pm10);
     pm10Characteristic->notify();
 
-    logg("[BLE] Updated PM10 characteristic");
+    loggWithContext("Updated characteristic", "PM10");
 }
 
 void Bluetooth_module::updateCO2Characteristic(int32_t co2) {
     carbonDioxideCharacteristic->setValue(co2);
     carbonDioxideCharacteristic->notify();
 
-    logg("[BLE] Updated CO2 characteristic");
+    loggWithContext("Updated characteristic", "CO2");
 }
 
 void Bluetooth_module::updateTemperatureCharacteristic(int32_t temperature) {
-    int cast_temp = static_cast<int>(temperature);
-    temperatureCharacteristic->setValue(cast_temp);
+    temperatureCharacteristic->setValue(temperature);
     temperatureCharacteristic->notify();
 
-    logg("[BLE] Updated temperature characteristic");
+    loggWithContext("Updated characteristic", "Temperature");
 }
 
 void Bluetooth_module::updateGasCharacteristic(int32_t gas) {
-    int cast_gas = static_cast<int>(gas);
-    gasCharacteristic->setValue(cast_gas);
+    gasCharacteristic->setValue(gas);
     gasCharacteristic->notify();
 
-    logg("[BLE] Updated gas characteristic");
+    loggWithContext("Updated characteristic", "Gas");
 }
 
 void Bluetooth_module::updateHumidityCharacteristic(int32_t humidity) {
-    int cast_hum = static_cast<int>(humidity);
-    humidityCharacteristic->setValue(cast_hum);
+    humidityCharacteristic->setValue(humidity);
     humidityCharacteristic->notify();
 
-    logg("[BLE] Updated humidity characteristic");
+    loggWithContext("Updated characteristic", "Humidity");
 }
 
 void Bluetooth_module::updatePressureCharacteristic(int32_t pressure) {
-    int cast_press = static_cast<int>(pressure);
-    pressureCharacteristic->setValue(cast_press);
+    pressureCharacteristic->setValue(pressure);
     pressureCharacteristic->notify();
 
-    logg("[BLE] Updated pressure characteristic");
+    loggWithContext("Updated characteristic", "Pressure");
 }
 
 void Bluetooth_module::updateAltitudeCharacteristic(int32_t altitude) {
     altitudeCharacteristic->setValue(altitude);
     altitudeCharacteristic->notify();
 
-    logg("[BLE] Updated altitude characteristic");
+    loggWithContext("Updated characteristic", "Altitude");
+}
+
+// Routine to update battery level
+void Bluetooth_module::updateBatteryCharacteristic(int32_t voltage) {
+    batteryCharacteristic->setValue(voltage);
+    batteryCharacteristic->notify();
+
+    loggWithContext("Updated characteristic", "Battery");
+}
+
+void Bluetooth_module::updateTimestampCharacteristic(String time) {
+    timestampCharacteristic->setValue(time.c_str());
+    timestampCharacteristic->notify();
+
+    loggWithContext("Updated characteristic", "Timestamp");
 }
 
 // Routine to create BLE characteristics
@@ -195,6 +239,11 @@ void Bluetooth_module::createCharacteristics() {
                                                         CHARACTERISTIC_PROPERTIES);
     altitudeCharacteristic      = new BLECharacteristic(ALTITUDE_CHARACTERISTIC_UUID,
                                                         CHARACTERISTIC_PROPERTIES);
+    batteryCharacteristic       = new BLECharacteristic(BATTERY_CHARACTERISTIC_UUID,
+                                                        CHARACTERISTIC_PROPERTIES);
+    timestampCharacteristic     = new BLECharacteristic(TIMESTAMP_CHARACTERISTIC_UUID,
+                                                        CHARACTERISTIC_PROPERTIES |
+                                                        BLECharacteristic::PROPERTY_WRITE);
 }
 
 // Routine to create BLE descriptors
@@ -208,6 +257,8 @@ void Bluetooth_module::createDescriptors() {
     humidityDescriptor      = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
     pressureDescriptor      = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
     altitudeDescriptor      = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    batteryDescriptor       = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+    timestampDescriptor     = new BLEDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
 }
 
 // Routine to destroy BLE characteristics
@@ -221,6 +272,8 @@ void Bluetooth_module::destroyCharacteristics() {
     delete humidityCharacteristic;
     delete pressureCharacteristic;
     delete altitudeCharacteristic;
+    delete batteryCharacteristic;
+    delete timestampCharacteristic;
 }
 
 // Routine to destroy BLE descriptors
@@ -234,4 +287,11 @@ void Bluetooth_module::destroyDescriptors() {
     delete humidityDescriptor;
     delete pressureDescriptor;
     delete altitudeDescriptor;
+    delete batteryDescriptor;
+    delete timestampDescriptor;
+}
+
+// Routine to update timestamp
+void Bluetooth_module::updateTimestamp(std::string timestamp) {
+    received_timestamp.assign(timestamp);
 }

@@ -1,9 +1,14 @@
 #include "Modules/Display.h"
 
+#define logg(message) loggWithBase(message, "DISPLAY")
+#define loggWithContext(message, context) loggWithContext(message, context, "DISPLAY")
+
 extern RTC_DATA_ATTR bool bleEnabled;
 extern RTC_DATA_ATTR bool bleConnected;
+extern RTC_DATA_ATTR String bleServerName;
 extern RTC_DATA_ATTR uint8_t currScreenMode;
 extern RTC_DATA_ATTR uint8_t prevScreenMode;
+extern RTC_DATA_ATTR char _battery[12];
 extern RTC_DATA_ATTR char _temperature[12];
 extern RTC_DATA_ATTR char _humidity[12];
 extern RTC_DATA_ATTR char _pressure[12];
@@ -15,7 +20,7 @@ extern RTC_DATA_ATTR char _pm10[12];
 
 // Construct display
 Display::Display() : display(GxEPD2_DRIVER_CLASS(DISPLAY_CS_PIN, DISPLAY_DC_PIN, DISPLAY_RST_PIN, DISPLAY_BUSY_PIN)) {
-    // Set screen mode
+    // Set initial screen mode
     if (currScreenMode == SCREENMODE::NO_SCREEN) {
         currScreenMode = SCREENMODE::SENSORS;
     }
@@ -29,48 +34,8 @@ void Display::init() {
     this->display.init(0, true, 2, false, SPI, SPISettings(4000000, MSBFIRST, SPI_MODE0));
     this->display.setRotation(2);
     this->display.setTextColor(GxEPD_BLACK);
-}
 
-void Display::updateSensorsStats(String *data) {
-    for (int i = 0; i < NR_VALUES; i++) {
-        convertData(i, data[i]);
-    }
-}
-
-void Display::convertData(int idx, String data) {
-    switch (idx) {
-        case BME_TEMPERATURE_INDEX:
-            convertTemperature(data);
-            break;
-        case BME_HUMIDITY_INDEX:
-            convertHumidity(data);
-            break;
-        case BME_PRESSURE_INDEX:
-            convertPressure(data);
-            break;
-        case BME_ALTITUDE_INDEX:
-            convertAltitude(data);
-            break;
-        case CO2_CO2_INDEX:
-            convertCO2(data);
-            break;
-        case PM_PM1_INDEX:
-            convertPM1(data);
-            break;
-        case PM_PM2_5_INDEX:
-            convertPM2_5(data);
-            break;
-        case PM_PM10_INDEX:
-            convertPM10(data);
-            break;
-        default:
-            break;
-    }
-}
-
-void Display::updateBluetoothStats(bool enabled, bool connected) {
-    bleEnabled = enabled;
-    bleConnected = connected;
+    logg("Initialized");
 }
 
 // Routine to change screen to the right
@@ -93,11 +58,7 @@ void Display::changeScreenLeft() {
     }
 }
 
-// Routine to get screen mode
-uint8_t Display::getScreenMode() {
-    return currScreenMode;
-}
-
+// Routine to update a certain page of the display
 void Display::updateScreen(SCREENUPDATE update) {
     if (update == SCREENUPDATE::GENERAL || update == SCREENUPDATE::SENSORS) {
         checkSensorsScreen();
@@ -108,6 +69,7 @@ void Display::updateScreen(SCREENUPDATE update) {
     }
 }
 
+// Routines to check if the current screen needs to be refreshed with the updates received
 void Display::checkSensorsScreen() {
     if (currScreenMode == SCREENMODE::SENSORS) {
         updateSensorsScreen();
@@ -124,8 +86,9 @@ void Display::checkBluetoothScreen() {
     }
 }
 
+// Routines for updating the Bluetooth information screen (full or partial)
 void Display::updateBluetoothScreen() {
-    logg("[Display] Updating bluetooth screen");
+    loggWithContext("Updating screen", "Bluetooth");
 
     if (prevScreenMode == SCREENMODE::BLUETOOTH) {
         partialBluetoothScreen();
@@ -135,7 +98,7 @@ void Display::updateBluetoothScreen() {
 }
 
 void Display::fullBluetoothScreen() {
-    logg("-> Full bluetooth screen");
+    logg("Full refresh");
     
     display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
@@ -144,6 +107,11 @@ void Display::fullBluetoothScreen() {
     display.setFont(&FreeMonoBold18pt7b);
     display.setCursor(centerText_X("Bluetooth"), 30);
     display.print("Bluetooth");
+
+    // Write BLE server name
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setCursor(centerText_X(bleServerName), 55);
+    display.print(bleServerName);
 
     printBLEStatus();
 
@@ -158,7 +126,7 @@ void Display::fullBluetoothScreen() {
 }
 
 void Display::partialBluetoothScreen() {
-    logg("-> Partial bluetooth screen");
+    logg("Partial refresh");
     
     display.setPartialWindow(0, 0, display.width(), display.height());
     display.firstPage();
@@ -172,8 +140,15 @@ void Display::partialBluetoothScreen() {
         display.setFont(&FreeMonoBold18pt7b);
         display.setCursor(centerText_X("Bluetooth"), 30);
         display.print("Bluetooth");
+
+        // Write BLE server name
+        display.setFont(&FreeMonoBold9pt7b);
+        display.setCursor(centerText_X(bleServerName), 55);
+        display.print(bleServerName);
+
          // Print new text
         printBLEStatus();
+        
         // Write instructions
         display.setFont(&FreeMonoBold9pt7b);
         display.setCursor(centerText_X("Press button to"), 170);
@@ -183,8 +158,9 @@ void Display::partialBluetoothScreen() {
     } while (display.nextPage());
 }
 
+// Routines for updating the Sensors information screen (full or partial)
 void Display::updateSensorsScreen() {
-    logg("[Display] Updating sensors screen");
+    loggWithContext("Updating screen", "Sensors");
 
     if (prevScreenMode == SCREENMODE::SENSORS) {
         partialSensorsScreen();
@@ -194,7 +170,7 @@ void Display::updateSensorsScreen() {
 }
 
 void Display::fullSensorsScreen() {
-    logg("-> Full sensors screen");
+    logg("Full refresh");
 
     display.setFullWindow();
     display.firstPage();
@@ -211,7 +187,7 @@ void Display::fullSensorsScreen() {
 }
 
 void Display::partialSensorsScreen() {
-    logg("-> Partial sensors screen");
+    logg("Partial refresh");
     
     display.setPartialWindow(0, 0, display.width(), display.height());
     display.firstPage();
@@ -230,133 +206,7 @@ void Display::partialSensorsScreen() {
     } while (display.nextPage());
 }
 
-void Display::convertTemperature(String data) {
-    int temp_val = data.toInt();
 
-    switch (temp_val) {
-        case READ_ERROR:
-            strcpy(_temperature, "read error\0");
-            break;
-        case SENSOR_ERROR:
-            strcpy(_temperature, "sensor err\0");
-            break;
-        default:
-            strcpy(_temperature, String(String(temp_val) + " C").c_str());
-            break;
-    }
-}
-
-void Display::convertHumidity(String data) {
-    int humidity_val = data.toInt();
-
-    switch (humidity_val) {
-        case READ_ERROR:
-            strcpy(_humidity, "read error\0");
-            break;
-        case SENSOR_ERROR:
-            strcpy(_humidity, "sensor err\0");
-            break;
-        default:
-            strcpy(_humidity, String(String(humidity_val) + " %").c_str());
-            break;
-    }
-}
-
-void Display::convertPressure(String data) {
-    int pressure_val = data.toInt();
-
-    switch (pressure_val) {
-        case READ_ERROR:
-            strcpy(_pressure, "read error\0");
-            break;
-        case SENSOR_ERROR:
-            strcpy(_pressure, "sensor err\0");
-            break;
-        default:
-            strcpy(_pressure, String(String(pressure_val) + " hPa").c_str());
-            break;
-    }
-}
-
-void Display::convertAltitude(String data) {
-    int altitude_val = data.toInt();
-
-    switch (altitude_val) {
-        case READ_ERROR:
-            strcpy(_altitude, "read error\0");
-            break;
-        case SENSOR_ERROR:
-            strcpy(_altitude, "sensor err\0");
-            break;
-        default:
-            strcpy(_altitude, String(String(altitude_val) + " m").c_str());
-            break;
-    }
-}
-
-void Display::convertCO2(String data) {
-    int co2_val = data.toInt();
-
-    switch (co2_val) {
-        case READ_ERROR:
-            strcpy(_co2, "read error\0");
-            break;
-        case SENSOR_ERROR:
-            strcpy(_co2, "sensor err\0");
-            break;
-        default:
-            strcpy(_co2, String(String(co2_val) + " ppm").c_str());
-            break;
-    }
-}
-
-void Display::convertPM1(String data) {
-    int pm1_val = data.toInt();
-
-    switch (pm1_val) {
-        case READ_ERROR:
-            strcpy(_pm1, "read error\0");
-            break;
-        case SENSOR_ERROR:
-            strcpy(_pm1, "sensor err\0");
-            break;
-        default:
-            strcpy(_pm1, String(String(pm1_val) + " ug/m3").c_str());
-            break;
-    }
-}
-
-void Display::convertPM2_5(String data) {
-    int pm2_5_val = data.toInt();
-
-    switch (pm2_5_val) {
-        case READ_ERROR:
-            strcpy(_pm2_5, "read error\0");
-            break;
-        case SENSOR_ERROR:
-            strcpy(_pm2_5, "sensor err\0");
-            break;
-        default:
-            strcpy(_pm2_5, String(String(pm2_5_val) + " ug/m3").c_str());
-            break;
-    }
-}
-
-void Display::convertPM10(String data) {
-    int pm10_val = data.toInt();
-
-    switch (pm10_val) {
-        case READ_ERROR:
-            strcpy(_pm10, "read error\0");
-            break;
-        case SENSOR_ERROR:
-            strcpy(_pm10, "sensor err\0");
-            break;
-        default:
-            strcpy(_pm10, String(String(pm10_val) + " ug/m3").c_str());
-            break;
-    }
-}
 uint16_t Display::centerText_X(String text) {
     int16_t x_text, y_text;
     uint16_t w_text, h_text, x_centered, y_centered;
@@ -367,7 +217,20 @@ uint16_t Display::centerText_X(String text) {
     return x_centered;
 }
 
+// Decodes the sensor's data to be displayed
+void Display::updateSensorsStats(String *data) {
+    for (int i = 0; i < NR_VALUES; i++) {
+        convertData(i, data[i]);
+    }
+}
+
+// Routine to get screen mode
+uint8_t Display::getScreenMode() {
+    return currScreenMode;
+}
+
 void Display::printSensorsStatus() {
+    // Print line by line sensor data
     display.setFont(&FreeMonoBold9pt7b);
     display.setCursor(0, 50);
     String line1 = "Temperature: " + String(_temperature);
@@ -386,14 +249,21 @@ void Display::printSensorsStatus() {
     display.println(line7);
     String line8 = "PM10: " + String(_pm10);
     display.println(line8);
+
+    // Print battery voltage on the bottom right corner
+    display.setFont(&FreeMono9pt7b);
+    display.setCursor(40, 195);
+    display.println("Battery: " + String(_battery));
 }
 
 void Display::printBLEStatus() {
+    // Print action status
     display.setFont(&FreeMonoBold12pt7b);
     String line1 = "Enabled: " + String(bleEnabled ? "Yes" : "No");
     display.setCursor(centerText_X(line1), 90);
     display.print(line1);
 
+    // Print connection status
     String line2 = "Connected: " + String(bleConnected ? "Yes" : "No");
     display.setCursor(centerText_X(line2), 120);
     display.print(line2);

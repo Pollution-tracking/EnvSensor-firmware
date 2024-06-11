@@ -36,6 +36,7 @@ class BMESensor : public Sensor {
     bool sensorInitialised() override;
     void read() override;
     void init() override;
+    String getName() override;
     BMEData getData();
   private:
     Adafruit_BME680 *bme;
