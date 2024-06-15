@@ -3,8 +3,7 @@
 #define logg(message) loggWithBase(message, "BUTTONS")
 #define loggWithContext(message, context) loggWithContext(message, context, "BUTTONS")
 
-uint64_t lastInterruptTime;
-uint8_t pressed_button = BUTTONS::NO_BUTTON;
+volatile uint8_t pressed_button = BUTTONS::NO_BUTTON;
 
 // Button left ISR
 void IRAM_ATTR ISR_button_left() {
@@ -41,6 +40,11 @@ void handle_button_readings() {
         return;
     }
 
+    // Restart timer for reenabling sleep mode if needed
+    if (sleepUtils.is_cooldown_enabled()) {
+        restart_timer_reenable_sleep();
+    }
+
     // Left button press
     check_left_button();
 
@@ -52,11 +56,6 @@ void handle_button_readings() {
 
     // Reset flag
     pressed_button = BUTTONS::NO_BUTTON;
-
-    // Restart timer for reenabling sleep mode if needed
-    if (sleepUtils.is_cooldown_enabled()) {
-        restart_timer_reenable_sleep();
-    }
 }
 
 void check_left_button() {

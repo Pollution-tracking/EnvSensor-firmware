@@ -23,6 +23,23 @@ void Display::init() {
     logg("Initialized");
 }
 
+// Routine to show the loading screen
+void Display::showLoadingScreen() {
+    logg("Loading screen");
+    display.setFullWindow();
+    display.fillScreen(GxEPD_WHITE);
+
+    // Write title
+    display.setFont(&FreeMonoBold24pt7b);
+    display.setCursor(centerText_X("Sensors"), 90);
+    display.print("Sensors");
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X("heating"), 130);
+    display.print("heating");
+
+    display.display(false);
+}
+
 // Routine to change screen to the right
 void Display::changeScreenRight() {
     prevScreenMode = currScreenMode;

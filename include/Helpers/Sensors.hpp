@@ -6,6 +6,8 @@
 #include <Resources/Pins.h>
 #include <Resources/Constants.h>
 
+#include <Helpers/Timers.hpp>
+
 #include <Logger/Logger.h>
 
 #include <Sensors/CO2_sensor.h>

@@ -91,7 +91,6 @@ void loop() {
 
 	// Check if we can sleep
 	if (sleepUtils.is_sleep_allowed()) {
-		disable_timer_reenable_sleep();
 		enter_sleep_mode();
 	}
 
@@ -129,14 +128,14 @@ void handle_bluetooth_updates() {
 
 void send_historical_data() {
 	if (sensorsReadAdapter.ableToSendHistoricalData()) {
-		// Temporarily disable sensor readings
-		pause_timer_read_sensors();
+		// Temporarily disable sensors activity
+		pause_active_timers();
 
 		// Send historical data
 		sensorsReadAdapter.sendHistoricalData();
 
-		// Reenable sensor readings after
-		restart_timer_read_sensors();
+		// Reenable sensors activity
+		enable_paused_timers();
 	}
 }
 
@@ -149,8 +148,8 @@ void enter_sleep_mode() {
 	// Enable deep sleep wakes
 	configure_wakeup_sources();
 
-	// Disable timer for sensor readings
-	disable_timer_read_sensors();
+	// Disable timers
+	disable_active_timers();
 
 	// Flush debug messages
 	forcePrint();
@@ -162,8 +161,9 @@ void enter_sleep_mode() {
 void exit_sleep_mode() {
 	logg("Exiting deep sleep mode");
 
-	// Enable buck-boost converter
+	// Turn on sensors and initialize after heating up
 	digitalWrite(BUCK_EN_PIN, HIGH);
+	init_timer_init_sensors();
 
 	// Mark sleep cycle as completed
 	sleepUtils.mark_sleep_treated();
@@ -171,20 +171,11 @@ void exit_sleep_mode() {
 	// Disable timer for cooldown after sleep wake-up caused by buttons
 	disable_timer_reenable_sleep();
 
-	// Re-initialize sensors
-	init_sensors();
+	// Re-initialize modules
 	sensorsReadAdapter.init();
-
-	// Perform a fresh read of the sensors
-	read_all_sensors();
-	display.updateSensorsStats(sensorsReadAdapter.getData()); // send updated data to display
-	sensorsReadAdapter.storeData(); // store data to SD card if BLE is not connected
-
-	// Re-enable timer for sensor readings
-	init_timer_read_sensors();
 	
-	// Update screen
-	display.updateScreen(SCREENUPDATE::SENSORS);
+	// Show loading screen
+	display.showLoadingScreen();
 }
 
 void configure_wakeup_sources() {
@@ -203,9 +194,9 @@ void treat_wakeup_reason() {
 		loggWithContext("Wakeup caused by timer", "wakeup_reason");
 
 		// Read sensors, go back to sleep (BLE is off)
-		digitalWrite(BUCK_EN_PIN, HIGH); // Enable buck-boost converter
-		init_sensors();            // Initialize sensors
+		digitalWrite(BUCK_EN_PIN, HIGH); // Turn on sensors
 		display.init();            // Initialize display
+		init_sensors();            // Initialize sensors
 		sensorsReadAdapter.init(); // Initialize SD card (BLE is still off)
 		read_all_sensors();        // Read sensors
 		display.updateSensorsStats(sensorsReadAdapter.getData()); // Send updated data to display
@@ -236,18 +227,12 @@ void treat_wakeup_reason() {
 		loggWithContext("Wakeup was not caused by timer nor GPIO", "wakeup_reason");
 
 		// Normal boot
-		digitalWrite(BUCK_EN_PIN, HIGH); // Enable buck-boost converter
-		init_sensors();            // Initialize sensors
-		display.init();            // Initialize display
-		sensorsReadAdapter.init(); // Initialize SD card and BLE
-		init_buttons();            // Initialize buttons
-		read_all_sensors();        // Perform an initial read of the sensors
-		display.updateSensorsStats(sensorsReadAdapter.getData()); // send updated data to display
-		sensorsReadAdapter.storeData(); // Store data to SD card if BLE is not connected
-		init_timer_read_sensors(); // Initialize timer for future sensor reads
-
-		// Update screen
-		display.updateScreen(SCREENUPDATE::SENSORS);
+		digitalWrite(BUCK_EN_PIN, HIGH); // Turn on sensors
+		init_timer_init_sensors();   // Initialize sensors after heating up
+		display.init();              // Initialize display
+		display.showLoadingScreen(); // Show loading screen
+		sensorsReadAdapter.init();   // Initialize SD card and BLE
+		init_buttons();              // Initialize buttons
 		break;
   }
 }

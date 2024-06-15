@@ -142,7 +142,7 @@ int MHZ19::getCO2(bool isunLimited, bool force)
                 if(checkVal[0] > 32767 || checkVal[1] > 32767 || (((checkVal[0] - checkVal[1]) >= 10) && checkVal[1] == 410))
                 {      
                     this->errorCode = RESULT_FILTER;
-                    return 0;
+                    return -1;
                 }     
             }
             else

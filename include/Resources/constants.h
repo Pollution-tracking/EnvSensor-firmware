@@ -68,12 +68,14 @@ const int PM_PM2_5_INDEX        = 9;
 const int PM_PM10_INDEX         = 10;
 const String dataPath = "/SensorsData.csv";
 
-// Time between sensor reads (in us -> chosen to be prime numbers)
+// Timer values (in us -> chosen to be prime numbers)
 const uint64_t WAIT_TIME_READ_SENSORS   = 20000009;
+const uint64_t WAIT_TIME_INIT_SENSORS   = 5000003;
 const uint64_t WAIT_TIME_REENABLE_SLEEP = 8000003;
-
-// Button times (in ms)
-const uint16_t DEBOUNCE_TIME = 250;
+const uint8_t NR_TIMERS         = 3;
+const uint8_t TIMER_INIT_INDEX  = 0;
+const uint8_t TIMER_READ_INDEX  = 1;
+const uint8_t TIMER_SLEEP_INDEX = 2;
 
 const uint64_t BUTTONS_MASK = (uint64_t)1 << BUTTON_LEFT_PIN |
                               (uint64_t)1 << BUTTON_CENTER_PIN |
@@ -84,12 +86,13 @@ const float seaLevel = 1013.25;
 
 // Each bit represents one of the sensors to be read
 namespace SENSORS {
-    const uint8_t NO_SENSOR    = 0b0000;
-    const uint8_t ALL_SENSORS  = 0b1111;
-    const uint8_t SENSOR_PM    = 0b0001;
-    const uint8_t SENSOR_CO2   = 0b0010;
-    const uint8_t SENSOR_BME   = 0b0100;
-    const uint8_t BATTERY      = 0b1000;
+    const uint8_t NO_SENSOR    = 0b00000;
+    const uint8_t ALL_SENSORS  = 0b11110;
+    const uint8_t SENSOR_PM    = 0b00010;
+    const uint8_t SENSOR_CO2   = 0b00100;
+    const uint8_t SENSOR_BME   = 0b01000;
+    const uint8_t BATTERY      = 0b10000;
+    const uint8_t INIT         = 0b00001;
 }
 
 // Each bit represents one of the buttons
@@ -110,6 +113,12 @@ namespace BLE_STATUS {
     const uint8_t CLIENT_UPDATE     = 0b01;
     const uint8_t TIMESTAMP_UPDATE  = 0b10;
     const uint8_t NO_UPDATE         = 0b00;
+};
+
+enum class TIMER_MODES {
+    T_ACTIVE,
+    T_PAUSED,
+    T_DISABLED
 };
 
 enum class SCREENUPDATE {

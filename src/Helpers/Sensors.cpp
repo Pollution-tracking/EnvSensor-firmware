@@ -3,7 +3,7 @@
 #define logg(message) loggWithBase(message, "SENSORS")
 #define loggWithContext(message, context) loggWithContext(message, context, "SENSORS")
 
-uint8_t read_sensor = SENSORS::NO_SENSOR; // Which sensors to read?
+volatile uint8_t read_sensor = SENSORS::NO_SENSOR; // Which sensors to read?
 
 void init_sensors() {
   // Initialize PM sensor (Serial2)
@@ -22,7 +22,26 @@ void handle_sensor_readings() {
   if (read_sensor == SENSORS::NO_SENSOR) {
     return;
   }
-  
+
+  // Initialize sensors
+  if (read_sensor & SENSORS::INIT) {
+    // Reset flag
+    read_sensor &= ~SENSORS::INIT;
+
+    // Init sensors
+    init_sensors();
+
+    // Start timer for sensor readings
+    disable_timer_init_sensors();
+    init_timer_read_sensors();
+
+    // Get initial sensor values and update display
+    read_all_sensors();
+    display.updateSensorsStats(sensorsReadAdapter.getData());
+    display.updateScreen(SCREENUPDATE::SENSORS);
+  }
+
+  // Read sensors
   if (read_sensor == SENSORS::ALL_SENSORS) {
     // Reset flag
     read_sensor = SENSORS::NO_SENSOR;
@@ -41,9 +60,9 @@ void handle_sensor_readings() {
 
 // Force reading all sensors
 void read_all_sensors() {
-  treat_CO2_sensor();
   treat_PM_sensor();
   treat_BME_sensor();
+  treat_CO2_sensor();
   treat_Battery();
 }
 

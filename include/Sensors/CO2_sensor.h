@@ -35,7 +35,6 @@ class CO2Sensor : public Sensor{
     CO2Data getData();
   private:
     CO2Data data;
-    HardwareSerial* mhz19Serial;
     MHZ19 mhz19;
     bool _errorCO2 = false;
     bool _errorTemperature = false;

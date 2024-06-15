@@ -5,21 +5,15 @@
 
 // Construct CO2 sensor
 CO2Sensor::CO2Sensor() {
-  Serial1.flush();
-  Serial1.end();
-  mhz19Serial = &Serial1;
+  Serial1.begin(9600, SERIAL_8N1, CO2_TX_PIN, CO2_RX_PIN);
 }
 
 // Destruct CO2 sensor
-CO2Sensor::~CO2Sensor() {
-  delete mhz19Serial;
-}
+CO2Sensor::~CO2Sensor() { }
 
 // Routine to initialize CO2 sensor
 void CO2Sensor::init() {
-  mhz19Serial->begin(9600, SERIAL_8N1, CO2_TX_PIN, CO2_RX_PIN);
-  mhz19.begin(*mhz19Serial);
-  mhz19.autoCalibration();
+  mhz19.begin(Serial1);
 
   if (mhz19.errorCode != RESULT_OK) {
     logg("Initialization failed!");
@@ -29,6 +23,7 @@ void CO2Sensor::init() {
     _sensorFound = true;
   }
 
+  mhz19.autoCalibration();
   _initialised = true;
 }
 
@@ -71,7 +66,7 @@ String CO2Sensor::getName() {
 
 // Internal functions
 void CO2Sensor::checkErrors() {
-  if (this->data.co2 == 0) {
+  if (this->data.co2 < 0) {
     loggWithContext("Error", "CO2");
     this->_errorCO2 = true;
     this->data.co2 = READ_ERROR;
@@ -79,7 +74,7 @@ void CO2Sensor::checkErrors() {
     this->_errorCO2 = false;
   }
 
-  if (this->data.temperature == -273.15) {
+  if (this->data.temperature == -273) {
     loggWithContext("Error", "Temperature");
     this->_errorTemperature = true;
     this->data.temperature = READ_ERROR;
