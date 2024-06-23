@@ -40,6 +40,23 @@ void Display::showLoadingScreen() {
     display.display(false);
 }
 
+// Routine to show the sending historical data screen
+void Display::showSendingScreen() {
+    logg("Sending screen");
+    display.setFullWindow();
+    display.fillScreen(GxEPD_WHITE);
+
+    // Write title
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X("Syncing"), 90);
+    display.print("Syncing");
+    display.setFont(&FreeMonoBold12pt7b);
+    display.setCursor(centerText_X("HistoricalData"), 130);
+    display.print("HistoricalData");
+
+    display.display(false);
+}
+
 // Routine to change screen to the right
 void Display::changeScreenRight() {
     prevScreenMode = currScreenMode;

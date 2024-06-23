@@ -22,6 +22,7 @@ extern CO2Sensor co2Sensor;
 extern PMSensor pmSensor;
 extern BMESensor bmeSensor;
 extern SensorsReadAdapter sensorsReadAdapter;
+extern SleepUtils sleepUtils;
 
 void init_sensors();
 void handle_sensor_readings();

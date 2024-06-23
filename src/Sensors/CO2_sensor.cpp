@@ -5,7 +5,7 @@
 
 // Construct CO2 sensor
 CO2Sensor::CO2Sensor() {
-  Serial1.begin(9600, SERIAL_8N1, CO2_TX_PIN, CO2_RX_PIN);
+  Serial2.begin(9600, SERIAL_8N1, CO2_TX_PIN, CO2_RX_PIN);
 }
 
 // Destruct CO2 sensor
@@ -13,7 +13,7 @@ CO2Sensor::~CO2Sensor() { }
 
 // Routine to initialize CO2 sensor
 void CO2Sensor::init() {
-  mhz19.begin(Serial1);
+  mhz19.begin(Serial2);
 
   if (mhz19.errorCode != RESULT_OK) {
     logg("Initialization failed!");

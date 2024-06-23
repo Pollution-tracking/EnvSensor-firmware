@@ -8,6 +8,7 @@ Bluetooth_module::Bluetooth_module() {
     // Create BLE characteristics and descriptors
     this->createCharacteristics();
     this->createDescriptors();
+    this->_isOn = false;
 }
 
 // Destruct Bluetooth module
@@ -24,7 +25,7 @@ void Bluetooth_module::init() {
 
     this->status = BLE_STATUS::NO_UPDATE;
     // BLE purposesly disabled => early exit
-    if (!this->isEnabled()) {
+    if (!this->isEnabled() || this->_isOn) {
         return;
     }
 
@@ -86,6 +87,8 @@ void Bluetooth_module::init() {
     // Start advertising BLE service
     this->startAdvertising();
     logg("Advertising started");
+
+    this->_isOn = true;
 }
 
 // Routine to start advertising BLE service
@@ -100,7 +103,6 @@ void Bluetooth_module::startAdvertising() {
 
 // Routine to stop advertising BLE service
 void Bluetooth_module::stopAdvertising() {
-    bleEnabled = false;
     envServer->getAdvertising()->stop();
 }
 
@@ -109,12 +111,18 @@ void Bluetooth_module::disable() {
     logg("Disabling");
     bleEnabled = false;
     bleConnected = false;
+    this->_isOn = false;
+    
+    this->stopAdvertising();
+    envServer->removeService(envService);
+    BLEDevice::deinit(true);
 }
 
 // Routine to enable BLE
 void Bluetooth_module::enable() {
     logg("Enabling");
     bleEnabled = true;
+    this->init();
 }
 
 // Extract received timestamp from client

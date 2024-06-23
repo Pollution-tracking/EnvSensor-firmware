@@ -86,9 +86,11 @@ void treat_left_button() {
 
 void treat_center_button() {
     loggWithContext("Pressed", "Center");
-    // Check if screen is interactive (blueooth screen)
+    // Check if screen is interactive (blueooth or sensors screen)
     if (display.getScreenMode() == SCREENMODE::BLUETOOTH) {
         interact_BLE();
+    } else if (display.getScreenMode() == SCREENMODE::SENSORS) {
+        interact_sensors();
     }
 }
 
@@ -106,6 +108,17 @@ void interact_BLE() {
 
     // Update display
     display.updateScreen(SCREENUPDATE::BLUETOOTH);
+}
+
+void interact_sensors() {
+    loggWithContext("Sensors request", "Center");
+    
+    // Request new sensor readings
+    if (request_sensor_readings()) {
+        loggWithContext("Success", "Center");
+    } else {
+        loggWithContext("Failes", "Center");
+    }
 }
 
 void treat_right_button() {

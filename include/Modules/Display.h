@@ -35,6 +35,7 @@ class Display {
         void updateScreen(SCREENUPDATE update = SCREENUPDATE::GENERAL);
         void updateSensorsStats(String *data);
         void showLoadingScreen();
+        void showSendingScreen();
     private:
         GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> display;
         void checkSensorsScreen();

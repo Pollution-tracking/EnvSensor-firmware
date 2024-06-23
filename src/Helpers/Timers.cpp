@@ -10,6 +10,13 @@ bool IRAM_ATTR ISR_sensors_read(void *args) {
   return true;
 }
 
+// Mark all sensors to be prepared for reading
+bool IRAM_ATTR ISR_sensors_prepare(void *args) {
+  read_sensor = SENSORS::SENSOR_PREPARE;
+
+  return true;
+}
+
 // Mark all sensors to be initialized
 bool IRAM_ATTR ISR_sensors_init(void *args) {
   read_sensor |= SENSORS::INIT;
@@ -32,7 +39,7 @@ void pause_active_timers() {
   }
 
   if (timers_state[TIMER_INIT_INDEX] == TIMER_MODES::T_ACTIVE) {
-    disable_timer_init_sensors();
+    pause_timer_init_sensors();
   }
 
   if (timers_state[TIMER_SLEEP_INDEX] == TIMER_MODES::T_ACTIVE) {
@@ -62,7 +69,7 @@ void enable_paused_timers() {
   }
 
   if (timers_state[TIMER_INIT_INDEX] == TIMER_MODES::T_PAUSED) {
-    init_timer_init_sensors();
+    restart_timer_init_sensors();
   }
 
   if (timers_state[TIMER_SLEEP_INDEX] == TIMER_MODES::T_PAUSED) {
@@ -84,14 +91,15 @@ void init_timer_read_sensors() {
   timer_init(TIMER_GROUP_0, TIMER_0, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
   // Setup timer interrupt for sensor readings
-  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, WAIT_TIME_READ_SENSORS);
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, WAIT_TIME_PREPARE_SENSORS);
   timer_enable_intr(TIMER_GROUP_0, TIMER_0);
-  timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, ISR_sensors_read, NULL, 0);
+  timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, ISR_sensors_prepare, NULL, 0);
   // Start timer
   timer_start(TIMER_GROUP_0, TIMER_0);
 
   // Mark timer as active
   timers_state[TIMER_READ_INDEX] = TIMER_MODES::T_ACTIVE;
+  read_timer_state = TIMER_READ_STATES::T_PREPARE;
 
   loggWithContext("Timer initialized", "Sensor readings");
 }
@@ -127,6 +135,38 @@ void restart_timer_read_sensors() {
   timers_state[TIMER_READ_INDEX] = TIMER_MODES::T_ACTIVE;
 
   loggWithContext("Timer resumed", "Sensor readings");
+}
+
+void register_read_interrupt() {
+  timer_disable_intr(TIMER_GROUP_0, TIMER_0);
+  timer_isr_callback_remove(TIMER_GROUP_0, TIMER_0);
+  timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, ISR_sensors_read, NULL, 0);
+  timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, WAIT_TIME_READ_SENSORS);
+  timer_enable_intr(TIMER_GROUP_0, TIMER_0);
+
+  // Change timer state
+  read_timer_state = TIMER_READ_STATES::T_POLL;
+
+  loggWithContext("Changed interrupt to POLL", "Sensor readings");
+}
+
+void register_prepare_interrupt() {
+  timer_disable_intr(TIMER_GROUP_0, TIMER_0);
+  timer_isr_callback_remove(TIMER_GROUP_0, TIMER_0);
+  timer_isr_callback_add(TIMER_GROUP_0, TIMER_0, ISR_sensors_prepare, NULL, 0);
+  timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, WAIT_TIME_PREPARE_SENSORS);
+  timer_enable_intr(TIMER_GROUP_0, TIMER_0);
+
+  // Change timer state
+  read_timer_state = TIMER_READ_STATES::T_PREPARE;
+
+  loggWithContext("Changed interrupt to PREPARE", "Sensor readings");
+}
+
+void force_read_sensors_interrupt() {
+  timer_set_counter_value(TIMER_GROUP_0, TIMER_0, WAIT_TIME_PREPARE_SENSORS - 500003);
 }
 
 // Timer that triggers sensor initializations
@@ -168,6 +208,24 @@ void disable_timer_init_sensors() {
   timers_state[TIMER_INIT_INDEX] = TIMER_MODES::T_DISABLED;
 
   loggWithContext("Timer disabled", "Sensor initializations");
+}
+
+void pause_timer_init_sensors() {
+  timer_pause(TIMER_GROUP_0, TIMER_0);
+
+  // Mark timer as paused
+  timers_state[TIMER_INIT_INDEX] = TIMER_MODES::T_PAUSED;
+
+  loggWithContext("Timer paused", "Sensor initializations");
+}
+
+void restart_timer_init_sensors() {
+  timer_start(TIMER_GROUP_0, TIMER_0);
+
+  // Mark timer as active
+  timers_state[TIMER_INIT_INDEX] = TIMER_MODES::T_ACTIVE;
+
+  loggWithContext("Timer resumed", "Sensor initializations");
 }
 
 // Timer that triggers reenabling sleep mode after cooldown when buttons are pressed (occurs in sleep mode)
@@ -218,4 +276,22 @@ void disable_timer_reenable_sleep() {
   timers_state[TIMER_SLEEP_INDEX] = TIMER_MODES::T_DISABLED;
 
   loggWithContext("Timer disabled", "Reenable sleep");
+}
+
+// Request sensor readings
+bool request_sensor_readings() {
+  // Timer not in use
+  if (timers_state[TIMER_READ_INDEX] != TIMER_MODES::T_ACTIVE) {
+    return false;
+  }
+
+  // Already in the polling state
+  if (read_timer_state == TIMER_READ_STATES::T_POLL) {
+    return false;
+  }
+
+  // Trigger sensor readings
+  force_read_sensors_interrupt();
+
+  return true;
 }

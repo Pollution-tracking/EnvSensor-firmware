@@ -3,9 +3,10 @@
 
 struct SleepUtils {
 private:
-    bool allowSleep    = false; // True when sleep mode should start
-    bool sleepCooldown = false; // True when starting cooldown after sleep wake-up caused by buttons
-    bool sleepFinished = false; // True when sleep mode is over
+    bool allowSleep     = false; // True when sleep mode should start
+    bool sleepCooldown  = false; // True when starting cooldown after sleep wake-up caused by buttons
+    bool sleepFinished  = false; // True when sleep mode is over
+    bool sleepAfterRead = false; // True when sleep mode should start after sensor readings
     
 public:
     void allow_sleep() {
@@ -39,6 +40,14 @@ public:
 
     void mark_sleep_treated() {
         sleepFinished = false;
+    }
+
+    void allow_sleep_after_read() {
+        sleepAfterRead = true;
+    }
+
+    bool should_sleep_after_read() {
+        return sleepAfterRead;
     }
 };
 

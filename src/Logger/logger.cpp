@@ -23,5 +23,7 @@ void loggWithContext(String message, String context, String base) {
 }
 
 void forcePrint() {
-  Serial.flush();
+  if (loggingEnabled) {
+    Serial.flush();
+  }
 }

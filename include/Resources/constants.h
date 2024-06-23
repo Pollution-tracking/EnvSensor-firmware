@@ -57,7 +57,7 @@ const uint16_t TIME_ERROR_16 = 65535;
 const int NR_VALUES             = 11;
 const int TIMESTAMP_INDEX       = 0;
 const int BATTERY_INDEX         = 1;
-const int BME_TEMPERATURE_INDEX = 2;
+const int TEMPERATURE_INDEX = 2;
 const int BME_HUMIDITY_INDEX    = 3;
 const int BME_PRESSURE_INDEX    = 4;
 const int BME_GAS_INDEX         = 5;
@@ -69,9 +69,10 @@ const int PM_PM10_INDEX         = 10;
 const String dataPath = "/SensorsData.csv";
 
 // Timer values (in us -> chosen to be prime numbers)
-const uint64_t WAIT_TIME_READ_SENSORS   = 20000009;
-const uint64_t WAIT_TIME_INIT_SENSORS   = 5000003;
-const uint64_t WAIT_TIME_REENABLE_SLEEP = 8000003;
+const uint64_t WAIT_TIME_READ_SENSORS    = 5000003;
+const uint64_t WAIT_TIME_PREPARE_SENSORS = 15000017;
+const uint64_t WAIT_TIME_INIT_SENSORS    = 5000003;
+const uint64_t WAIT_TIME_REENABLE_SLEEP  = 8000003;
 const uint8_t NR_TIMERS         = 3;
 const uint8_t TIMER_INIT_INDEX  = 0;
 const uint8_t TIMER_READ_INDEX  = 1;
@@ -86,13 +87,14 @@ const float seaLevel = 1013.25;
 
 // Each bit represents one of the sensors to be read
 namespace SENSORS {
-    const uint8_t NO_SENSOR    = 0b00000;
-    const uint8_t ALL_SENSORS  = 0b11110;
-    const uint8_t SENSOR_PM    = 0b00010;
-    const uint8_t SENSOR_CO2   = 0b00100;
-    const uint8_t SENSOR_BME   = 0b01000;
-    const uint8_t BATTERY      = 0b10000;
-    const uint8_t INIT         = 0b00001;
+    const uint8_t NO_SENSOR      = 0b00000;
+    const uint8_t ALL_SENSORS    = 0b11110;
+    const uint8_t SENSOR_PM      = 0b00010;
+    const uint8_t SENSOR_CO2     = 0b00100;
+    const uint8_t SENSOR_BME     = 0b01000;
+    const uint8_t BATTERY        = 0b10000;
+    const uint8_t INIT           = 0b00001;
+    const uint8_t SENSOR_PREPARE = 0b00011;
 }
 
 // Each bit represents one of the buttons
@@ -119,6 +121,12 @@ enum class TIMER_MODES {
     T_ACTIVE,
     T_PAUSED,
     T_DISABLED
+};
+
+enum class TIMER_READ_STATES {
+    T_POLL,
+    T_PREPARE,
+    T_NULL
 };
 
 enum class SCREENUPDATE {

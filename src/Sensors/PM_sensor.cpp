@@ -16,6 +16,7 @@ PMSensor::~PMSensor() {
 // Routine to initialize PM sensor
 void PMSensor::init() {
   pms->init();
+  pms->wake();
   this->_sensorFound = true;
   logg("Initialized");
   
@@ -68,6 +69,31 @@ bool PMSensor::sensorInitialised() {
 
 String PMSensor::getName() {
   return "PMSA003";
+}
+
+void PMSensor::sleep() {
+  // Early exit if already sleeping
+  if (this->_sleeping) {
+    logg("Already sleeping");
+    return;
+}
+
+  pms->sleep();
+  this->_sleeping = true;
+  logg("Put to sleep");
+}
+
+void PMSensor::wake() {
+  // Early exit if already awake
+  if (!this->_sleeping) {
+    logg("Already awake");
+    return;
+  }
+
+  pms->wake();
+  this->_sleeping = false;
+  delay(100); // Wait for sensor to wake up
+  logg("Woken up");
 }
 
 // Internal functions

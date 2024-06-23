@@ -34,6 +34,8 @@ class PMSensor : public Sensor{
     void read() override;
     void init() override;
     String getName() override;
+    void sleep();
+    void wake();
     PMData getData();
   private:
     SerialPM *pms;
@@ -41,6 +43,7 @@ class PMSensor : public Sensor{
     bool _errorPM = false;
     bool _sensorFound = false;
     bool _initialised = false;
+    bool _sleeping = false;
     void checkErrors(SerialPM::STATUS status);
     void markError();
 };

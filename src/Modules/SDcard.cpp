@@ -26,6 +26,7 @@ void SDcard::init() {
     logg("Initialized");
 
     _initialised = true;
+    hasHistoricalData = fileExists(dataPath);
 }
 
 bool SDcard::isInitialised() {
@@ -36,16 +37,18 @@ bool SDcard::isInitialised() {
 bool SDcard::writeHistoricalData(String data) {
     loggWithContext("Storing to file", "HistoricalData");
 
-    return writeData(dataPath, data);
+    bool writeRes = writeData(dataPath, data);
+
+    if (writeRes) {
+        hasHistoricalData = true;
+    }
+
+    return writeRes;
 }
 
 // Routine to check if historical data are stored on SD card
 bool SDcard::haveHistoricalData() {
-    if (!isInitialised()) {
-        return false;
-    }
-
-    return fileExists(dataPath);
+    return hasHistoricalData;
 }
 
 // Routine to delete all historical data from SD card
@@ -56,11 +59,17 @@ bool SDcard::deleteHistoricalData() {
 
     loggWithContext("Deleting file", "HistoricalData");
 
-    return deleteFile(dataPath);
+    bool deleteRes = deleteFile(dataPath);
+
+    if (deleteRes) {
+        hasHistoricalData = false;
+    }
+
+    return deleteRes;
 }
 
 bool SDcard::writeData(String path, String data) {
-    if(!fileExists(path)) {
+    if(!hasHistoricalData) {
         return writeToFile(path, data);
     } else {
         return appendToFile(path, data);
@@ -80,7 +89,7 @@ bool SDcard::fileExists(String path) {
 
 bool SDcard::writeToFile(String path, String message) {
     // Open file for writing
-    File file = SD.open(path, FILE_WRITE);
+    File file = SD.open(path, FILE_WRITE, true);
     if(!file) {
         return false;
     }
@@ -100,7 +109,7 @@ bool SDcard::writeToFile(String path, String message) {
 
 bool SDcard::appendToFile(String path, String message) {
     // Open file for appending
-    File file = SD.open(path, FILE_APPEND);
+    File file = SD.open(path, FILE_APPEND, true);
     if(!file) {
         return false;
     }

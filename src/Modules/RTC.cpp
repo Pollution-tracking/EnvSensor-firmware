@@ -95,7 +95,7 @@ bool RTC::setDay(uint8_t day) {
         return false;
     }
 
-    return rtc.setWeekday(day);
+    return rtc.setDate(day);
 }
 
 // Routine to set month
@@ -173,7 +173,7 @@ String RTC::getTimestamp() {
     return String(rtc.getHours()) + ":" +
            String(rtc.getMinutes()) + ":" +
            String(rtc.getSeconds()) + ":" +
-           String(rtc.getWeekday()) + ":" +
+           String(rtc.getDate()) + ":" +
            String(rtc.getMonth()) + ":" +
            String(rtc.getYear());
 }

@@ -36,5 +36,6 @@ void treat_center_button();
 void treat_right_button();
 
 void interact_BLE();
+void interact_sensors();
 
 #endif // BUTTONS_HPP

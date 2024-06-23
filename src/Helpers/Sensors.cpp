@@ -6,6 +6,9 @@
 volatile uint8_t read_sensor = SENSORS::NO_SENSOR; // Which sensors to read?
 
 void init_sensors() {
+  // Enable BUCK converter
+  digitalWrite(BUCK_EN_PIN, HIGH);
+
   // Initialize PM sensor (Serial2)
   pmSensor.init();
   
@@ -24,9 +27,9 @@ void handle_sensor_readings() {
   }
 
   // Initialize sensors
-  if (read_sensor & SENSORS::INIT) {
+  if (read_sensor == SENSORS::INIT) {
     // Reset flag
-    read_sensor &= ~SENSORS::INIT;
+    read_sensor = SENSORS::NO_SENSOR;
 
     // Init sensors
     init_sensors();
@@ -35,10 +38,22 @@ void handle_sensor_readings() {
     disable_timer_init_sensors();
     init_timer_read_sensors();
 
-    // Get initial sensor values and update display
+    // Get initial sensor values and update display (don't handle data yet)
     read_all_sensors();
     display.updateSensorsStats(sensorsReadAdapter.getData());
-    display.updateScreen(SCREENUPDATE::SENSORS);
+    display.updateScreen(SCREENUPDATE::GENERAL);
+  }
+
+  // Prepare sensors for reading
+  if (read_sensor == SENSORS::SENSOR_PREPARE) {
+    // Reset flag
+    read_sensor = SENSORS::NO_SENSOR;
+
+    // Prepare sensors
+    pmSensor.wake();
+
+    // Prepare next timer (read sensors)
+    register_read_interrupt();
   }
 
   // Read sensors
@@ -49,21 +64,32 @@ void handle_sensor_readings() {
     // Update sensor values (BLE updates sent if connected)
     read_all_sensors();
 
+    // Reset sensor modes
+    pmSensor.sleep();
+
+    // Prepare next timer (prepare sensors)
+    register_prepare_interrupt();
+
     // Update display data and view
     display.updateSensorsStats(sensorsReadAdapter.getData());
     display.updateScreen(SCREENUPDATE::SENSORS);
 
     // Store data to SD card if bluetooth is not connected
     sensorsReadAdapter.storeData();
+
+    // Check if we should sleep
+    if (sleepUtils.should_sleep_after_read()) {
+      sleepUtils.allow_sleep();
+    }
   }
 }
 
 // Force reading all sensors
 void read_all_sensors() {
+  treat_Battery();
   treat_PM_sensor();
   treat_BME_sensor();
   treat_CO2_sensor();
-  treat_Battery();
 }
 
 // Read sensors and send data to Adapter (will either write to SD card or send via Bluetooth)

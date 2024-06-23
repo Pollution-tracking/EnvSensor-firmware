@@ -12,6 +12,7 @@ extern RTC_DATA_ATTR bool bleEnabled;
 extern RTC_DATA_ATTR bool bleConnected;
 
 extern RTC_DATA_ATTR bool RTCUpdated;
+extern RTC_DATA_ATTR bool hasHistoricalData;
 
 extern RTC_DATA_ATTR float batteryVoltage;
 

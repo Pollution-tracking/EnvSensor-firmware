@@ -5,7 +5,7 @@ void convertData(int idx, String data) {
         case BATTERY_INDEX:
             convertBattery(data);
             break;
-        case BME_TEMPERATURE_INDEX:
+        case TEMPERATURE_INDEX:
             convertTemperature(data);
             break;
         case BME_HUMIDITY_INDEX:

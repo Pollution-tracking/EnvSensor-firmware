@@ -131,8 +131,14 @@ void send_historical_data() {
 		// Temporarily disable sensors activity
 		pause_active_timers();
 
+		// Change screen to sending screen
+		display.showSendingScreen();
+
 		// Send historical data
 		sensorsReadAdapter.sendHistoricalData();
+
+		// Revert screen to previous state
+		display.updateScreen(SCREENUPDATE::GENERAL);
 
 		// Reenable sensors activity
 		enable_paused_timers();
@@ -142,8 +148,8 @@ void send_historical_data() {
 void enter_sleep_mode() {
   	logg("Entering deep sleep mode");
 
-	// Disable buck-boost converter
-	digitalWrite(BUCK_EN_PIN, LOW);
+	// Change sensors state to sleep
+	pmSensor.sleep();
   
 	// Enable deep sleep wakes
 	configure_wakeup_sources();
@@ -162,7 +168,6 @@ void exit_sleep_mode() {
 	logg("Exiting deep sleep mode");
 
 	// Turn on sensors and initialize after heating up
-	digitalWrite(BUCK_EN_PIN, HIGH);
 	init_timer_init_sensors();
 
 	// Mark sleep cycle as completed
@@ -180,7 +185,7 @@ void exit_sleep_mode() {
 
 void configure_wakeup_sources() {
   // Timer wakeup for sensor readings
-  esp_sleep_enable_timer_wakeup(WAIT_TIME_READ_SENSORS);
+  esp_sleep_enable_timer_wakeup(WAIT_TIME_PREPARE_SENSORS);
   // ext1 wakeup for button presses
   esp_sleep_enable_ext1_wakeup(BUTTONS_MASK, ESP_EXT1_WAKEUP_ANY_HIGH);
 }
@@ -194,20 +199,12 @@ void treat_wakeup_reason() {
 		loggWithContext("Wakeup caused by timer", "wakeup_reason");
 
 		// Read sensors, go back to sleep (BLE is off)
-		digitalWrite(BUCK_EN_PIN, HIGH); // Turn on sensors
-		display.init();            // Initialize display
 		init_sensors();            // Initialize sensors
+		display.init();            // Initialize display
 		sensorsReadAdapter.init(); // Initialize SD card (BLE is still off)
-		read_all_sensors();        // Read sensors
-		display.updateSensorsStats(sensorsReadAdapter.getData()); // Send updated data to display
-		sensorsReadAdapter.storeData(); // Store data to SD card (BLE is not connected)
-
-		// Update screen
-		display.updateScreen(SCREENUPDATE::SENSORS);
-
-		// Go back to sleep
-		configure_wakeup_sources();
-		esp_deep_sleep_start();
+		init_timer_read_sensors(); // Initialize timer for sensor readings
+		force_read_sensors_interrupt(); // Force sensor readings
+		sleepUtils.allow_sleep_after_read(); // Enable sleep mode after sensor readings
 		break;
 
 	case ESP_SLEEP_WAKEUP_EXT1:
@@ -227,7 +224,6 @@ void treat_wakeup_reason() {
 		loggWithContext("Wakeup was not caused by timer nor GPIO", "wakeup_reason");
 
 		// Normal boot
-		digitalWrite(BUCK_EN_PIN, HIGH); // Turn on sensors
 		init_timer_init_sensors();   // Initialize sensors after heating up
 		display.init();              // Initialize display
 		display.showLoadingScreen(); // Show loading screen

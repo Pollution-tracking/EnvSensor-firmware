@@ -32,13 +32,12 @@ void SensorsReadAdapter::updateCO2Sensor(CO2Data co2data) {
     // Update the CO2 sensor data
     this->co2data = co2data;
 
+    // Update mean temperature
+    this->meanTemperature.addTemperature(this->co2data.temperature * 1.25);
+
     // Update the CSV data
     csvData[CO2_CO2_INDEX] = String(this->co2data.co2);
-
-    // Update characteristics
-    if (bluetoothModule->isEnabled() && bluetoothModule->isConnected()) {
-        bluetoothModule->updateCO2Characteristic(this->co2data.co2);
-    }
+    csvData[TEMPERATURE_INDEX] = String(this->meanTemperature.getMeanTemperature());
 }
 
 void SensorsReadAdapter::updateBMESensor(BMEData bmedata) {
@@ -47,21 +46,15 @@ void SensorsReadAdapter::updateBMESensor(BMEData bmedata) {
     // Update the BME sensor data
     this->bmedata = bmedata;
 
+    // Update mean temperature
+    this->meanTemperature.addTemperature(this->bmedata.temperature * 0.75);
+
     // Update the CSV data
-    csvData[BME_TEMPERATURE_INDEX] = String(this->bmedata.temperature);
     csvData[BME_HUMIDITY_INDEX] = String(this->bmedata.humidity);
     csvData[BME_PRESSURE_INDEX] = String(this->bmedata.pressure);
     csvData[BME_GAS_INDEX] = String(this->bmedata.gas);
     csvData[BME_ALTITUDE_INDEX] = String(this->bmedata.altitude);
-
-    // Update characteristics
-    if (bluetoothModule->isEnabled() && bluetoothModule->isConnected()) {
-        bluetoothModule->updateTemperatureCharacteristic(this->bmedata.temperature);
-        bluetoothModule->updateHumidityCharacteristic(this->bmedata.humidity);
-        bluetoothModule->updatePressureCharacteristic(this->bmedata.pressure);
-        bluetoothModule->updateGasCharacteristic(this->bmedata.gas);
-        bluetoothModule->updateAltitudeCharacteristic(this->bmedata.altitude);
-    }
+    csvData[TEMPERATURE_INDEX] = String(this->meanTemperature.getMeanTemperature());
 }
 
 void SensorsReadAdapter::updatePMSensor(PMData pmdata) {
@@ -74,31 +67,37 @@ void SensorsReadAdapter::updatePMSensor(PMData pmdata) {
     csvData[PM_PM1_INDEX] = String(this->pmdata.pm1);
     csvData[PM_PM2_5_INDEX] = String(this->pmdata.pm2_5);
     csvData[PM_PM10_INDEX] = String(this->pmdata.pm10);
-
-    // Update characteristics
-    if (bluetoothModule->isEnabled() && bluetoothModule->isConnected()) {
-        bluetoothModule->updatePM1Characteristic(this->pmdata.pm1);
-        bluetoothModule->updatePM2_5Characteristic(this->pmdata.pm2_5);
-        bluetoothModule->updatePM10Characteristic(this->pmdata.pm10);
-    }
 }
 
 void SensorsReadAdapter::updateBatteryStatus(float voltage) {
     loggWithContext("Handling data", "Battery");
 
+    // Update the battery data
+    this->batteryData = voltage;
+
     // Update the CSV data
     csvData[BATTERY_INDEX] = String(voltage);
-
-    // Update characteristics
-    if (bluetoothModule->isEnabled() && bluetoothModule->isConnected()) {
-        bluetoothModule->updateBatteryCharacteristic((int)(voltage * 100));
-    }
 }
 
 // Routine to save historical data on SD card
 void SensorsReadAdapter::storeData() {
-    // Need to store data on SD card
-    if (!bluetoothModule->isConnected() || !bluetoothModule->isEnabled()) {
+    if (bluetoothModule->isEnabled() && bluetoothModule->isConnected()) {
+        // Update characteristics
+        bluetoothModule->updateCO2Characteristic(this->co2data.co2);
+
+        bluetoothModule->updateTemperatureCharacteristic(this->meanTemperature.getMeanTemperature());
+        bluetoothModule->updateHumidityCharacteristic(this->bmedata.humidity);
+        bluetoothModule->updatePressureCharacteristic(this->bmedata.pressure);
+        bluetoothModule->updateGasCharacteristic(this->bmedata.gas);
+        bluetoothModule->updateAltitudeCharacteristic(this->bmedata.altitude);
+
+        bluetoothModule->updatePM1Characteristic(this->pmdata.pm1);
+        bluetoothModule->updatePM2_5Characteristic(this->pmdata.pm2_5);
+        bluetoothModule->updatePM10Characteristic(this->pmdata.pm10);
+
+        bluetoothModule->updateBatteryCharacteristic((int)(this->batteryData * 100));
+    } else {
+        // Need to store data on SD card
         String data = this->convertDataToCSV();
         
         // Reinitialize SD card if needed
@@ -136,6 +135,7 @@ void SensorsReadAdapter::sendHistoricalData() {
     while (file.available()) {
         String line = file.readStringUntil('\n');
         handleCSVData(line);
+        delay(100); // Delay to avoid BLE buffer overflow
     }
 
     // Delete the historical data file
@@ -189,7 +189,7 @@ void SensorsReadAdapter::handleCSVData(String csvData) {
 
         bluetoothModule->updateTimestampCharacteristic(dataDecoded[TIMESTAMP_INDEX]);
 
-        bluetoothModule->updateTemperatureCharacteristic(dataDecoded[BME_TEMPERATURE_INDEX].toInt());
+        bluetoothModule->updateTemperatureCharacteristic(dataDecoded[TEMPERATURE_INDEX].toInt());
         bluetoothModule->updateHumidityCharacteristic(dataDecoded[BME_HUMIDITY_INDEX].toInt());
         bluetoothModule->updatePressureCharacteristic(dataDecoded[BME_PRESSURE_INDEX].toInt());
         bluetoothModule->updateGasCharacteristic(dataDecoded[BME_GAS_INDEX].toInt());

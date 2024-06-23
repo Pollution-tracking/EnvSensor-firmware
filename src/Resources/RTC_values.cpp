@@ -7,6 +7,7 @@ RTC_DATA_ATTR bool bleEnabled = true;
 RTC_DATA_ATTR bool bleConnected = false;
 
 RTC_DATA_ATTR bool RTCUpdated = false;
+RTC_DATA_ATTR bool hasHistoricalData = false;
 
 RTC_DATA_ATTR float batteryVoltage = 0.0;
 

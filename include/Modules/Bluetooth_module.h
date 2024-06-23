@@ -40,6 +40,7 @@ class Bluetooth_module {
         void updateBatteryCharacteristic(int32_t voltage);
         void updateTimestampCharacteristic(String time);
     private:
+        bool _isOn;
         uint8_t status;
         std::string received_timestamp;
         BLEServer* envServer;   // BLE server
