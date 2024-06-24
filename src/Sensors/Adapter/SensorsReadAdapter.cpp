@@ -83,13 +83,14 @@ void SensorsReadAdapter::updateBatteryStatus(float voltage) {
 void SensorsReadAdapter::storeData() {
     if (bluetoothModule->isEnabled() && bluetoothModule->isConnected()) {
         // Update characteristics
-        bluetoothModule->updateCO2Characteristic(this->co2data.co2);
 
         bluetoothModule->updateTemperatureCharacteristic(this->meanTemperature.getMeanTemperature());
         bluetoothModule->updateHumidityCharacteristic(this->bmedata.humidity);
         bluetoothModule->updatePressureCharacteristic(this->bmedata.pressure);
         bluetoothModule->updateGasCharacteristic(this->bmedata.gas);
         bluetoothModule->updateAltitudeCharacteristic(this->bmedata.altitude);
+
+        bluetoothModule->updateCO2Characteristic(this->co2data.co2);
 
         bluetoothModule->updatePM1Characteristic(this->pmdata.pm1);
         bluetoothModule->updatePM2_5Characteristic(this->pmdata.pm2_5);
