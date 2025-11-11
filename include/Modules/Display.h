@@ -30,7 +30,6 @@ class Display {
         ~Display();
         void init();
         void setScreenMode(SCREEN_MODE mode);
-        SCREEN_MODE getScreenMode();
         void changeScreenRight();
         void changeScreenLeft();
         void refreshScreen(SCREEN_REFRESH screen);

@@ -35,11 +35,6 @@ void Display::setScreenMode(SCREEN_MODE mode) {
     showScreen(mode);
 }
 
-// Routine to get screen mode
-SCREEN_MODE Display::getScreenMode() {
-    return lastScreenData.currentScreen;
-}
-
 // Routine to change screen to the right
 void Display::changeScreenRight() {
     switch (lastScreenData.currentScreen) {

@@ -14,8 +14,8 @@
 #define BUTTON_CENTER_PIN   45
 #define BUTTON_RIGHT_PIN    3
 
+// Wakeup pins from deep sleep (center unavailable)
 const uint64_t BUTTONS_MASK = (uint64_t)1 << BUTTON_LEFT_PIN |
-                              (uint64_t)1 << BUTTON_CENTER_PIN |
                               (uint64_t)1 << BUTTON_RIGHT_PIN;
 
 // Display
