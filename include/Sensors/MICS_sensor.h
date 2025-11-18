@@ -6,6 +6,15 @@
 #include <Resources/pins.h>
 #include <Logger/logger.h>
 #include <Sensors/sensor.h>
+#include <configs.h>
+
+// MICS Calibration data stored in RTC memory
+typedef struct {
+    uint16_t baseNH3;
+    uint16_t baseCO;
+    uint16_t baseNO2;
+    bool isValid;
+} MICSCalibration;
 
 struct MICSData : public SensorData {
     int32_t co  = NO_DATA;
@@ -49,6 +58,13 @@ class MICSSensor : public Sensor {
   private:
     MICSData data;
     MICSStatus status;
+    
+    // Private helper functions
+    bool calibrate();
+    uint16_t getResistance(uint8_t pin) const;
+    float getCurrentRatio(uint8_t pin, float baseResistance) const;
+    float measure(uint8_t gasType);
+    void markReadError();
 };
 
 #endif // MICS_SENSOR_H
