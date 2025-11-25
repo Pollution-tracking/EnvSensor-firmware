@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #define LOGGING_ENABLED 1
+#define DEBUG_ENABLED 1
 #define PM_ENABLE 1
 #define CO2_ENABLE 1
 #define BME_ENABLE 1

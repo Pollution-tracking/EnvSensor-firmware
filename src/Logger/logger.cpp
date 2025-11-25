@@ -58,6 +58,15 @@ void loggWithCtx(String message, String object, String context) {
 #endif
 }
 
+void DEBUG(String message) {
+#ifdef DEBUG_ENABLED
+  if (xSemaphoreTake(logMutex, portMAX_DELAY) == pdTRUE) {
+    Serial.print("{DEBUG " + message + " }\n");
+    xSemaphoreGive(logMutex);
+  }
+#endif
+}
+
 void forcePrint() {
 #ifdef LOGGING_ENABLED
   if (xSemaphoreTake(logMutex, portMAX_DELAY) == pdTRUE) {
