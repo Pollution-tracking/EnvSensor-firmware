@@ -46,9 +46,18 @@ class Display {
         void showSensorsScreen();
         void fullSensorsScreen();
         void partialSensorsScreen();
+        void showEnvironmentalScreen();
+        void fullEnvironmentalScreen();
+        void partialEnvironmentalScreen();
+        void showPollutantsScreen();
+        void fullPollutantsScreen();
+        void partialPollutantsScreen();
         uint16_t centerText_X(String text);
         void printBLEStatus();
         void printSensorsStatus();
+        void printEnvironmentalStatus();
+        void printPollutantsStatus();
+        void printBatteryData();
 };
 
 #endif // DISPLAY_H

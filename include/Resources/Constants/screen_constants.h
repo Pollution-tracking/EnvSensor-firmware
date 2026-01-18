@@ -14,6 +14,8 @@ enum class SCREEN_MODE {
     LOADING,
     BLUETOOTH,
     SENSORS,
+    ENVIRONMENTAL,
+    POLLUTANTS,
     SENDING,
     HEATING
 };
@@ -41,6 +43,14 @@ const String BluetoothScreenText[3] = {
 
 const String SensorsScreenText[1] = {
     "Sensors"
+};
+
+const String EnvironmentalScreenText[1] = {
+    "Ambient"
+};
+
+const String PollutantsScreenText[1] = {
+    "Pollution"
 };
 
 #endif // SCREEN_CONSTANTS_H
