@@ -7,6 +7,7 @@
 #include <Logger/logger.h>
 #include <Sensors/sensor.h>
 #include <configs.h>
+#include <Resources/Constants/adc_constants.h>
 
 // MICS Calibration data stored in RTC memory
 typedef struct {
@@ -50,20 +51,31 @@ class MICSSensor : public Sensor {
   public:
     MICSSensor();
     ~MICSSensor();
+    
+    // Public interface (inherited from Sensor)
     SensorStatus& getStatus() override;
     void read() override;
     void init() override;
     String getName() override;
     MICSData& getData();
+    
   private:
     MICSData data;
     MICSStatus status;
     
-    // Private helper functions
+    // Calibration
     bool calibrate();
-    uint16_t getResistance(uint8_t pin) const;
-    float getCurrentRatio(uint8_t pin, float baseResistance) const;
-    float measure(uint8_t gasType);
+    
+    // ADC reading helpers
+    uint16_t readADCAverage(uint8_t pin, uint16_t numSamples);
+    void readAllChannels(uint16_t* readings, uint16_t numSamples);
+    bool isReadingStable(float current, float average);
+    
+    // Gas concentration measurement
+    float calculateResistanceRatio(uint8_t pin, uint16_t baselineADC);
+    float measureGasConcentration(uint8_t channel);
+    
+    // Error handling
     void markReadError();
 };
 

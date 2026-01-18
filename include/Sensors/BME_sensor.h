@@ -10,7 +10,9 @@
 #include <Logger/logger.h>
 #include <Sensors/sensor.h>
 
-#define SEA_LEVEL 1013.25 // Standard sea level pressure in hPa
+#define SEA_LEVEL_STANDARD 1013.25 // Standard sea level pressure in hPa
+#define SEA_LEVEL_SPECIFIC 1017.25 // Romania average sea level pressure in hPa
+#define STANDARD_TEMPERATURE_C 20.0 // Standard temperature in Celsius
 #define BME680_ADDRESS 0x76 // I2C address for BME680
     
 struct BMEData : public SensorData {
@@ -60,6 +62,7 @@ class BMESensor : public Sensor {
     Adafruit_BME680 *bme;
     BMEData data;
     BMEStatus status;
+    float compute_altitude(float pressure, float temp_c = STANDARD_TEMPERATURE_C, float seaLevel = SEA_LEVEL_STANDARD);
     void markReadError();
 };
 

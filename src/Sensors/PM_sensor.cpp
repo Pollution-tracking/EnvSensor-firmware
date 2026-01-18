@@ -73,13 +73,13 @@ void PMSensor::read() {
 		// Update the PM data
 		this->status.error = false;
 
-		data.pm1 = pms->pm01;
+		data.pm1 = pms->pm01 * 100;
 		loggValue(String(data.pm1), "PM1");
 
-		data.pm2_5 = pms->pm25;
+		data.pm2_5 = pms->pm25 * 100;
 		loggValue(String(data.pm2_5), "PM2.5");
 
-		data.pm10 = pms->pm10;
+		data.pm10 = pms->pm10 * 100;
 		loggValue(String(data.pm10), "PM10");
 	}
 }

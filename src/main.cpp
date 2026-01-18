@@ -8,7 +8,7 @@
 #include <Logger/logger.h>
 
 #include <Resources/pins.h>
-#include <Resources/Constants/battery_constants.h>
+#include <Resources/Constants/adc_constants.h>
 #include <Resources/Software/DataHandler.h>
 
 #include <Modules/Bluetooth.h>

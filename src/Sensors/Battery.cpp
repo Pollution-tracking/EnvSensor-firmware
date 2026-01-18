@@ -15,7 +15,7 @@ void Battery::read() {
     logg(TRIGGER_READ);
 
     uint16_t raw_battery = analogRead(BATTERY_PIN);
-    data.voltage = raw_battery * BATTERY_MAX_VOLTAGE * BATTERY_VOLTAGE_DIVIDER / ADC_MAX_VALUE;
+    data.voltage = raw_battery * BATTERY_MAX_VOLTAGE * BATTERY_VOLTAGE_DIVIDER / ADC_MAX_VALUE * 100;
     data.voltage *= BATTERY_CORRECTION_FACTOR;
 }
 

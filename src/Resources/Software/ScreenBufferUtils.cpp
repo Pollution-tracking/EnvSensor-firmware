@@ -9,7 +9,7 @@ static String formatSensorValue(int32_t value, const String& unit) {
         case NO_DATA:
             return NO_DATA_STRING;
         default:
-            return String(value) + unit;
+            return String(value / 100.0, 2) + unit;
     }
 }
 
@@ -21,7 +21,7 @@ String convertBattery(BatteryData data) {
             break;
     }
 
-    return String(String(data.voltage) + " V");
+    return String(String(data.voltage / 100.0, 2) + " V");
 }
 
 #ifdef BME_ENABLE

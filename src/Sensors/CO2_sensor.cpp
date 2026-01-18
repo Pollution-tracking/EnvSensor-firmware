@@ -52,8 +52,8 @@ void CO2Sensor::read() {
         return;
     }
 
-    this->data.co2 = mhz19.getCO2();
-    this->data.temperature = mhz19.getTemperature();
+    this->data.co2 = mhz19.getCO2() * 100;
+    this->data.temperature = mhz19.getTemperature() * 100;
 
     // Check for errors
     this->checkErrors();
