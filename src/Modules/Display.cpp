@@ -144,28 +144,30 @@ void Display::showLoadingScreen() {
     display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
 
+    using namespace LoadingLayout;
+    
     // Draw decorative border - top part
-    display.drawLine(10, 10, 190, 10, GxEPD_BLACK); // top
-    display.drawLine(13, 13, 187, 13, GxEPD_BLACK); // top inner
-    display.drawLine(10, 10, 10, 50, GxEPD_BLACK); // left top
-    display.drawLine(13, 13, 13, 50, GxEPD_BLACK); // left top inner
-    display.drawLine(190, 10, 190, 50, GxEPD_BLACK); // right top
-    display.drawLine(187, 13, 187, 50, GxEPD_BLACK); // right top inner
+    display.drawLine(BORDER_OUTER, BORDER_OUTER, BORDER_RIGHT_OUTER, BORDER_OUTER, GxEPD_BLACK); // top
+    display.drawLine(BORDER_INNER, BORDER_INNER, BORDER_RIGHT_INNER, BORDER_INNER, GxEPD_BLACK); // top inner
+    display.drawLine(BORDER_OUTER, BORDER_OUTER, BORDER_OUTER, BORDER_TOP_END, GxEPD_BLACK); // left top
+    display.drawLine(BORDER_INNER, BORDER_INNER, BORDER_INNER, BORDER_TOP_END, GxEPD_BLACK); // left top inner
+    display.drawLine(BORDER_RIGHT_OUTER, BORDER_OUTER, BORDER_RIGHT_OUTER, BORDER_TOP_END, GxEPD_BLACK); // right top
+    display.drawLine(BORDER_RIGHT_INNER, BORDER_INNER, BORDER_RIGHT_INNER, BORDER_TOP_END, GxEPD_BLACK); // right top inner
     
     // Draw decorative border - bottom part
-    display.drawLine(10, 145, 10, 190, GxEPD_BLACK); // left bottom
-    display.drawLine(13, 145, 13, 187, GxEPD_BLACK); // left bottom inner
-    display.drawLine(190, 145, 190, 190, GxEPD_BLACK); // right bottom
-    display.drawLine(187, 145, 187, 187, GxEPD_BLACK); // right bottom inner
-    display.drawLine(10, 190, 190, 190, GxEPD_BLACK); // bottom
-    display.drawLine(13, 187, 187, 187, GxEPD_BLACK); // bottom inner
+    display.drawLine(BORDER_OUTER, BORDER_BOTTOM_START, BORDER_OUTER, BORDER_BOTTOM, GxEPD_BLACK); // left bottom
+    display.drawLine(BORDER_INNER, BORDER_BOTTOM_START, BORDER_INNER, BORDER_BOTTOM_INNER, GxEPD_BLACK); // left bottom inner
+    display.drawLine(BORDER_RIGHT_OUTER, BORDER_BOTTOM_START, BORDER_RIGHT_OUTER, BORDER_BOTTOM, GxEPD_BLACK); // right bottom
+    display.drawLine(BORDER_RIGHT_INNER, BORDER_BOTTOM_START, BORDER_RIGHT_INNER, BORDER_BOTTOM_INNER, GxEPD_BLACK); // right bottom inner
+    display.drawLine(BORDER_OUTER, BORDER_BOTTOM, BORDER_RIGHT_OUTER, BORDER_BOTTOM, GxEPD_BLACK); // bottom
+    display.drawLine(BORDER_INNER, BORDER_BOTTOM_INNER, BORDER_RIGHT_INNER, BORDER_BOTTOM_INNER, GxEPD_BLACK); // bottom inner
 
     // Write title
     display.setFont(&FreeMonoBold24pt7b);
-    display.setCursor(centerText_X(LoadingScreenText[0]), 90);
+    display.setCursor(centerText_X(LoadingScreenText[0]), TEXT1_Y);
     display.print(LoadingScreenText[0]);
     display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(centerText_X(LoadingScreenText[1]), 130);
+    display.setCursor(centerText_X(LoadingScreenText[1]), TEXT2_Y);
     display.print(LoadingScreenText[1]);
 
     display.display(false);
@@ -178,9 +180,11 @@ void Display::showHeatingScreen() {
     display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
 
+    using namespace HeatingLayout;
+    
     // Draw heating icon (thermometer with rising bars)
-    int iconX = 90;
-    int iconY = 30;
+    int iconX = ICON_X;
+    int iconY = ICON_Y;
     display.fillRect(iconX, iconY, 8, 30, GxEPD_BLACK);
     display.fillCircle(iconX + 4, iconY + 35, 8, GxEPD_BLACK);
     display.fillCircle(iconX + 4, iconY + 35, 4, GxEPD_WHITE);
@@ -193,15 +197,15 @@ void Display::showHeatingScreen() {
 
     // Write title
     display.setFont(&FreeMonoBold24pt7b);
-    display.setCursor(centerText_X(HeatingScreenText[0]), 110);
+    display.setCursor(centerText_X(HeatingScreenText[0]), TEXT1_Y);
     display.print(HeatingScreenText[0]);
     display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(centerText_X(HeatingScreenText[1]), 145);
+    display.setCursor(centerText_X(HeatingScreenText[1]), TEXT2_Y);
     display.print(HeatingScreenText[1]);
     
     // Progress indicator
-    display.drawRoundRect(40, 165, 120, 12, 6, GxEPD_BLACK);
-    display.fillRoundRect(42, 167, 60, 8, 4, GxEPD_BLACK);
+    display.drawRoundRect(PROGRESS_X, PROGRESS_Y, PROGRESS_W, PROGRESS_H, PROGRESS_RADIUS, GxEPD_BLACK);
+    display.fillRoundRect(PROGRESS_X + 2, PROGRESS_Y + 2, 60, PROGRESS_H - 4, PROGRESS_FILL_RADIUS, GxEPD_BLACK);
 
     display.display(false);
     logg("Rendered heating screen");
@@ -213,9 +217,11 @@ void Display::showSendingScreen() {
     display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
 
+    using namespace SendingLayout;
+    
     // Draw sync/upload icon (cloud with arrow)
-    int cloudX = 85;
-    int cloudY = 50;
+    int cloudX = CLOUD_X;
+    int cloudY = CLOUD_Y;
     display.drawCircle(cloudX, cloudY, 8, GxEPD_BLACK);
     display.drawCircle(cloudX + 12, cloudY, 8, GxEPD_BLACK);
     display.drawCircle(cloudX + 6, cloudY - 6, 6, GxEPD_BLACK);
@@ -228,18 +234,18 @@ void Display::showSendingScreen() {
 
     // Write title
     display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(centerText_X(SendingScreenText[0]), 100);
+    display.setCursor(centerText_X(SendingScreenText[0]), TEXT1_Y);
     display.print(SendingScreenText[0]);
     display.setFont(&FreeMonoBold12pt7b);
-    display.setCursor(centerText_X(SendingScreenText[1]), 130);
+    display.setCursor(centerText_X(SendingScreenText[1]), TEXT2_Y);
     display.print(SendingScreenText[1]);
     
     // Animated dots
-    display.fillCircle(60, 155, 3, GxEPD_BLACK);
-    display.fillCircle(75, 155, 3, GxEPD_BLACK);
-    display.fillCircle(90, 155, 3, GxEPD_BLACK);
-    display.drawCircle(105, 155, 3, GxEPD_BLACK);
-    display.drawCircle(120, 155, 3, GxEPD_BLACK);
+    display.fillCircle(60, DOTS_Y, 3, GxEPD_BLACK);
+    display.fillCircle(75, DOTS_Y, 3, GxEPD_BLACK);
+    display.fillCircle(90, DOTS_Y, 3, GxEPD_BLACK);
+    display.drawCircle(105, DOTS_Y, 3, GxEPD_BLACK);
+    display.drawCircle(120, DOTS_Y, 3, GxEPD_BLACK);
 
     display.display(false);
     logg("Rendered sending screen");
@@ -277,36 +283,29 @@ void Display::partialBluetoothScreen() {
     
     partialRefreshCounter++;
     
-    // Define the region that changes: status box area (Enabled/Connected text)
-    // x: 3, y: 105, width: 194, height: 50
-    display.setPartialWindow(3, 105, 194, 50);
+    using namespace BluetoothLayout;
     
-    // First pass: clear the region
-    display.firstPage();
-    do {
-        display.fillRect(3, 105, 194, 50, GxEPD_WHITE);
-    } while (display.nextPage());
-    
-    // Second pass: redraw content
-    display.firstPage();
-    do {
-        display.fillRect(3, 105, 194, 50, GxEPD_WHITE);
-        display.drawRoundRect(3, 105, 194, 50, 5, GxEPD_BLACK);
+    // Status box region
+    clearPartialRegion(STATUS_BOX_X, STATUS_BOX_Y, STATUS_BOX_W, STATUS_BOX_H);
+    redrawPartialRegion(STATUS_BOX_X, STATUS_BOX_Y, STATUS_BOX_W, STATUS_BOX_H, [this]() {
+        display.drawRoundRect(STATUS_BOX_X, STATUS_BOX_Y, STATUS_BOX_W, STATUS_BOX_H, STATUS_BOX_RADIUS, GxEPD_BLACK);
         printBLEStatus();
-    } while (display.nextPage());
+    });
 }
 
 // Rendering helpers
 void Display::printBLEStatus() {
+    using namespace BluetoothLayout;
+    
     // Print action status
     display.setFont(&FreeMonoBold12pt7b);
     String line1 = "Enabled: " + String(board_config.ble_stats.enabled ? "Yes" : "No");
-    display.setCursor(centerText_X(line1), 125);
+    display.setCursor(centerText_X(line1), STATUS_LINE1_Y);
     display.print(line1);
 
     // Print connection status with indicator dots
     String line2 = "Connected: " + String(board_config.ble_stats.connected ? "Yes" : "No");
-    display.setCursor(centerText_X(line2), 147);
+    display.setCursor(centerText_X(line2), STATUS_LINE2_Y);
     display.print(line2);
     
     // Draw connection indicator
@@ -319,11 +318,13 @@ void Display::printBLEStatus() {
 }
 
 void Display::contentBluetoothScreen() {
+    using namespace BluetoothLayout;
+    
     // Draw Bluetooth icon (classic Bluetooth symbol with thicker lines)
-    int iconCenterX = 100;
-    int iconCenterY = 53;
-    int iconHeight = 16;
-    int iconWidth = 8;
+    int iconCenterX = ICON_CENTER_X;
+    int iconCenterY = ICON_CENTER_Y;
+    int iconHeight = ICON_HEIGHT;
+    int iconWidth = ICON_WIDTH;
     
     // Vertical center line (3 pixels wide)
     display.drawLine(iconCenterX - 1, iconCenterY - iconHeight/2, iconCenterX - 1, iconCenterY + iconHeight/2, GxEPD_BLACK);
@@ -354,23 +355,23 @@ void Display::contentBluetoothScreen() {
     display.print(BluetoothScreenText[0]);
 
     // Write BLE server name in a box
-    display.drawRoundRect(15, 70, 170, 25, 5, GxEPD_BLACK);
+    display.drawRoundRect(NAME_BOX_X, NAME_BOX_Y, NAME_BOX_W, NAME_BOX_H, NAME_BOX_RADIUS, GxEPD_BLACK);
     display.setFont(&FreeMonoBold9pt7b);
-    display.setCursor(centerText_X(bleServerName), 88);
+    display.setCursor(centerText_X(bleServerName), NAME_TEXT_Y);
     display.print(bleServerName);
 
     // Status section with decorative box (maximum width)
-    display.drawRoundRect(3, 105, 194, 50, 5, GxEPD_BLACK);
+    display.drawRoundRect(STATUS_BOX_X, STATUS_BOX_Y, STATUS_BOX_W, STATUS_BOX_H, STATUS_BOX_RADIUS, GxEPD_BLACK);
     printBLEStatus();
 
     // Draw footer divider
-    display.drawLine(10, 160, 190, 160, GxEPD_BLACK);
+    display.drawLine(10, FOOTER_LINE_Y, 190, FOOTER_LINE_Y, GxEPD_BLACK);
     
     // Write instructions
     display.setFont(&FreeMonoBold9pt7b);
-    display.setCursor(centerText_X(BluetoothScreenText[1]), 177);
+    display.setCursor(centerText_X(BluetoothScreenText[1]), FOOTER_TEXT1_Y);
     display.print(BluetoothScreenText[1]);
-    display.setCursor(centerText_X(BluetoothScreenText[2]), 193);
+    display.setCursor(centerText_X(BluetoothScreenText[2]), FOOTER_TEXT2_Y);
     display.print(BluetoothScreenText[2]);
 }
 
@@ -412,49 +413,31 @@ void Display::partialSensorsScreen() {
     
     partialRefreshCounter++;
     
-    // Refresh only the 4 data value lines (not labels)
-    // Line 2: Temperature, Humidity, Pressure values (y ≈ 75)
-    // Line 4: Altitude, Battery, CO2 values (y ≈ 115) 
-    // Line 6: PM1, PM2.5, PM10 values (y ≈ 155)
-    // Line 8: CO, NO2, NH3 values (y ≈ 195)
+    using namespace SensorsLayout;
     
-    int startY = 55;
-    int lineSpacing = 20;
-    int lineHeight = 18;
-    
-    // Define 4 narrow horizontal strips for data lines only
     int dataLines[] = {1, 3, 5, 7};
     
     for (int lineIdx : dataLines) {
-        // Lift region up by half its height to cover correctly
-        int yPos = startY + lineSpacing * lineIdx - 3 - (lineHeight / 2);
+        int yPos = START_Y + LINE_SPACING * lineIdx - 3 - (LINE_HEIGHT / 2);
         
-        // Set partial window for this data line
-        display.setPartialWindow(10, yPos, 180, lineHeight);
-        
-        // First pass: clear
-        display.firstPage();
-        do {
-            display.fillRect(10, yPos, 180, lineHeight, GxEPD_WHITE);
-        } while (display.nextPage());
-        
-        // Second pass: redraw content
-        display.firstPage();
-        do {
-            display.fillRect(10, yPos, 180, lineHeight, GxEPD_WHITE);
+        clearPartialRegion(PARTIAL_X, yPos, PARTIAL_W, LINE_HEIGHT);
+        redrawPartialRegion(PARTIAL_X, yPos, PARTIAL_W, LINE_HEIGHT, [this]() {
             printSensorsStatus();
-        } while (display.nextPage());
+        });
     }
 }
 
+
 // Sensors screen data printer
 void Display::printSensorsStatus() {
+    using namespace SensorsLayout;
+    
     // Draw decorative header box (extended downward)
-    display.drawRoundRect(5, 35, 190, 165, 8, GxEPD_BLACK);
+    display.drawRoundRect(BOX_X, BOX_Y, BOX_W, BOX_H, BOX_RADIUS, GxEPD_BLACK);
     
     // Define column positions for 3-column layout (more evenly distributed)
-    int boxLeft = 5;
-    int boxRight = 195;
+    int boxLeft = BOX_X;
+    int boxRight = BOX_X + BOX_W;
     int boxWidth = boxRight - boxLeft;
     int columnWidth = boxWidth / 3;
     
@@ -462,8 +445,8 @@ void Display::printSensorsStatus() {
     int col2X = boxLeft + columnWidth + columnWidth / 2;  // Center of second column
     int col3X = boxLeft + 2 * columnWidth + columnWidth / 2; // Center of third column
     
-    int startY = 55;
-    int lineSpacing = 20;
+    int startY = START_Y;
+    int lineSpacing = LINE_SPACING;
     
     display.setFont(&FreeMonoBold9pt7b);
     
@@ -603,72 +586,47 @@ void Display::partialEnvironmentalScreen() {
     
     partialRefreshCounter++;
     
-    // Region 1: Temperature and Humidity data values only
-    display.setPartialWindow(90, 55, 110, 45);
+    using namespace EnvironmentalLayout;
     
-    // First pass: clear
-    display.firstPage();
-    do {
-        display.fillRect(90, 55, 110, 45, GxEPD_WHITE);
-    } while (display.nextPage());
-    
-    // Second pass: redraw
-    display.firstPage();
-    do {
-        display.fillRect(90, 55, 110, 45, GxEPD_WHITE);
+    // Region 1: Temperature and Humidity data values
+    clearPartialRegion(TEMP_HUM_REGION_X, TEMP_HUM_REGION_Y, TEMP_HUM_REGION_W, TEMP_HUM_REGION_H);
+    redrawPartialRegion(TEMP_HUM_REGION_X, TEMP_HUM_REGION_Y, TEMP_HUM_REGION_W, TEMP_HUM_REGION_H, [this]() {
         printEnvironmentalStatus();
-    } while (display.nextPage());
+    });
     
-    // Region 2: Pressure and Altitude data values only
-    display.setPartialWindow(80, 100, 100, 45);
-    
-    // First pass: clear
-    display.firstPage();
-    do {
-        display.fillRect(80, 100, 100, 45, GxEPD_WHITE);
-    } while (display.nextPage());
-    
-    // Second pass: redraw
-    display.firstPage();
-    do {
-        display.fillRect(80, 100, 100, 45, GxEPD_WHITE);
+    // Region 2: Pressure and Altitude data values
+    clearPartialRegion(PRESS_ALT_REGION_X, PRESS_ALT_REGION_Y, PRESS_ALT_REGION_W, PRESS_ALT_REGION_H);
+    redrawPartialRegion(PRESS_ALT_REGION_X, PRESS_ALT_REGION_Y, PRESS_ALT_REGION_W, PRESS_ALT_REGION_H, [this]() {
         printEnvironmentalStatus();
-    } while (display.nextPage());
+    });
     
     // Region 3: Battery rectangle
-    display.setPartialWindow(5, 175, 190, 21);
-    
-    // First pass: clear
-    display.firstPage();
-    do {
-        display.fillRect(5, 175, 190, 21, GxEPD_WHITE);
-    } while (display.nextPage());
-    
-    // Second pass: redraw battery section
-    display.firstPage();
-    do {
-        // Redraw battery section
-        display.fillRoundRect(5, 175, 190, 21, 5, GxEPD_BLACK);
+    clearPartialRegion(BATTERY_X, BATTERY_Y, BATTERY_W, BATTERY_HEIGHT);
+    redrawPartialRegion(BATTERY_X, BATTERY_Y, BATTERY_W, BATTERY_HEIGHT, [this]() {
+        display.fillRoundRect(BATTERY_X, BATTERY_Y, BATTERY_W, BATTERY_HEIGHT, BATTERY_RADIUS, GxEPD_BLACK);
         display.setFont(&FreeMono9pt7b);
         display.setTextColor(GxEPD_WHITE);
-        display.setCursor(15, 190);
+        display.setCursor(BATTERY_TEXT_X, BATTERY_TEXT_Y);
         display.println("Battery: " + convertBattery(lastSensorsData.lastBatteryData));
         display.setTextColor(GxEPD_BLACK);
-    } while (display.nextPage());
+    });
 }
+
 
 // Environmental screen data printer
 void Display::printEnvironmentalStatus() {
+    using namespace EnvironmentalLayout;
+    
     // Draw decorative header line under title
-    display.drawLine(10, 40, 190, 40, GxEPD_BLACK);
+    display.drawLine(10, HEADER_LINE_Y, 190, HEADER_LINE_Y, GxEPD_BLACK);
     
     // Print line by line environmental data with icons/markers
     display.setFont(&FreeMonoBold9pt7b);
     
-    int startY = 65;
-    int lineSpacing = 25;
-    int iconX = 10;
-    int textX = 25;  // Closer to icons (was 30)
+    int startY = START_Y;
+    int lineSpacing = LINE_SPACING;
+    int iconX = ICON_X;
+    int textX = TEXT_X;
     
 #ifdef BME_ENABLE
     // Temperature with thermometer icon (simple box)
@@ -697,10 +655,10 @@ void Display::printEnvironmentalStatus() {
 #endif
 
     // Draw battery section with filled background
-    display.fillRoundRect(5, 175, 190, 21, 5, GxEPD_BLACK);
+    display.fillRoundRect(BATTERY_X, BATTERY_Y, BATTERY_W, BATTERY_HEIGHT, BATTERY_RADIUS, GxEPD_BLACK);
     display.setFont(&FreeMono9pt7b);
     display.setTextColor(GxEPD_WHITE);
-    display.setCursor(15, 190);
+    display.setCursor(BATTERY_TEXT_X, BATTERY_TEXT_Y);
     display.println("Battery: " + convertBattery(lastSensorsData.lastBatteryData));
     display.setTextColor(GxEPD_BLACK);
 }
@@ -743,52 +701,36 @@ void Display::partialPollutantsScreen() {
     
     partialRefreshCounter++;
     
-    // Split into 2 regions to reduce greying
-    // Region 1: Top half of pollutants data (CO2, CO, NO2, NH3)
-    display.setPartialWindow(80, 50, 170, 80);
+    using namespace PollutantsLayout;
     
-    // First pass: clear
-    display.firstPage();
-    do {
-        display.fillRect(80, 50, 170, 80, GxEPD_WHITE);
-    } while (display.nextPage());
-    
-    // Second pass: redraw
-    display.firstPage();
-    do {
-        display.fillRect(80, 50, 170, 80, GxEPD_WHITE);
+    // Region 1: Top half (CO2, CO, NO2, NH3)
+    clearPartialRegion(TOP_REGION_X, TOP_REGION_Y, TOP_REGION_W, TOP_REGION_H);
+    redrawPartialRegion(TOP_REGION_X, TOP_REGION_Y, TOP_REGION_W, TOP_REGION_H, [this]() {
         printPollutantsStatus();
-    } while (display.nextPage());
+    });
     
-    // Region 2: Bottom half of pollutants data (PM1, PM2.5, PM10)
-    display.setPartialWindow(80, 130, 170, 70);
-    
-    // First pass: clear
-    display.firstPage();
-    do {
-        display.fillRect(80, 130, 170, 70, GxEPD_WHITE);
-    } while (display.nextPage());
-    
-    // Second pass: redraw
-    display.firstPage();
-    do {
-        display.fillRect(80, 130, 170, 70, GxEPD_WHITE);
+    // Region 2: Bottom half (PM1, PM2.5, PM10)
+    clearPartialRegion(BOTTOM_REGION_X, BOTTOM_REGION_Y, BOTTOM_REGION_W, BOTTOM_REGION_H);
+    redrawPartialRegion(BOTTOM_REGION_X, BOTTOM_REGION_Y, BOTTOM_REGION_W, BOTTOM_REGION_H, [this]() {
         printPollutantsStatus();
-    } while (display.nextPage());
+    });
 }
+
 
 // Pollutants screen data printer
 void Display::printPollutantsStatus() {
+    using namespace PollutantsLayout;
+    
     // Draw decorative header line under title
-    display.drawLine(10, 40, 190, 40, GxEPD_BLACK);
+    display.drawLine(10, HEADER_LINE_Y, 190, HEADER_LINE_Y, GxEPD_BLACK);
     
     // Print line by line pollutants data with warning boxes
     display.setFont(&FreeMonoBold9pt7b);
     
-    int startY = 60;
-    int lineSpacing = 22;
-    int boxX = 8;
-    int textX = 30;
+    int startY = START_Y;
+    int lineSpacing = LINE_SPACING;
+    int boxX = BOX_X;
+    int textX = TEXT_X;
     
     int currentLine = 0;
     
@@ -864,4 +806,23 @@ uint16_t Display::centerText_X(String text) {
     x_centered = ((display.width() - w_text) / 2) - x_text;
 
     return x_centered;
+}
+
+// Partial refresh helper: clear a specific region
+void Display::clearPartialRegion(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    display.setPartialWindow(x, y, w, h);
+    display.firstPage();
+    do {
+        display.fillRect(x, y, w, h, GxEPD_WHITE);
+    } while (display.nextPage());
+}
+
+// Partial refresh helper: redraw content in a specific region
+void Display::redrawPartialRegion(uint16_t x, uint16_t y, uint16_t w, uint16_t h, std::function<void()> drawFunc) {
+    display.setPartialWindow(x, y, w, h);
+    display.firstPage();
+    do {
+        display.fillRect(x, y, w, h, GxEPD_WHITE);
+        drawFunc();
+    } while (display.nextPage());
 }

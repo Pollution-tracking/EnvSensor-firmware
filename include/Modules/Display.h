@@ -17,6 +17,7 @@
 #include <Resources/RTC_values.h>
 #include <Resources/Software/ScreenBufferUtils.h>
 #include <Logger/logger.h>
+#include <functional>
 
 #define GxEPD2_DISPLAY_CLASS GxEPD2_BW
 // #define GxEPD2_DRIVER_CLASS GxEPD2_154_D67
@@ -59,6 +60,8 @@ class Display {
         void printEnvironmentalStatus();
         void printPollutantsStatus();
         void printBatteryData();
+        void clearPartialRegion(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+        void redrawPartialRegion(uint16_t x, uint16_t y, uint16_t w, uint16_t h, std::function<void()> drawFunc);
 };
 
 #endif // DISPLAY_H
