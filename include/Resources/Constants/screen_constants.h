@@ -18,8 +18,8 @@ enum class SCREEN_MODE {
     LOADING,
     BLUETOOTH,
     SENSORS,
-    ENVIRONMENTAL,
-    POLLUTANTS,
+    AMBIENT,
+    POLLUTION,
     SENDING,
     HEATING
 };
@@ -49,11 +49,11 @@ const String SensorsScreenText[1] = {
     "Sensors"
 };
 
-const String EnvironmentalScreenText[1] = {
+const String AmbientScreenText[1] = {
     "Ambient"
 };
 
-const String PollutantsScreenText[1] = {
+const String PollutionScreenText[1] = {
     "Pollution"
 };
 
@@ -115,8 +115,8 @@ namespace SensorsLayout {
     const uint16_t PARTIAL_W = 180;
 }
 
-// --- ENVIRONMENTAL SCREEN LAYOUT ---
-namespace EnvironmentalLayout {
+// --- AMBIENT SCREEN LAYOUT ---
+namespace AmbientLayout {
     // Header line
     const uint16_t HEADER_LINE_Y = 40;
     
@@ -148,8 +148,8 @@ namespace EnvironmentalLayout {
     const uint16_t PRESS_ALT_REGION_H = 45;
 }
 
-// --- POLLUTANTS SCREEN LAYOUT ---
-namespace PollutantsLayout {
+// --- POLLUTION SCREEN LAYOUT ---
+namespace PollutionLayout {
     // Header line
     const uint16_t HEADER_LINE_Y = 40;
     

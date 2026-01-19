@@ -51,17 +51,17 @@ class Display {
         void showSensorsScreen();
         void fullSensorsScreen();
         void partialSensorsScreen();
-        void showEnvironmentalScreen();
-        void fullEnvironmentalScreen();
-        void partialEnvironmentalScreen();
-        void showPollutantsScreen();
-        void fullPollutantsScreen();
-        void partialPollutantsScreen();
+        void showAmbientScreen();
+        void fullAmbientScreen();
+        void partialAmbientScreen();
+        void showPollutionScreen();
+        void fullPollutionScreen();
+        void partialPollutionScreen();
         uint16_t centerText_X(String text);
         void printBLEStatus();
         void printSensorsStatus();
-        void printEnvironmentalStatus();
-        void printPollutantsStatus();
+        void printAmbientStatus();
+        void printPollutionStatus();
         void printBatteryData();
         
         // Partial refresh helper functions
