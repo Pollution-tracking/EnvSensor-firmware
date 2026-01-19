@@ -35,6 +35,7 @@ class Display {
         void refreshScreen(SCREEN_REFRESH screen);
     private:
         GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> display;
+        uint8_t partialRefreshCounter;
         void showScreen(SCREEN_MODE mode);
         void showLoadingScreen();
         void showHeatingScreen();

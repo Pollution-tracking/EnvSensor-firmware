@@ -3,6 +3,10 @@
 
 #include <Arduino.h>
 
+// Partial refresh configuration
+// After this many partial refreshes, a full refresh will be performed to prevent ghosting
+const uint8_t FULL_REFRESH_INTERVAL = 5;
+
 enum class SCREEN_REFRESH {
     GENERAL,
     BLUETOOTH,

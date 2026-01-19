@@ -4,7 +4,9 @@
 #define loggValue(message, value) loggWithCtx(message, "DISPLAY", value)
 
 // Construct display
-Display::Display() : display(GxEPD2_DRIVER_CLASS(DISPLAY_CS_PIN, DISPLAY_DC_PIN, DISPLAY_RST_PIN, DISPLAY_BUSY_PIN)) {
+Display::Display() : 
+    partialRefreshCounter(0),
+    display(GxEPD2_DRIVER_CLASS(DISPLAY_CS_PIN, DISPLAY_DC_PIN, DISPLAY_RST_PIN, DISPLAY_BUSY_PIN)) {
 }
 
 // Destruct display
@@ -246,7 +248,9 @@ void Display::showSendingScreen() {
 // Routines for updating the Bluetooth information screen (full or partial)
 void Display::showBluetoothScreen() {
     logg("Preparing Bluetooth screen");
-    if (lastScreenData.previousScreen == SCREEN_MODE::BLUETOOTH) {
+    
+    if (lastScreenData.previousScreen == SCREEN_MODE::BLUETOOTH &&
+        partialRefreshCounter < FULL_REFRESH_INTERVAL) {
         partialBluetoothScreen();
     } else {
         fullBluetoothScreen();
@@ -256,6 +260,9 @@ void Display::showBluetoothScreen() {
 
 void Display::fullBluetoothScreen() {
     loggValue("Full refresh", "Bluetooth");
+    
+    // Reset counter on full refresh
+    partialRefreshCounter = 0;
     
     display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
@@ -268,16 +275,24 @@ void Display::fullBluetoothScreen() {
 void Display::partialBluetoothScreen() {
     loggValue("Partial refresh", "Bluetooth");
     
-    display.setPartialWindow(0, 0, display.width(), display.height());
-    display.firstPage();
+    partialRefreshCounter++;
     
-    // Cover previous text
+    // Define the region that changes: status box area (Enabled/Connected text)
+    // x: 3, y: 105, width: 194, height: 50
+    display.setPartialWindow(3, 105, 194, 50);
+    
+    // First pass: clear the region
+    display.firstPage();
     do {
-        display.fillScreen(GxEPD_WHITE);
+        display.fillRect(3, 105, 194, 50, GxEPD_WHITE);
     } while (display.nextPage());
-
+    
+    // Second pass: redraw content
+    display.firstPage();
     do {
-        contentBluetoothScreen();
+        display.fillRect(3, 105, 194, 50, GxEPD_WHITE);
+        display.drawRoundRect(3, 105, 194, 50, 5, GxEPD_BLACK);
+        printBLEStatus();
     } while (display.nextPage());
 }
 
@@ -362,7 +377,9 @@ void Display::contentBluetoothScreen() {
 // Routines for updating the Sensors information screen (full or partial)
 void Display::showSensorsScreen() {
     logg("Preparing sensors screen");
-    if (lastScreenData.previousScreen == SCREEN_MODE::SENSORS) {
+    
+    if (lastScreenData.previousScreen == SCREEN_MODE::SENSORS &&
+        partialRefreshCounter < FULL_REFRESH_INTERVAL) {
         partialSensorsScreen();
     } else {
         fullSensorsScreen();
@@ -372,6 +389,9 @@ void Display::showSensorsScreen() {
 
 void Display::fullSensorsScreen() {
     loggValue("Full refresh", "Sensors");
+    
+    // Reset counter on full refresh
+    partialRefreshCounter = 0;
 
     display.setFullWindow();
     display.firstPage();
@@ -390,23 +410,41 @@ void Display::fullSensorsScreen() {
 void Display::partialSensorsScreen() {
     loggValue("Partial refresh", "Sensors");
     
-    display.setPartialWindow(0, 0, display.width(), display.height());
-    display.firstPage();
+    partialRefreshCounter++;
     
-    // Cover previous text
-    do {
-        display.fillScreen(GxEPD_WHITE);
-    } while (display.nextPage());
-
-    do {
-        // Re-print title
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X(SensorsScreenText[0]), 30);
-        display.print(SensorsScreenText[0]);
-
-        // Print new text
-        printSensorsStatus();
-    } while (display.nextPage());
+    // Refresh only the 4 data value lines (not labels)
+    // Line 2: Temperature, Humidity, Pressure values (y ≈ 75)
+    // Line 4: Altitude, Battery, CO2 values (y ≈ 115) 
+    // Line 6: PM1, PM2.5, PM10 values (y ≈ 155)
+    // Line 8: CO, NO2, NH3 values (y ≈ 195)
+    
+    int startY = 55;
+    int lineSpacing = 20;
+    int lineHeight = 18;
+    
+    // Define 4 narrow horizontal strips for data lines only
+    int dataLines[] = {1, 3, 5, 7};
+    
+    for (int lineIdx : dataLines) {
+        // Lift region up by half its height to cover correctly
+        int yPos = startY + lineSpacing * lineIdx - 3 - (lineHeight / 2);
+        
+        // Set partial window for this data line
+        display.setPartialWindow(10, yPos, 180, lineHeight);
+        
+        // First pass: clear
+        display.firstPage();
+        do {
+            display.fillRect(10, yPos, 180, lineHeight, GxEPD_WHITE);
+        } while (display.nextPage());
+        
+        // Second pass: redraw content
+        display.firstPage();
+        do {
+            display.fillRect(10, yPos, 180, lineHeight, GxEPD_WHITE);
+            printSensorsStatus();
+        } while (display.nextPage());
+    }
 }
 
 // Sensors screen data printer
@@ -530,7 +568,9 @@ void Display::printSensorsStatus() {
 // Routines for updating the Environmental information screen (full or partial)
 void Display::showEnvironmentalScreen() {
     logg("Preparing environmental screen");
-    if (lastScreenData.previousScreen == SCREEN_MODE::ENVIRONMENTAL) {
+
+    if (lastScreenData.previousScreen == SCREEN_MODE::ENVIRONMENTAL &&
+        partialRefreshCounter < FULL_REFRESH_INTERVAL) {
         partialEnvironmentalScreen();
     } else {
         fullEnvironmentalScreen();
@@ -540,6 +580,9 @@ void Display::showEnvironmentalScreen() {
 
 void Display::fullEnvironmentalScreen() {
     loggValue("Full refresh", "Ambient");
+    
+    // Reset counter on full refresh
+    partialRefreshCounter = 0;
 
     display.setFullWindow();
     display.firstPage();
@@ -558,22 +601,59 @@ void Display::fullEnvironmentalScreen() {
 void Display::partialEnvironmentalScreen() {
     loggValue("Partial refresh", "Ambient");
     
-    display.setPartialWindow(0, 0, display.width(), display.height());
-    display.firstPage();
+    partialRefreshCounter++;
     
-    // Cover previous text
+    // Region 1: Temperature and Humidity data values only
+    display.setPartialWindow(90, 55, 110, 45);
+    
+    // First pass: clear
+    display.firstPage();
     do {
-        display.fillScreen(GxEPD_WHITE);
+        display.fillRect(90, 55, 110, 45, GxEPD_WHITE);
     } while (display.nextPage());
-
+    
+    // Second pass: redraw
+    display.firstPage();
     do {
-        // Re-print title
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X(EnvironmentalScreenText[0]), 30);
-        display.print(EnvironmentalScreenText[0]);
-
-        // Print new text
+        display.fillRect(90, 55, 110, 45, GxEPD_WHITE);
         printEnvironmentalStatus();
+    } while (display.nextPage());
+    
+    // Region 2: Pressure and Altitude data values only
+    display.setPartialWindow(80, 100, 100, 45);
+    
+    // First pass: clear
+    display.firstPage();
+    do {
+        display.fillRect(80, 100, 100, 45, GxEPD_WHITE);
+    } while (display.nextPage());
+    
+    // Second pass: redraw
+    display.firstPage();
+    do {
+        display.fillRect(80, 100, 100, 45, GxEPD_WHITE);
+        printEnvironmentalStatus();
+    } while (display.nextPage());
+    
+    // Region 3: Battery rectangle
+    display.setPartialWindow(5, 175, 190, 21);
+    
+    // First pass: clear
+    display.firstPage();
+    do {
+        display.fillRect(5, 175, 190, 21, GxEPD_WHITE);
+    } while (display.nextPage());
+    
+    // Second pass: redraw battery section
+    display.firstPage();
+    do {
+        // Redraw battery section
+        display.fillRoundRect(5, 175, 190, 21, 5, GxEPD_BLACK);
+        display.setFont(&FreeMono9pt7b);
+        display.setTextColor(GxEPD_WHITE);
+        display.setCursor(15, 190);
+        display.println("Battery: " + convertBattery(lastSensorsData.lastBatteryData));
+        display.setTextColor(GxEPD_BLACK);
     } while (display.nextPage());
 }
 
@@ -600,13 +680,7 @@ void Display::printEnvironmentalStatus() {
     // Humidity with droplet shape (circle)
     display.fillCircle(iconX + 1, startY + lineSpacing - 4, 4, GxEPD_BLACK);
     display.setCursor(textX, startY + lineSpacing);
-    display.println("Hum: " + convertHumidity(lastSensorsData.lastBMEData));
-    
-    // Pressure with gauge icon (arc shape using lines)
-    display.drawCircle(iconX + 1, startY + lineSpacing * 2 - 4, 5, GxEPD_BLACK);
-    display.drawLine(iconX + 1, startY + lineSpacing * 2 - 4, iconX + 4, startY + lineSpacing * 2 - 7, GxEPD_BLACK);
-    display.setCursor(textX, startY + lineSpacing * 2);
-    display.println("Press: " + convertPressure(lastSensorsData.lastBMEData, true, true));
+    display.println("Hum:  " + convertHumidity(lastSensorsData.lastBMEData));
     
     // Altitude with mountain icon (triangle) - centered with text
     display.drawLine(iconX + 1, startY + lineSpacing * 3 - 5, iconX - 4, startY + lineSpacing * 3, GxEPD_BLACK);
@@ -614,6 +688,12 @@ void Display::printEnvironmentalStatus() {
     display.drawLine(iconX - 4, startY + lineSpacing * 3, iconX + 6, startY + lineSpacing * 3, GxEPD_BLACK);
     display.setCursor(textX, startY + lineSpacing * 3);
     display.println("Alt: " + convertAltitude(lastSensorsData.lastBMEData));
+
+    // Pressure with gauge icon (arc shape using lines)
+    display.drawCircle(iconX + 1, startY + lineSpacing * 2 - 4, 5, GxEPD_BLACK);
+    display.drawLine(iconX + 1, startY + lineSpacing * 2 - 4, iconX + 4, startY + lineSpacing * 2 - 7, GxEPD_BLACK);
+    display.setCursor(textX, startY + lineSpacing * 2);
+    display.println("Pres:" + convertPressure(lastSensorsData.lastBMEData, true, true));
 #endif
 
     // Draw battery section with filled background
@@ -628,7 +708,9 @@ void Display::printEnvironmentalStatus() {
 // Routines for updating the Pollutants information screen (full or partial)
 void Display::showPollutantsScreen() {
     logg("Preparing pollutants screen");
-    if (lastScreenData.previousScreen == SCREEN_MODE::POLLUTANTS) {
+
+    if (lastScreenData.previousScreen == SCREEN_MODE::POLLUTANTS &&
+        partialRefreshCounter < FULL_REFRESH_INTERVAL) {
         partialPollutantsScreen();
     } else {
         fullPollutantsScreen();
@@ -638,6 +720,9 @@ void Display::showPollutantsScreen() {
 
 void Display::fullPollutantsScreen() {
     loggValue("Full refresh", "Pollution");
+    
+    // Reset counter on full refresh
+    partialRefreshCounter = 0;
 
     display.setFullWindow();
     display.firstPage();
@@ -656,21 +741,38 @@ void Display::fullPollutantsScreen() {
 void Display::partialPollutantsScreen() {
     loggValue("Partial refresh", "Pollution");
     
-    display.setPartialWindow(0, 0, display.width(), display.height());
-    display.firstPage();
+    partialRefreshCounter++;
     
-    // Cover previous text
+    // Split into 2 regions to reduce greying
+    // Region 1: Top half of pollutants data (CO2, CO, NO2, NH3)
+    display.setPartialWindow(80, 50, 170, 80);
+    
+    // First pass: clear
+    display.firstPage();
     do {
-        display.fillScreen(GxEPD_WHITE);
+        display.fillRect(80, 50, 170, 80, GxEPD_WHITE);
     } while (display.nextPage());
-
+    
+    // Second pass: redraw
+    display.firstPage();
     do {
-        // Re-print title
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X(PollutantsScreenText[0]), 30);
-        display.print(PollutantsScreenText[0]);
-
-        // Print new text
+        display.fillRect(80, 50, 170, 80, GxEPD_WHITE);
+        printPollutantsStatus();
+    } while (display.nextPage());
+    
+    // Region 2: Bottom half of pollutants data (PM1, PM2.5, PM10)
+    display.setPartialWindow(80, 130, 170, 70);
+    
+    // First pass: clear
+    display.firstPage();
+    do {
+        display.fillRect(80, 130, 170, 70, GxEPD_WHITE);
+    } while (display.nextPage());
+    
+    // Second pass: redraw
+    display.firstPage();
+    do {
+        display.fillRect(80, 130, 170, 70, GxEPD_WHITE);
         printPollutantsStatus();
     } while (display.nextPage());
 }
@@ -703,7 +805,7 @@ void Display::printPollutantsStatus() {
     display.fillCircle(boxX + 6, startY + lineSpacing * currentLine - 4, 5, GxEPD_BLACK);
     display.fillCircle(boxX + 6, startY + lineSpacing * currentLine - 4, 2, GxEPD_WHITE);
     display.setCursor(textX, startY + lineSpacing * currentLine);
-    display.println("CO: " + convertCO(lastSensorsData.lastMICSData));
+    display.println("CO:  " + convertCO(lastSensorsData.lastMICSData));
     currentLine++;
     
     // NO2 with double box
@@ -734,14 +836,14 @@ void Display::printPollutantsStatus() {
     display.fillCircle(boxX + 3, startY + lineSpacing * currentLine - 6, 3, GxEPD_BLACK);
     display.fillCircle(boxX + 9, startY + lineSpacing * currentLine - 2, 2, GxEPD_BLACK);
     display.setCursor(textX, startY + lineSpacing * currentLine);
-    display.println("PM2.5: " + convertPM2_5(lastSensorsData.lastPMData));
+    display.println("PM25:" + convertPM2_5(lastSensorsData.lastPMData));
     currentLine++;
     
     // PM10 with larger dots
     display.fillCircle(boxX + 3, startY + lineSpacing * currentLine - 6, 4, GxEPD_BLACK);
     display.fillCircle(boxX + 10, startY + lineSpacing * currentLine - 2, 3, GxEPD_BLACK);
     display.setCursor(textX, startY + lineSpacing * currentLine);
-    display.println("PM10: " + convertPM10(lastSensorsData.lastPMData));
+    display.println("PM10:" + convertPM10(lastSensorsData.lastPMData));
     currentLine++;
 #endif
 }
