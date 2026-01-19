@@ -1,4 +1,5 @@
 #include <Resources/Software/DataHandler.h>
+#include <Resources/Constants/storage_constants.h>
 
 #define logg(message) loggWithObj(message, "HANDLER")
 #define loggValue(message, value) loggWithCtx(message, "HANDLER", value)
@@ -42,7 +43,7 @@ static void transferSDcard() {
     String convertedData = convertDataToCSV();
 
     // Store data on SD card
-    if(!sdcard.writeHistoricalData(convertedData)) {
+    if(sdcard.isInitialised() &&!sdcard.writeHistoricalData(convertedData)) {
         logg("Failed to write data to SD card");
     }
 }
@@ -101,8 +102,13 @@ void handleHistoricalData() {
     }
 
     // Check if there is historical data to send
-    if (!sdcard.haveHistoricalData()) {
+    if (sdcard.isInitialised() && !sdcard.haveHistoricalData()) {
         logg("No historical data to send");
+        return;
+    }
+
+    if (!sdcard.isInitialised()) {
+        logg("SD card not initialized, cannot transfer historical data");
         return;
     }
 
@@ -126,28 +132,34 @@ void handleHistoricalData() {
         endIdx = historicalData.indexOf('\n', startIdx);
 
         if (bluetooth.isEnabled() && bluetooth.isConnected()) {
+            // Parse and send historical data according to storage order
+            if (decodedDataLine.size() == NR_VALUES) {
+                bluetooth.updateTimestampCharacteristic(decodedDataLine[TIMESTAMP_INDEX]);
+                bluetooth.updateBatteryCharacteristic(decodedDataLine[BATTERY_INDEX].toFloat());
 #ifdef BME_ENABLE
-            bluetooth.updateTemperatureCharacteristic(lastSensorsData.lastBMEData.temperature);
-            bluetooth.updateHumidityCharacteristic(lastSensorsData.lastBMEData.humidity);
-            bluetooth.updatePressureCharacteristic(lastSensorsData.lastBMEData.pressure);
-            bluetooth.updateGasCharacteristic(lastSensorsData.lastBMEData.gas);
-            bluetooth.updateAltitudeCharacteristic(lastSensorsData.lastBMEData.altitude);
+                bluetooth.updateTemperatureCharacteristic(decodedDataLine[BME_TEMPERATURE_INDEX].toInt());
+                bluetooth.updatePressureCharacteristic(decodedDataLine[BME_PRESSURE_INDEX].toInt());
+                bluetooth.updateHumidityCharacteristic(decodedDataLine[BME_HUMIDITY_INDEX].toInt());
+                bluetooth.updateGasCharacteristic(decodedDataLine[BME_GAS_INDEX].toInt());
+                bluetooth.updateAltitudeCharacteristic(decodedDataLine[BME_ALTITUDE_INDEX].toInt());
 #endif // BME_ENABLE
-#ifdef PM_ENABLE
-            bluetooth.updatePM1Characteristic(lastSensorsData.lastPMData.pm1);
-            bluetooth.updatePM2_5Characteristic(lastSensorsData.lastPMData.pm2_5);
-            bluetooth.updatePM10Characteristic(lastSensorsData.lastPMData.pm10);
-#endif // PM_ENABLE
 #ifdef CO2_ENABLE
-            bluetooth.updateCO2Characteristic(lastSensorsData.lastCO2Data.co2);
+                bluetooth.updateCO2Characteristic(decodedDataLine[CO2_CO2_INDEX].toInt());
 #endif // CO2_ENABLE
+#ifdef PM_ENABLE
+                bluetooth.updatePM1Characteristic(decodedDataLine[PM_PM1_INDEX].toInt());
+                bluetooth.updatePM2_5Characteristic(decodedDataLine[PM_PM2_5_INDEX].toInt());
+                bluetooth.updatePM10Characteristic(decodedDataLine[PM_PM10_INDEX].toInt());
+#endif // PM_ENABLE
 #ifdef MICS_ENABLE
-            bluetooth.updateCarbonMonoxideCharacteristic(lastSensorsData.lastMICSData.co);
-            bluetooth.updateNitrogenDioxideCharacteristic(lastSensorsData.lastMICSData.no2);
-            bluetooth.updateAmmoniaCharacteristic(lastSensorsData.lastMICSData.nh3);
+                bluetooth.updateCarbonMonoxideCharacteristic(decodedDataLine[MICS_CO_INDEX].toInt());
+                bluetooth.updateNitrogenDioxideCharacteristic(decodedDataLine[MICS_NO2_INDEX].toInt());
+                bluetooth.updateAmmoniaCharacteristic(decodedDataLine[MICS_NH3_INDEX].toInt());
 #endif // MICS_ENABLE
-            bluetooth.updateBatteryCharacteristic(lastSensorsData.lastBatteryData.voltage);
-            bluetooth.updateTimestampCharacteristic(lastSensorsData.timestamp);
+            } else {
+                logg("Invalid historical data line, skipping");
+                DEBUG("Invalid data line size: " + String(decodedDataLine.size()));
+            }
         }
     }
 }

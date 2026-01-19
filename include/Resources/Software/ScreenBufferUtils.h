@@ -19,25 +19,25 @@
 #include <Sensors/MICS_sensor.h>
 #endif
 
-String convertBattery(BatteryData data);
+String convertBattery(BatteryData data, bool includeUnit = true);
 #ifdef BME_ENABLE
-String convertTemperature(BMEData data);
-String convertHumidity(BMEData data);
-String convertPressure(BMEData data);
-String convertAltitude(BMEData data);
+String convertTemperature(BMEData data, bool includeUnit = true, bool integerOnly = false);
+String convertHumidity(BMEData data, bool includeUnit = true, bool integerOnly = false);
+String convertPressure(BMEData data, bool includeUnit = true, bool integerOnly = false);
+String convertAltitude(BMEData data, bool includeUnit = true, bool integerOnly = false);
 #endif
 #ifdef CO2_ENABLE
-String convertCO2(CO2Data data);
+String convertCO2(CO2Data data, bool includeUnit = true, bool integerOnly = false);
 #endif
 #ifdef PM_ENABLE
-String convertPM1(PMData data);
-String convertPM2_5(PMData data);
-String convertPM10(PMData data);
+String convertPM1(PMData data, bool includeUnit = true, bool integerOnly = false);
+String convertPM2_5(PMData data, bool includeUnit = true, bool integerOnly = false);
+String convertPM10(PMData data, bool includeUnit = true, bool integerOnly = false);
 #endif
 #ifdef MICS_ENABLE
-String convertCO(MICSData data);
-String convertNO2(MICSData data);
-String convertNH3(MICSData data);
+String convertCO(MICSData data, bool includeUnit = true, bool integerOnly = false);
+String convertNO2(MICSData data, bool includeUnit = true, bool integerOnly = false);
+String convertNH3(MICSData data, bool includeUnit = true, bool integerOnly = false);
 #endif
 
 #endif // SCREENBUFFERUTILS_H

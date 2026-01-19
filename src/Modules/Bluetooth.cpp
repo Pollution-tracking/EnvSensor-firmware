@@ -22,11 +22,6 @@ Bluetooth::~Bluetooth() {
 void Bluetooth::init() {
     loggValue(bleServerName, "Server name");
 
-    // BLE purposesly disabled => early exit
-    if (!this->isEnabled()) {
-        return;
-    }
-
     // Create BLE device
     BLEDevice::init(bleServerName.c_str());
 

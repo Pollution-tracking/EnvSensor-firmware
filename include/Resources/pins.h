@@ -9,13 +9,18 @@
 #define PM_RX_PIN 1
 #define PM_TX_PIN 2
 
+// MICS 6814
+#define MICS_CO_PIN 16
+#define MICS_NO2_PIN 17
+#define MICS_NH3_PIN 14
+
 // GPIO buttons
 #define BUTTON_LEFT_PIN     18
 #define BUTTON_CENTER_PIN   45
 #define BUTTON_RIGHT_PIN    3
 
+// Wakeup pins from deep sleep (center unavailable)
 const uint64_t BUTTONS_MASK = (uint64_t)1 << BUTTON_LEFT_PIN |
-                              (uint64_t)1 << BUTTON_CENTER_PIN |
                               (uint64_t)1 << BUTTON_RIGHT_PIN;
 
 // Display

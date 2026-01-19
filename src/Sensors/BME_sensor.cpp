@@ -24,18 +24,29 @@ void BMESensor::init() {
 	delay(100);
 
     // Check if the sensor is found
-    if(ret) {
+    if (ret) {
         logg(INITIALIZED);
 
         this->status.found = true;
 		this->status.initialised = true;
 		this->status.error = false;
 
-        bme->setTemperatureOversampling(BME680_OS_8X);
-        bme->setHumidityOversampling(BME680_OS_2X);
-        bme->setPressureOversampling(BME680_OS_4X);
-        bme->setIIRFilterSize(BME680_FILTER_SIZE_3);
-        bme->setGasHeater(320, 150); // 320*C for 150 ms
+        // Default configuration
+        if (!bme->setTemperatureOversampling(BME680_OS_8X)) {
+            logg("Failed to set temperature oversampling");
+        }
+        if (!bme->setHumidityOversampling(BME680_OS_2X)) {
+            logg("Failed to set humidity oversampling");
+        }
+        if (!bme->setPressureOversampling(BME680_OS_4X)) {
+            logg("Failed to set pressure oversampling");
+        }
+        if (!bme->setIIRFilterSize(BME680_FILTER_SIZE_3)) {
+            logg("Failed to set IIR filter size");
+        }
+        if (!bme->setGasHeater(0, 0)) {
+            logg("Failed to stop gas heater");
+        }
     } else {
         logg(NOT_INITIALIZED);
 
@@ -68,19 +79,21 @@ void BMESensor::read() {
         // Update the BME data
         this->status.error = false;
 
-        data.temperature = bme->temperature;
+        data.temperature = bme->temperature * 100;
         loggValue(String(data.temperature), "Temperature");
 
-        data.pressure = bme->pressure / 100.0; // hPa
+        data.pressure = bme->pressure;
         loggValue(String(data.pressure), "Pressure");
 
-        data.humidity = bme->humidity;
+        data.humidity = bme->humidity * 100;
         loggValue(String(data.humidity), "Humidity");
 
-        data.gas = bme->gas_resistance / 1000.0;
+        data.gas = bme->gas_resistance / 10;
         loggValue(String(data.gas), "Gas");
 
-        data.altitude = bme->readAltitude(SEA_LEVEL);
+        data.altitude = data.pressure / 100.0 > SEA_LEVEL_STANDARD ?
+                        compute_altitude(data.pressure, data.temperature / 100.0, SEA_LEVEL_SPECIFIC) * 100 :
+                        compute_altitude(data.pressure, data.temperature / 100.0) * 100;
         loggValue(String(data.altitude), "Altitude");
     }
 }
@@ -99,6 +112,11 @@ String BMESensor::getName() {
 }
 
 // Internal functions
+float BMESensor::compute_altitude(float pressure, float temp_c, float seaLevel) {
+    pressure /= 100.0; // Convert Pa to hPa
+    return ((pow((seaLevel / pressure), (1.0 / 5.257)) - 1.0) * (temp_c + 273.15)) / 0.0065;    
+}
+
 void BMESensor::markReadError() {
     this->status.error = true;
     this->data.temperature = READ_ERROR;

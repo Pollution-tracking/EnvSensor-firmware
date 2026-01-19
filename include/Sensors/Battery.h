@@ -2,7 +2,7 @@
 #define BATTERY_H
 
 #include <Resources/Constants/battery_constants.h>
-
+#include <Resources/Constants/adc_constants.h>
 #include <Resources/pins.h>
 #include <Logger/logger.h>
 #include <Sensors/sensor.h>

@@ -30,7 +30,6 @@ class Display {
         ~Display();
         void init();
         void setScreenMode(SCREEN_MODE mode);
-        SCREEN_MODE getScreenMode();
         void changeScreenRight();
         void changeScreenLeft();
         void refreshScreen(SCREEN_REFRESH screen);
@@ -47,9 +46,18 @@ class Display {
         void showSensorsScreen();
         void fullSensorsScreen();
         void partialSensorsScreen();
+        void showEnvironmentalScreen();
+        void fullEnvironmentalScreen();
+        void partialEnvironmentalScreen();
+        void showPollutantsScreen();
+        void fullPollutantsScreen();
+        void partialPollutantsScreen();
         uint16_t centerText_X(String text);
         void printBLEStatus();
         void printSensorsStatus();
+        void printEnvironmentalStatus();
+        void printPollutantsStatus();
+        void printBatteryData();
 };
 
 #endif // DISPLAY_H

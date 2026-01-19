@@ -118,8 +118,8 @@ class Bluetooth {
                 _logg("Received update");
                 
                 if (characteristic->getUUID().equals(TIMESTAMP_CHARACTERISTIC_UUID)) {
-                    String receivedTimestamp = characteristic->getValue();
-                    outerClass->updateTimestamp(receivedTimestamp);
+                    std::string receivedTimestamp = characteristic->getValue();
+                    outerClass->updateTimestamp(String(receivedTimestamp.c_str()));
 
                     // Announce timestamp update
                     board_config.ble_state = BLE::TIMESTAMP_UPDATE;
