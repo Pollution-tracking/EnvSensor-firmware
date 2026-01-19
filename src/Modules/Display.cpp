@@ -4,7 +4,9 @@
 #define loggValue(message, value) loggWithCtx(message, "DISPLAY", value)
 
 // Construct display
-Display::Display() : display(GxEPD2_DRIVER_CLASS(DISPLAY_CS_PIN, DISPLAY_DC_PIN, DISPLAY_RST_PIN, DISPLAY_BUSY_PIN)) {
+Display::Display() : 
+    partialRefreshCounter(0),
+    display(GxEPD2_DRIVER_CLASS(DISPLAY_CS_PIN, DISPLAY_DC_PIN, DISPLAY_RST_PIN, DISPLAY_BUSY_PIN)) {
 }
 
 // Destruct display
@@ -42,12 +44,12 @@ void Display::changeScreenRight() {
             setScreenMode(SCREEN_MODE::SENSORS);
             break;
         case SCREEN_MODE::SENSORS:
-            setScreenMode(SCREEN_MODE::ENVIRONMENTAL);
+            setScreenMode(SCREEN_MODE::AMBIENT);
             break;
-        case SCREEN_MODE::ENVIRONMENTAL:
-            setScreenMode(SCREEN_MODE::POLLUTANTS);
+        case SCREEN_MODE::AMBIENT:
+            setScreenMode(SCREEN_MODE::POLLUTION);
             break;
-        case SCREEN_MODE::POLLUTANTS:
+        case SCREEN_MODE::POLLUTION:
             setScreenMode(SCREEN_MODE::BLUETOOTH);
             break;
         default:
@@ -60,16 +62,16 @@ void Display::changeScreenRight() {
 void Display::changeScreenLeft() {
     switch (lastScreenData.currentScreen) {
         case SCREEN_MODE::BLUETOOTH:
-            setScreenMode(SCREEN_MODE::POLLUTANTS);
+            setScreenMode(SCREEN_MODE::POLLUTION);
             break;
         case SCREEN_MODE::SENSORS:
             setScreenMode(SCREEN_MODE::BLUETOOTH);
             break;
-        case SCREEN_MODE::ENVIRONMENTAL:
+        case SCREEN_MODE::AMBIENT:
             setScreenMode(SCREEN_MODE::SENSORS);
             break;
-        case SCREEN_MODE::POLLUTANTS:
-            setScreenMode(SCREEN_MODE::ENVIRONMENTAL);
+        case SCREEN_MODE::POLLUTION:
+            setScreenMode(SCREEN_MODE::AMBIENT);
             break;
         default:
             logg("Not allowed to change screen!");
@@ -90,10 +92,10 @@ void Display::refreshScreen(SCREEN_REFRESH screen) {
         case SCREEN_REFRESH::SENSORS:
             if (lastScreenData.currentScreen == SCREEN_MODE::SENSORS) {
                 setScreenMode(SCREEN_MODE::SENSORS);
-            } else if (lastScreenData.currentScreen == SCREEN_MODE::ENVIRONMENTAL) {
-                setScreenMode(SCREEN_MODE::ENVIRONMENTAL);
-            } else if (lastScreenData.currentScreen == SCREEN_MODE::POLLUTANTS) {
-                setScreenMode(SCREEN_MODE::POLLUTANTS);
+            } else if (lastScreenData.currentScreen == SCREEN_MODE::AMBIENT) {
+                setScreenMode(SCREEN_MODE::AMBIENT);
+            } else if (lastScreenData.currentScreen == SCREEN_MODE::POLLUTION) {
+                setScreenMode(SCREEN_MODE::POLLUTION);
             }
             break;
         default:
@@ -117,11 +119,11 @@ void Display::showScreen(SCREEN_MODE mode) {
         case SCREEN_MODE::SENSORS:
             showSensorsScreen();
             break;
-        case SCREEN_MODE::ENVIRONMENTAL:
-            showEnvironmentalScreen();
+        case SCREEN_MODE::AMBIENT:
+            showAmbientScreen();
             break;
-        case SCREEN_MODE::POLLUTANTS:
-            showPollutantsScreen();
+        case SCREEN_MODE::POLLUTION:
+            showPollutionScreen();
             break;
         case SCREEN_MODE::LOADING:
             showLoadingScreen();
@@ -138,115 +140,57 @@ void Display::showScreen(SCREEN_MODE mode) {
 // Routine to show the loading screen (special)
 void Display::showLoadingScreen() {
     logg("Preparing loading screen");
-
-    display.setFullWindow();
-    display.fillScreen(GxEPD_WHITE);
-
-    // Draw decorative border - top part
-    display.drawLine(10, 10, 190, 10, GxEPD_BLACK); // top
-    display.drawLine(13, 13, 187, 13, GxEPD_BLACK); // top inner
-    display.drawLine(10, 10, 10, 50, GxEPD_BLACK); // left top
-    display.drawLine(13, 13, 13, 50, GxEPD_BLACK); // left top inner
-    display.drawLine(190, 10, 190, 50, GxEPD_BLACK); // right top
-    display.drawLine(187, 13, 187, 50, GxEPD_BLACK); // right top inner
     
-    // Draw decorative border - bottom part
-    display.drawLine(10, 145, 10, 190, GxEPD_BLACK); // left bottom
-    display.drawLine(13, 145, 13, 187, GxEPD_BLACK); // left bottom inner
-    display.drawLine(190, 145, 190, 190, GxEPD_BLACK); // right bottom
-    display.drawLine(187, 145, 187, 187, GxEPD_BLACK); // right bottom inner
-    display.drawLine(10, 190, 190, 190, GxEPD_BLACK); // bottom
-    display.drawLine(13, 187, 187, 187, GxEPD_BLACK); // bottom inner
-
-    // Write title
-    display.setFont(&FreeMonoBold24pt7b);
-    display.setCursor(centerText_X(LoadingScreenText[0]), 90);
-    display.print(LoadingScreenText[0]);
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(centerText_X(LoadingScreenText[1]), 130);
-    display.print(LoadingScreenText[1]);
-
-    display.display(false);
+    performFullRefresh("", [this]() {
+        contentLoadingScreen();
+    });
+    
+    
+    performFullRefresh("", [this]() {
+        contentLoadingScreen();
+    });
+    
     logg("Rendered loading screen");
 }
 
 // Routine to show the heating screen
 void Display::showHeatingScreen() {
     logg("Preparing heating screen");
-    display.setFullWindow();
-    display.fillScreen(GxEPD_WHITE);
-
-    // Draw heating icon (thermometer with rising bars)
-    int iconX = 90;
-    int iconY = 30;
-    display.fillRect(iconX, iconY, 8, 30, GxEPD_BLACK);
-    display.fillCircle(iconX + 4, iconY + 35, 8, GxEPD_BLACK);
-    display.fillCircle(iconX + 4, iconY + 35, 4, GxEPD_WHITE);
     
-    // Rising heat bars
-    for (int i = 0; i < 3; i++) {
-        display.drawLine(iconX + 15 + i * 6, iconY + 20, iconX + 15 + i * 6, iconY + 10, GxEPD_BLACK);
-        display.drawLine(iconX + 17 + i * 6, iconY + 25, iconX + 17 + i * 6, iconY + 15, GxEPD_BLACK);
-    }
-
-    // Write title
-    display.setFont(&FreeMonoBold24pt7b);
-    display.setCursor(centerText_X(HeatingScreenText[0]), 110);
-    display.print(HeatingScreenText[0]);
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(centerText_X(HeatingScreenText[1]), 145);
-    display.print(HeatingScreenText[1]);
+    performFullRefresh("", [this]() {
+        contentHeatingScreen();
+    });
     
-    // Progress indicator
-    display.drawRoundRect(40, 165, 120, 12, 6, GxEPD_BLACK);
-    display.fillRoundRect(42, 167, 60, 8, 4, GxEPD_BLACK);
-
-    display.display(false);
+    
+    performFullRefresh("", [this]() {
+        contentHeatingScreen();
+    });
+    
     logg("Rendered heating screen");
 }
 
 // Routine to show the sending historical data screen
 void Display::showSendingScreen() {
     logg("Preparing sending screen");
-    display.setFullWindow();
-    display.fillScreen(GxEPD_WHITE);
-
-    // Draw sync/upload icon (cloud with arrow)
-    int cloudX = 85;
-    int cloudY = 50;
-    display.drawCircle(cloudX, cloudY, 8, GxEPD_BLACK);
-    display.drawCircle(cloudX + 12, cloudY, 8, GxEPD_BLACK);
-    display.drawCircle(cloudX + 6, cloudY - 6, 6, GxEPD_BLACK);
-    display.fillRect(cloudX - 6, cloudY, 24, 8, GxEPD_BLACK);
     
-    // Upload arrow
-    display.drawLine(cloudX + 6, cloudY + 15, cloudX + 6, cloudY + 30, GxEPD_BLACK);
-    display.drawLine(cloudX + 6, cloudY + 15, cloudX + 2, cloudY + 20, GxEPD_BLACK);
-    display.drawLine(cloudX + 6, cloudY + 15, cloudX + 10, cloudY + 20, GxEPD_BLACK);
-
-    // Write title
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(centerText_X(SendingScreenText[0]), 100);
-    display.print(SendingScreenText[0]);
-    display.setFont(&FreeMonoBold12pt7b);
-    display.setCursor(centerText_X(SendingScreenText[1]), 130);
-    display.print(SendingScreenText[1]);
+    performFullRefresh("", [this]() {
+        contentSendingScreen();
+    });
     
-    // Animated dots
-    display.fillCircle(60, 155, 3, GxEPD_BLACK);
-    display.fillCircle(75, 155, 3, GxEPD_BLACK);
-    display.fillCircle(90, 155, 3, GxEPD_BLACK);
-    display.drawCircle(105, 155, 3, GxEPD_BLACK);
-    display.drawCircle(120, 155, 3, GxEPD_BLACK);
-
-    display.display(false);
+    
+    performFullRefresh("", [this]() {
+        contentSendingScreen();
+    });
+    
     logg("Rendered sending screen");
 }
 
 // Routines for updating the Bluetooth information screen (full or partial)
 void Display::showBluetoothScreen() {
     logg("Preparing Bluetooth screen");
-    if (lastScreenData.previousScreen == SCREEN_MODE::BLUETOOTH) {
+    
+    if (lastScreenData.previousScreen == SCREEN_MODE::BLUETOOTH &&
+        partialRefreshCounter < FULL_REFRESH_INTERVAL) {
         partialBluetoothScreen();
     } else {
         fullBluetoothScreen();
@@ -257,41 +201,42 @@ void Display::showBluetoothScreen() {
 void Display::fullBluetoothScreen() {
     loggValue("Full refresh", "Bluetooth");
     
-    display.setFullWindow();
-    display.fillScreen(GxEPD_WHITE);
-
-    contentBluetoothScreen();
-
-    display.display(false);
+    performFullRefresh(BluetoothScreenText[0], [this]() {
+        contentBluetoothScreen();
+    });
+    performFullRefresh(BluetoothScreenText[0], [this]() {
+        contentBluetoothScreen();
+    });
 }
 
 void Display::partialBluetoothScreen() {
     loggValue("Partial refresh", "Bluetooth");
     
-    display.setPartialWindow(0, 0, display.width(), display.height());
-    display.firstPage();
+    partialRefreshCounter++;
     
-    // Cover previous text
-    do {
-        display.fillScreen(GxEPD_WHITE);
-    } while (display.nextPage());
-
-    do {
-        contentBluetoothScreen();
-    } while (display.nextPage());
+    using namespace BluetoothLayout;
+    
+    // Status box region
+    clearPartialRegion(STATUS_BOX_X, STATUS_BOX_Y, STATUS_BOX_W, STATUS_BOX_H);
+    redrawPartialRegion(STATUS_BOX_X, STATUS_BOX_Y, STATUS_BOX_W, STATUS_BOX_H, [this]() {
+        display.drawRoundRect(STATUS_BOX_X, STATUS_BOX_Y, STATUS_BOX_W, STATUS_BOX_H, STATUS_BOX_RADIUS, GxEPD_BLACK);
+        printBLEStatus();
+    });
 }
 
 // Rendering helpers
 void Display::printBLEStatus() {
+    using namespace BluetoothLayout;
+    
     // Print action status
     display.setFont(&FreeMonoBold12pt7b);
     String line1 = "Enabled: " + String(board_config.ble_stats.enabled ? "Yes" : "No");
-    display.setCursor(centerText_X(line1), 125);
+    display.setCursor(centerText_X(line1), STATUS_LINE1_Y);
     display.print(line1);
 
     // Print connection status with indicator dots
     String line2 = "Connected: " + String(board_config.ble_stats.connected ? "Yes" : "No");
-    display.setCursor(centerText_X(line2), 147);
+    display.setCursor(centerText_X(line2), STATUS_LINE2_Y);
     display.print(line2);
     
     // Draw connection indicator
@@ -304,11 +249,13 @@ void Display::printBLEStatus() {
 }
 
 void Display::contentBluetoothScreen() {
+    using namespace BluetoothLayout;
+    
     // Draw Bluetooth icon (classic Bluetooth symbol with thicker lines)
-    int iconCenterX = 100;
-    int iconCenterY = 53;
-    int iconHeight = 16;
-    int iconWidth = 8;
+    int iconCenterX = ICON_CENTER_X;
+    int iconCenterY = ICON_CENTER_Y;
+    int iconHeight = ICON_HEIGHT;
+    int iconWidth = ICON_WIDTH;
     
     // Vertical center line (3 pixels wide)
     display.drawLine(iconCenterX - 1, iconCenterY - iconHeight/2, iconCenterX - 1, iconCenterY + iconHeight/2, GxEPD_BLACK);
@@ -333,36 +280,212 @@ void Display::contentBluetoothScreen() {
     display.drawLine(iconCenterX - iconWidth + 2, iconCenterY + iconHeight/2 - 2, iconCenterX + iconWidth - 2, iconCenterY - iconHeight/2 + 2, GxEPD_BLACK);
     display.drawLine(iconCenterX - iconWidth + 3, iconCenterY + iconHeight/2 - 2, iconCenterX + iconWidth - 1, iconCenterY - iconHeight/2 + 2, GxEPD_BLACK);
     
-    // Write title
-    display.setFont(&FreeMonoBold18pt7b);
-    display.setCursor(centerText_X(BluetoothScreenText[0]), 30);
-    display.print(BluetoothScreenText[0]);
-
+    
     // Write BLE server name in a box
-    display.drawRoundRect(15, 70, 170, 25, 5, GxEPD_BLACK);
+    display.drawRoundRect(NAME_BOX_X, NAME_BOX_Y, NAME_BOX_W, NAME_BOX_H, NAME_BOX_RADIUS, GxEPD_BLACK);
     display.setFont(&FreeMonoBold9pt7b);
-    display.setCursor(centerText_X(bleServerName), 88);
+    display.setCursor(centerText_X(bleServerName), NAME_TEXT_Y);
     display.print(bleServerName);
 
     // Status section with decorative box (maximum width)
-    display.drawRoundRect(3, 105, 194, 50, 5, GxEPD_BLACK);
+    display.drawRoundRect(STATUS_BOX_X, STATUS_BOX_Y, STATUS_BOX_W, STATUS_BOX_H, STATUS_BOX_RADIUS, GxEPD_BLACK);
     printBLEStatus();
 
     // Draw footer divider
-    display.drawLine(10, 160, 190, 160, GxEPD_BLACK);
+    display.drawLine(10, FOOTER_LINE_Y, 190, FOOTER_LINE_Y, GxEPD_BLACK);
     
     // Write instructions
     display.setFont(&FreeMonoBold9pt7b);
-    display.setCursor(centerText_X(BluetoothScreenText[1]), 177);
+    display.setCursor(centerText_X(BluetoothScreenText[1]), FOOTER_TEXT1_Y);
     display.print(BluetoothScreenText[1]);
-    display.setCursor(centerText_X(BluetoothScreenText[2]), 193);
+    display.setCursor(centerText_X(BluetoothScreenText[2]), FOOTER_TEXT2_Y);
     display.print(BluetoothScreenText[2]);
+}
+
+void Display::contentLoadingScreen() {
+    using namespace LoadingLayout;
+    
+    // Draw decorative border - top part
+    display.drawLine(BORDER_OUTER, BORDER_OUTER, BORDER_RIGHT_OUTER, BORDER_OUTER, GxEPD_BLACK);
+    display.drawLine(BORDER_INNER, BORDER_INNER, BORDER_RIGHT_INNER, BORDER_INNER, GxEPD_BLACK);
+    display.drawLine(BORDER_OUTER, BORDER_OUTER, BORDER_OUTER, BORDER_TOP_END, GxEPD_BLACK);
+    display.drawLine(BORDER_INNER, BORDER_INNER, BORDER_INNER, BORDER_TOP_END, GxEPD_BLACK);
+    display.drawLine(BORDER_RIGHT_OUTER, BORDER_OUTER, BORDER_RIGHT_OUTER, BORDER_TOP_END, GxEPD_BLACK);
+    display.drawLine(BORDER_RIGHT_INNER, BORDER_INNER, BORDER_RIGHT_INNER, BORDER_TOP_END, GxEPD_BLACK);
+    
+    // Draw decorative border - bottom part
+    display.drawLine(BORDER_OUTER, BORDER_BOTTOM_START, BORDER_OUTER, BORDER_BOTTOM, GxEPD_BLACK);
+    display.drawLine(BORDER_INNER, BORDER_BOTTOM_START, BORDER_INNER, BORDER_BOTTOM_INNER, GxEPD_BLACK);
+    display.drawLine(BORDER_RIGHT_OUTER, BORDER_BOTTOM_START, BORDER_RIGHT_OUTER, BORDER_BOTTOM, GxEPD_BLACK);
+    display.drawLine(BORDER_RIGHT_INNER, BORDER_BOTTOM_START, BORDER_RIGHT_INNER, BORDER_BOTTOM_INNER, GxEPD_BLACK);
+    display.drawLine(BORDER_OUTER, BORDER_BOTTOM, BORDER_RIGHT_OUTER, BORDER_BOTTOM, GxEPD_BLACK);
+    display.drawLine(BORDER_INNER, BORDER_BOTTOM_INNER, BORDER_RIGHT_INNER, BORDER_BOTTOM_INNER, GxEPD_BLACK);
+
+    // Write title with custom fonts
+    display.setFont(&FreeMonoBold24pt7b);
+    display.setCursor(centerText_X(LoadingScreenText[0]), TEXT1_Y);
+    display.print(LoadingScreenText[0]);
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X(LoadingScreenText[1]), TEXT2_Y);
+    display.print(LoadingScreenText[1]);
+}
+
+void Display::contentHeatingScreen() {
+    using namespace HeatingLayout;
+    
+    // Draw heating icon (thermometer with rising bars)
+    int iconX = ICON_X;
+    int iconY = ICON_Y;
+    display.fillRect(iconX, iconY, 8, 30, GxEPD_BLACK);
+    display.fillCircle(iconX + 4, iconY + 35, 8, GxEPD_BLACK);
+    display.fillCircle(iconX + 4, iconY + 35, 4, GxEPD_WHITE);
+    
+    // Rising heat bars
+    for (int i = 0; i < 3; i++) {
+        display.drawLine(iconX + 15 + i * 6, iconY + 20, iconX + 15 + i * 6, iconY + 10, GxEPD_BLACK);
+        display.drawLine(iconX + 17 + i * 6, iconY + 25, iconX + 17 + i * 6, iconY + 15, GxEPD_BLACK);
+    }
+
+    // Write title with custom fonts
+    display.setFont(&FreeMonoBold24pt7b);
+    display.setCursor(centerText_X(HeatingScreenText[0]), TEXT1_Y);
+    display.print(HeatingScreenText[0]);
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X(HeatingScreenText[1]), TEXT2_Y);
+    display.print(HeatingScreenText[1]);
+    
+    // Progress indicator
+    display.drawRoundRect(PROGRESS_X, PROGRESS_Y, PROGRESS_W, PROGRESS_H, PROGRESS_RADIUS, GxEPD_BLACK);
+    display.fillRoundRect(PROGRESS_X + 2, PROGRESS_Y + 2, 60, PROGRESS_H - 4, PROGRESS_FILL_RADIUS, GxEPD_BLACK);
+}
+
+void Display::contentSendingScreen() {
+    using namespace SendingLayout;
+    
+    // Draw sync/upload icon (cloud with arrow)
+    int cloudX = CLOUD_X;
+    int cloudY = CLOUD_Y;
+    display.drawCircle(cloudX, cloudY, 8, GxEPD_BLACK);
+    display.drawCircle(cloudX + 12, cloudY, 8, GxEPD_BLACK);
+    display.drawCircle(cloudX + 6, cloudY - 6, 6, GxEPD_BLACK);
+    display.fillRect(cloudX - 6, cloudY, 24, 8, GxEPD_BLACK);
+    
+    // Upload arrow
+    display.drawLine(cloudX + 6, cloudY + 15, cloudX + 6, cloudY + 30, GxEPD_BLACK);
+    display.drawLine(cloudX + 6, cloudY + 15, cloudX + 2, cloudY + 20, GxEPD_BLACK);
+    display.drawLine(cloudX + 6, cloudY + 15, cloudX + 10, cloudY + 20, GxEPD_BLACK);
+
+    // Write title with custom fonts
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X(SendingScreenText[0]), TEXT1_Y);
+    display.print(SendingScreenText[0]);
+    display.setFont(&FreeMonoBold12pt7b);
+    display.setCursor(centerText_X(SendingScreenText[1]), TEXT2_Y);
+    display.print(SendingScreenText[1]);
+    
+    // Animated dots
+    display.fillCircle(60, DOTS_Y, 3, GxEPD_BLACK);
+    display.fillCircle(75, DOTS_Y, 3, GxEPD_BLACK);
+    display.fillCircle(90, DOTS_Y, 3, GxEPD_BLACK);
+    display.drawCircle(105, DOTS_Y, 3, GxEPD_BLACK);
+    display.drawCircle(120, DOTS_Y, 3, GxEPD_BLACK);
+}
+
+void Display::contentLoadingScreen() {
+    using namespace LoadingLayout;
+    
+    // Draw decorative border - top part
+    display.drawLine(BORDER_OUTER, BORDER_OUTER, BORDER_RIGHT_OUTER, BORDER_OUTER, GxEPD_BLACK);
+    display.drawLine(BORDER_INNER, BORDER_INNER, BORDER_RIGHT_INNER, BORDER_INNER, GxEPD_BLACK);
+    display.drawLine(BORDER_OUTER, BORDER_OUTER, BORDER_OUTER, BORDER_TOP_END, GxEPD_BLACK);
+    display.drawLine(BORDER_INNER, BORDER_INNER, BORDER_INNER, BORDER_TOP_END, GxEPD_BLACK);
+    display.drawLine(BORDER_RIGHT_OUTER, BORDER_OUTER, BORDER_RIGHT_OUTER, BORDER_TOP_END, GxEPD_BLACK);
+    display.drawLine(BORDER_RIGHT_INNER, BORDER_INNER, BORDER_RIGHT_INNER, BORDER_TOP_END, GxEPD_BLACK);
+    
+    // Draw decorative border - bottom part
+    display.drawLine(BORDER_OUTER, BORDER_BOTTOM_START, BORDER_OUTER, BORDER_BOTTOM, GxEPD_BLACK);
+    display.drawLine(BORDER_INNER, BORDER_BOTTOM_START, BORDER_INNER, BORDER_BOTTOM_INNER, GxEPD_BLACK);
+    display.drawLine(BORDER_RIGHT_OUTER, BORDER_BOTTOM_START, BORDER_RIGHT_OUTER, BORDER_BOTTOM, GxEPD_BLACK);
+    display.drawLine(BORDER_RIGHT_INNER, BORDER_BOTTOM_START, BORDER_RIGHT_INNER, BORDER_BOTTOM_INNER, GxEPD_BLACK);
+    display.drawLine(BORDER_OUTER, BORDER_BOTTOM, BORDER_RIGHT_OUTER, BORDER_BOTTOM, GxEPD_BLACK);
+    display.drawLine(BORDER_INNER, BORDER_BOTTOM_INNER, BORDER_RIGHT_INNER, BORDER_BOTTOM_INNER, GxEPD_BLACK);
+
+    // Write title with custom fonts
+    display.setFont(&FreeMonoBold24pt7b);
+    display.setCursor(centerText_X(LoadingScreenText[0]), TEXT1_Y);
+    display.print(LoadingScreenText[0]);
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X(LoadingScreenText[1]), TEXT2_Y);
+    display.print(LoadingScreenText[1]);
+}
+
+void Display::contentHeatingScreen() {
+    using namespace HeatingLayout;
+    
+    // Draw heating icon (thermometer with rising bars)
+    int iconX = ICON_X;
+    int iconY = ICON_Y;
+    display.fillRect(iconX, iconY, 8, 30, GxEPD_BLACK);
+    display.fillCircle(iconX + 4, iconY + 35, 8, GxEPD_BLACK);
+    display.fillCircle(iconX + 4, iconY + 35, 4, GxEPD_WHITE);
+    
+    // Rising heat bars
+    for (int i = 0; i < 3; i++) {
+        display.drawLine(iconX + 15 + i * 6, iconY + 20, iconX + 15 + i * 6, iconY + 10, GxEPD_BLACK);
+        display.drawLine(iconX + 17 + i * 6, iconY + 25, iconX + 17 + i * 6, iconY + 15, GxEPD_BLACK);
+    }
+
+    // Write title with custom fonts
+    display.setFont(&FreeMonoBold24pt7b);
+    display.setCursor(centerText_X(HeatingScreenText[0]), TEXT1_Y);
+    display.print(HeatingScreenText[0]);
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X(HeatingScreenText[1]), TEXT2_Y);
+    display.print(HeatingScreenText[1]);
+    
+    // Progress indicator
+    display.drawRoundRect(PROGRESS_X, PROGRESS_Y, PROGRESS_W, PROGRESS_H, PROGRESS_RADIUS, GxEPD_BLACK);
+    display.fillRoundRect(PROGRESS_X + 2, PROGRESS_Y + 2, 60, PROGRESS_H - 4, PROGRESS_FILL_RADIUS, GxEPD_BLACK);
+}
+
+void Display::contentSendingScreen() {
+    using namespace SendingLayout;
+    
+    // Draw sync/upload icon (cloud with arrow)
+    int cloudX = CLOUD_X;
+    int cloudY = CLOUD_Y;
+    display.drawCircle(cloudX, cloudY, 8, GxEPD_BLACK);
+    display.drawCircle(cloudX + 12, cloudY, 8, GxEPD_BLACK);
+    display.drawCircle(cloudX + 6, cloudY - 6, 6, GxEPD_BLACK);
+    display.fillRect(cloudX - 6, cloudY, 24, 8, GxEPD_BLACK);
+    
+    // Upload arrow
+    display.drawLine(cloudX + 6, cloudY + 15, cloudX + 6, cloudY + 30, GxEPD_BLACK);
+    display.drawLine(cloudX + 6, cloudY + 15, cloudX + 2, cloudY + 20, GxEPD_BLACK);
+    display.drawLine(cloudX + 6, cloudY + 15, cloudX + 10, cloudY + 20, GxEPD_BLACK);
+
+    // Write title with custom fonts
+    display.setFont(&FreeMonoBold18pt7b);
+    display.setCursor(centerText_X(SendingScreenText[0]), TEXT1_Y);
+    display.print(SendingScreenText[0]);
+    display.setFont(&FreeMonoBold12pt7b);
+    display.setCursor(centerText_X(SendingScreenText[1]), TEXT2_Y);
+    display.print(SendingScreenText[1]);
+    
+    // Animated dots
+    display.fillCircle(60, DOTS_Y, 3, GxEPD_BLACK);
+    display.fillCircle(75, DOTS_Y, 3, GxEPD_BLACK);
+    display.fillCircle(90, DOTS_Y, 3, GxEPD_BLACK);
+    display.drawCircle(105, DOTS_Y, 3, GxEPD_BLACK);
+    display.drawCircle(120, DOTS_Y, 3, GxEPD_BLACK);
 }
 
 // Routines for updating the Sensors information screen (full or partial)
 void Display::showSensorsScreen() {
     logg("Preparing sensors screen");
-    if (lastScreenData.previousScreen == SCREEN_MODE::SENSORS) {
+    
+    if (lastScreenData.previousScreen == SCREEN_MODE::SENSORS &&
+        partialRefreshCounter < FULL_REFRESH_INTERVAL) {
         partialSensorsScreen();
     } else {
         fullSensorsScreen();
@@ -372,51 +495,44 @@ void Display::showSensorsScreen() {
 
 void Display::fullSensorsScreen() {
     loggValue("Full refresh", "Sensors");
-
-    display.setFullWindow();
-    display.firstPage();
-
-    do {
-        // Write title
-        display.fillScreen(GxEPD_WHITE);
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X(SensorsScreenText[0]), 30);
-        display.print(SensorsScreenText[0]);
-
+    
+    performFullRefresh(SensorsScreenText[0], [this]() {
+    performFullRefresh(SensorsScreenText[0], [this]() {
         printSensorsStatus();
-    } while (display.nextPage());
+    });
+    });
 }
 
 void Display::partialSensorsScreen() {
     loggValue("Partial refresh", "Sensors");
     
-    display.setPartialWindow(0, 0, display.width(), display.height());
-    display.firstPage();
+    partialRefreshCounter++;
     
-    // Cover previous text
-    do {
-        display.fillScreen(GxEPD_WHITE);
-    } while (display.nextPage());
-
-    do {
-        // Re-print title
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X(SensorsScreenText[0]), 30);
-        display.print(SensorsScreenText[0]);
-
-        // Print new text
-        printSensorsStatus();
-    } while (display.nextPage());
+    using namespace SensorsLayout;
+    
+    int dataLines[] = {1, 3, 5, 7};
+    
+    for (int lineIdx : dataLines) {
+        int yPos = START_Y + LINE_SPACING * lineIdx - 3 - (LINE_HEIGHT / 2);
+        
+        clearPartialRegion(PARTIAL_X, yPos, PARTIAL_W, LINE_HEIGHT);
+        redrawPartialRegion(PARTIAL_X, yPos, PARTIAL_W, LINE_HEIGHT, [this]() {
+            printSensorsStatus();
+        });
+    }
 }
+
 
 // Sensors screen data printer
 void Display::printSensorsStatus() {
+    using namespace SensorsLayout;
+    
     // Draw decorative header box (extended downward)
-    display.drawRoundRect(5, 35, 190, 165, 8, GxEPD_BLACK);
+    display.drawRoundRect(BOX_X, BOX_Y, BOX_W, BOX_H, BOX_RADIUS, GxEPD_BLACK);
     
     // Define column positions for 3-column layout (more evenly distributed)
-    int boxLeft = 5;
-    int boxRight = 195;
+    int boxLeft = BOX_X;
+    int boxRight = BOX_X + BOX_W;
     int boxWidth = boxRight - boxLeft;
     int columnWidth = boxWidth / 3;
     
@@ -424,8 +540,8 @@ void Display::printSensorsStatus() {
     int col2X = boxLeft + columnWidth + columnWidth / 2;  // Center of second column
     int col3X = boxLeft + 2 * columnWidth + columnWidth / 2; // Center of third column
     
-    int startY = 55;
-    int lineSpacing = 20;
+    int startY = START_Y;
+    int lineSpacing = LINE_SPACING;
     
     display.setFont(&FreeMonoBold9pt7b);
     
@@ -527,221 +643,229 @@ void Display::printSensorsStatus() {
 #endif
 }
 
-// Routines for updating the Environmental information screen (full or partial)
-void Display::showEnvironmentalScreen() {
-    logg("Preparing environmental screen");
-    if (lastScreenData.previousScreen == SCREEN_MODE::ENVIRONMENTAL) {
-        partialEnvironmentalScreen();
+// Routines for updating the Ambient information screen (full or partial)
+void Display::showAmbientScreen() {
+    logg("Preparing ambient screen");
+
+    if (lastScreenData.previousScreen == SCREEN_MODE::AMBIENT &&
+        partialRefreshCounter < FULL_REFRESH_INTERVAL) {
+        partialAmbientScreen();
     } else {
-        fullEnvironmentalScreen();
+        fullAmbientScreen();
     }
-    logg("Rendered environmental screen");
+    logg("Rendered ambient screen");
 }
 
-void Display::fullEnvironmentalScreen() {
+void Display::fullAmbientScreen() {
     loggValue("Full refresh", "Ambient");
-
-    display.setFullWindow();
-    display.firstPage();
-
-    do {
-        // Write title
-        display.fillScreen(GxEPD_WHITE);
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X(EnvironmentalScreenText[0]), 30);
-        display.print(EnvironmentalScreenText[0]);
-
-        printEnvironmentalStatus();
-    } while (display.nextPage());
+    
+    performFullRefresh(AmbientScreenText[0], [this]() {
+        printAmbientStatus();
+    });
 }
 
-void Display::partialEnvironmentalScreen() {
+void Display::partialAmbientScreen() {
     loggValue("Partial refresh", "Ambient");
     
-    display.setPartialWindow(0, 0, display.width(), display.height());
-    display.firstPage();
+    partialRefreshCounter++;
     
-    // Cover previous text
-    do {
-        display.fillScreen(GxEPD_WHITE);
-    } while (display.nextPage());
-
-    do {
-        // Re-print title
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X(EnvironmentalScreenText[0]), 30);
-        display.print(EnvironmentalScreenText[0]);
-
-        // Print new text
-        printEnvironmentalStatus();
-    } while (display.nextPage());
+    using namespace AmbientLayout;
+    
+    // Region 1: Temperature and Humidity data values
+    clearPartialRegion(TEMP_HUM_REGION_X, TEMP_HUM_REGION_Y, TEMP_HUM_REGION_W, TEMP_HUM_REGION_H);
+    redrawPartialRegion(TEMP_HUM_REGION_X, TEMP_HUM_REGION_Y, TEMP_HUM_REGION_W, TEMP_HUM_REGION_H, [this]() {
+        printAmbientStatus();
+    });
+    
+    // Region 2: Pressure and Altitude data values
+    clearPartialRegion(PRESS_ALT_REGION_X, PRESS_ALT_REGION_Y, PRESS_ALT_REGION_W, PRESS_ALT_REGION_H);
+    redrawPartialRegion(PRESS_ALT_REGION_X, PRESS_ALT_REGION_Y, PRESS_ALT_REGION_W, PRESS_ALT_REGION_H, [this]() {
+        printAmbientStatus();
+    });
+    
+    // Region 3: Battery rectangle
+    clearPartialRegion(BATTERY_X, BATTERY_Y, BATTERY_W, BATTERY_HEIGHT);
+    redrawPartialRegion(BATTERY_X, BATTERY_Y, BATTERY_W, BATTERY_HEIGHT, [this]() {
+        display.fillRoundRect(BATTERY_X, BATTERY_Y, BATTERY_W, BATTERY_HEIGHT, BATTERY_RADIUS, GxEPD_BLACK);
+        display.setFont(&FreeMono9pt7b);
+        display.setTextColor(GxEPD_WHITE);
+        display.setCursor(BATTERY_TEXT_X, BATTERY_TEXT_Y);
+        display.println("Battery: " + convertBattery(lastSensorsData.lastBatteryData));
+        display.setTextColor(GxEPD_BLACK);
+    });
 }
 
-// Environmental screen data printer
-void Display::printEnvironmentalStatus() {
-    // Draw decorative header line under title
-    display.drawLine(10, 40, 190, 40, GxEPD_BLACK);
+
+// Ambient screen data printer
+void Display::printAmbientStatus() {
+    using namespace AmbientLayout;
     
-    // Print line by line environmental data with icons/markers
+    // Draw decorative header line under title
+    display.drawLine(10, HEADER_LINE_Y, 190, HEADER_LINE_Y, GxEPD_BLACK);
+    
+    // Print line by line ambient data with icons/markers
     display.setFont(&FreeMonoBold9pt7b);
     
-    int startY = 65;
-    int lineSpacing = 25;
-    int iconX = 10;
-    int textX = 25;  // Closer to icons (was 30)
+    int startY = START_Y;
+    int lineSpacing = LINE_SPACING;
+    int iconX = ICON_X;
+    int textX = TEXT_X;
     
 #ifdef BME_ENABLE
-    // Temperature with thermometer icon (simple box)
-    display.fillRect(iconX, startY - 13, 3, 12, GxEPD_BLACK);
-    display.fillCircle(iconX + 1, startY + 1, 3, GxEPD_BLACK);
+    // Temperature with thermometer icon
+    drawThermometerIcon(iconX, startY);
+    // Temperature with thermometer icon
+    drawThermometerIcon(iconX, startY);
     display.setCursor(textX, startY);
     display.println("Temp: " + convertTemperature(lastSensorsData.lastBMEData));
     
-    // Humidity with droplet shape (circle)
-    display.fillCircle(iconX + 1, startY + lineSpacing - 4, 4, GxEPD_BLACK);
+    // Humidity with droplet icon
+    drawDropletIcon(iconX, startY + lineSpacing);
+    // Humidity with droplet icon
+    drawDropletIcon(iconX, startY + lineSpacing);
     display.setCursor(textX, startY + lineSpacing);
-    display.println("Hum: " + convertHumidity(lastSensorsData.lastBMEData));
+    display.println("Hum:  " + convertHumidity(lastSensorsData.lastBMEData));
     
-    // Pressure with gauge icon (arc shape using lines)
-    display.drawCircle(iconX + 1, startY + lineSpacing * 2 - 4, 5, GxEPD_BLACK);
-    display.drawLine(iconX + 1, startY + lineSpacing * 2 - 4, iconX + 4, startY + lineSpacing * 2 - 7, GxEPD_BLACK);
-    display.setCursor(textX, startY + lineSpacing * 2);
-    display.println("Press: " + convertPressure(lastSensorsData.lastBMEData, true, true));
-    
-    // Altitude with mountain icon (triangle) - centered with text
-    display.drawLine(iconX + 1, startY + lineSpacing * 3 - 5, iconX - 4, startY + lineSpacing * 3, GxEPD_BLACK);
-    display.drawLine(iconX + 1, startY + lineSpacing * 3 - 5, iconX + 6, startY + lineSpacing * 3, GxEPD_BLACK);
-    display.drawLine(iconX - 4, startY + lineSpacing * 3, iconX + 6, startY + lineSpacing * 3, GxEPD_BLACK);
+    // Altitude with mountain icon
+    drawTriangleIcon(iconX, startY + lineSpacing * 3);
+    // Altitude with mountain icon
+    drawTriangleIcon(iconX, startY + lineSpacing * 3);
     display.setCursor(textX, startY + lineSpacing * 3);
     display.println("Alt: " + convertAltitude(lastSensorsData.lastBMEData));
+
+    // Pressure with gauge icon
+    drawGaugeIcon(iconX, startY + lineSpacing * 2);
+    // Pressure with gauge icon
+    drawGaugeIcon(iconX, startY + lineSpacing * 2);
+    display.setCursor(textX, startY + lineSpacing * 2);
+    display.println("Pres:" + convertPressure(lastSensorsData.lastBMEData, true, true));
 #endif
 
     // Draw battery section with filled background
-    display.fillRoundRect(5, 175, 190, 21, 5, GxEPD_BLACK);
+    display.fillRoundRect(BATTERY_X, BATTERY_Y, BATTERY_W, BATTERY_HEIGHT, BATTERY_RADIUS, GxEPD_BLACK);
     display.setFont(&FreeMono9pt7b);
     display.setTextColor(GxEPD_WHITE);
-    display.setCursor(15, 190);
+    display.setCursor(BATTERY_TEXT_X, BATTERY_TEXT_Y);
     display.println("Battery: " + convertBattery(lastSensorsData.lastBatteryData));
     display.setTextColor(GxEPD_BLACK);
 }
 
-// Routines for updating the Pollutants information screen (full or partial)
-void Display::showPollutantsScreen() {
-    logg("Preparing pollutants screen");
-    if (lastScreenData.previousScreen == SCREEN_MODE::POLLUTANTS) {
-        partialPollutantsScreen();
+// Routines for updating the Pollution information screen (full or partial)
+void Display::showPollutionScreen() {
+    logg("Preparing pollution screen");
+
+    if (lastScreenData.previousScreen == SCREEN_MODE::POLLUTION &&
+        partialRefreshCounter < FULL_REFRESH_INTERVAL) {
+        partialPollutionScreen();
     } else {
-        fullPollutantsScreen();
+        fullPollutionScreen();
     }
-    logg("Rendered pollutants screen");
+    logg("Rendered pollution screen");
 }
 
-void Display::fullPollutantsScreen() {
+void Display::fullPollutionScreen() {
     loggValue("Full refresh", "Pollution");
-
-    display.setFullWindow();
-    display.firstPage();
-
-    do {
-        // Write title
-        display.fillScreen(GxEPD_WHITE);
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X(PollutantsScreenText[0]), 30);
-        display.print(PollutantsScreenText[0]);
-
-        printPollutantsStatus();
-    } while (display.nextPage());
+    
+    performFullRefresh(PollutionScreenText[0], [this]() {
+        printPollutionStatus();
+    });
 }
 
-void Display::partialPollutantsScreen() {
+void Display::partialPollutionScreen() {
     loggValue("Partial refresh", "Pollution");
     
-    display.setPartialWindow(0, 0, display.width(), display.height());
-    display.firstPage();
+    partialRefreshCounter++;
     
-    // Cover previous text
-    do {
-        display.fillScreen(GxEPD_WHITE);
-    } while (display.nextPage());
-
-    do {
-        // Re-print title
-        display.setFont(&FreeMonoBold18pt7b);
-        display.setCursor(centerText_X(PollutantsScreenText[0]), 30);
-        display.print(PollutantsScreenText[0]);
-
-        // Print new text
-        printPollutantsStatus();
-    } while (display.nextPage());
+    using namespace PollutionLayout;
+    
+    // Region 1: Top half (CO2, CO, NO2, NH3)
+    clearPartialRegion(TOP_REGION_X, TOP_REGION_Y, TOP_REGION_W, TOP_REGION_H);
+    redrawPartialRegion(TOP_REGION_X, TOP_REGION_Y, TOP_REGION_W, TOP_REGION_H, [this]() {
+        printPollutionStatus();
+    });
+    
+    // Region 2: Bottom half (PM1, PM2.5, PM10)
+    clearPartialRegion(BOTTOM_REGION_X, BOTTOM_REGION_Y, BOTTOM_REGION_W, BOTTOM_REGION_H);
+    redrawPartialRegion(BOTTOM_REGION_X, BOTTOM_REGION_Y, BOTTOM_REGION_W, BOTTOM_REGION_H, [this]() {
+        printPollutionStatus();
+    });
 }
 
-// Pollutants screen data printer
-void Display::printPollutantsStatus() {
-    // Draw decorative header line under title
-    display.drawLine(10, 40, 190, 40, GxEPD_BLACK);
+
+// Pollution screen data printer
+void Display::printPollutionStatus() {
+    using namespace PollutionLayout;
     
-    // Print line by line pollutants data with warning boxes
+    // Draw decorative header line under title
+    display.drawLine(10, HEADER_LINE_Y, 190, HEADER_LINE_Y, GxEPD_BLACK);
+    
+    // Print line by line pollution data with warning boxes
     display.setFont(&FreeMonoBold9pt7b);
     
-    int startY = 60;
-    int lineSpacing = 22;
-    int boxX = 8;
-    int textX = 30;
+    int startY = START_Y;
+    int lineSpacing = LINE_SPACING;
+    int boxX = BOX_X;
+    int textX = TEXT_X;
     
     int currentLine = 0;
     
 #ifdef CO2_ENABLE
     // CO2 with alert box icon
-    display.drawRect(boxX, startY + lineSpacing * currentLine - 10, 12, 12, GxEPD_BLACK);
+    drawAlertBoxIcon(boxX, startY + lineSpacing * currentLine);
+    drawAlertBoxIcon(boxX, startY + lineSpacing * currentLine);
     display.setCursor(textX, startY + lineSpacing * currentLine);
     display.println("CO2: " + convertCO2(lastSensorsData.lastCO2Data));
     currentLine++;
 #endif
 
 #ifdef MICS_ENABLE
-    // CO with filled circle
-    display.fillCircle(boxX + 6, startY + lineSpacing * currentLine - 4, 5, GxEPD_BLACK);
-    display.fillCircle(boxX + 6, startY + lineSpacing * currentLine - 4, 2, GxEPD_WHITE);
+    // CO with warning circle icon
+    drawWarningCircleIcon(boxX, startY + lineSpacing * currentLine);
+    // CO with warning circle icon
+    drawWarningCircleIcon(boxX, startY + lineSpacing * currentLine);
     display.setCursor(textX, startY + lineSpacing * currentLine);
-    display.println("CO: " + convertCO(lastSensorsData.lastMICSData));
+    display.println("CO:  " + convertCO(lastSensorsData.lastMICSData));
     currentLine++;
     
-    // NO2 with double box
-    display.drawRect(boxX, startY + lineSpacing * currentLine - 10, 5, 12, GxEPD_BLACK);
-    display.drawRect(boxX + 7, startY + lineSpacing * currentLine - 10, 5, 12, GxEPD_BLACK);
+    // NO2 with double box icon
+    drawDoubleBoxIcon(boxX, startY + lineSpacing * currentLine);
+    // NO2 with double box icon
+    drawDoubleBoxIcon(boxX, startY + lineSpacing * currentLine);
     display.setCursor(textX, startY + lineSpacing * currentLine);
     display.println("NO2: " + convertNO2(lastSensorsData.lastMICSData));
     currentLine++;
     
-    // NH3 with triangle
-    display.drawLine(boxX + 6, startY + lineSpacing * currentLine - 10, boxX + 1, startY + lineSpacing * currentLine + 2, GxEPD_BLACK);
-    display.drawLine(boxX + 6, startY + lineSpacing * currentLine - 10, boxX + 11, startY + lineSpacing * currentLine + 2, GxEPD_BLACK);
-    display.drawLine(boxX + 1, startY + lineSpacing * currentLine + 2, boxX + 11, startY + lineSpacing * currentLine + 2, GxEPD_BLACK);
+    // NH3 with triangle icon
+    drawTriangleIcon(boxX + 6, startY + lineSpacing * currentLine);
+    // NH3 with triangle icon
+    drawTriangleIcon(boxX + 6, startY + lineSpacing * currentLine);
     display.setCursor(textX, startY + lineSpacing * currentLine);
     display.println("NH3: " + convertNH3(lastSensorsData.lastMICSData));
     currentLine++;
 #endif
 
 #ifdef PM_ENABLE
-    // PM1 with small dots pattern
-    display.fillCircle(boxX + 3, startY + lineSpacing * currentLine - 6, 2, GxEPD_BLACK);
-    display.fillCircle(boxX + 9, startY + lineSpacing * currentLine - 2, 2, GxEPD_BLACK);
+    // PM1 with small dots
+    drawPMDotsIcon(boxX, startY + lineSpacing * currentLine, 1);
+    // PM1 with small dots
+    drawPMDotsIcon(boxX, startY + lineSpacing * currentLine, 1);
     display.setCursor(textX, startY + lineSpacing * currentLine);
     display.println("PM1: " + convertPM1(lastSensorsData.lastPMData));
     currentLine++;
     
     // PM2.5 with medium dots
-    display.fillCircle(boxX + 3, startY + lineSpacing * currentLine - 6, 3, GxEPD_BLACK);
-    display.fillCircle(boxX + 9, startY + lineSpacing * currentLine - 2, 2, GxEPD_BLACK);
+    drawPMDotsIcon(boxX, startY + lineSpacing * currentLine, 2);
+    drawPMDotsIcon(boxX, startY + lineSpacing * currentLine, 2);
     display.setCursor(textX, startY + lineSpacing * currentLine);
-    display.println("PM2.5: " + convertPM2_5(lastSensorsData.lastPMData));
+    display.println("PM25:" + convertPM2_5(lastSensorsData.lastPMData));
     currentLine++;
     
-    // PM10 with larger dots
-    display.fillCircle(boxX + 3, startY + lineSpacing * currentLine - 6, 4, GxEPD_BLACK);
-    display.fillCircle(boxX + 10, startY + lineSpacing * currentLine - 2, 3, GxEPD_BLACK);
+    // PM10 with large dots
+    drawPMDotsIcon(boxX, startY + lineSpacing * currentLine, 3);
+    // PM10 with large dots
+    drawPMDotsIcon(boxX, startY + lineSpacing * currentLine, 3);
     display.setCursor(textX, startY + lineSpacing * currentLine);
-    display.println("PM10: " + convertPM10(lastSensorsData.lastPMData));
+    display.println("PM10:" + convertPM10(lastSensorsData.lastPMData));
     currentLine++;
 #endif
 }
@@ -762,4 +886,161 @@ uint16_t Display::centerText_X(String text) {
     x_centered = ((display.width() - w_text) / 2) - x_text;
 
     return x_centered;
+}
+
+// Partial refresh helper: clear a specific region
+void Display::clearPartialRegion(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    display.setPartialWindow(x, y, w, h);
+    display.firstPage();
+    do {
+        display.fillRect(x, y, w, h, GxEPD_WHITE);
+    } while (display.nextPage());
+}
+
+// Partial refresh helper: redraw content in a specific region
+void Display::redrawPartialRegion(uint16_t x, uint16_t y, uint16_t w, uint16_t h, std::function<void()> drawFunc) {
+    display.setPartialWindow(x, y, w, h);
+    display.firstPage();
+    do {
+        display.fillRect(x, y, w, h, GxEPD_WHITE);
+        drawFunc();
+    } while (display.nextPage());
+}
+
+// Full refresh helper: render entire screen with title and content
+void Display::performFullRefresh(const String& title, std::function<void()> contentFunc) {
+    partialRefreshCounter = 0;
+    
+    display.setFullWindow();
+    display.firstPage();
+    
+    do {
+        display.fillScreen(GxEPD_WHITE);
+        
+        if (title.length() > 0) {
+            display.setFont(&FreeMonoBold18pt7b);
+            display.setCursor(centerText_X(title), 30);
+            display.print(title);
+        }
+        
+        contentFunc();
+    } while (display.nextPage());
+}
+
+// Icon drawing helpers
+void Display::drawThermometerIcon(int16_t x, int16_t y) {
+    display.fillRect(x, y - 13, 3, 12, GxEPD_BLACK);
+    display.fillCircle(x + 1, y + 1, 3, GxEPD_BLACK);
+}
+
+void Display::drawDropletIcon(int16_t x, int16_t y) {
+    display.fillCircle(x + 1, y - 4, 4, GxEPD_BLACK);
+}
+
+void Display::drawGaugeIcon(int16_t x, int16_t y) {
+    display.drawCircle(x + 1, y - 4, 5, GxEPD_BLACK);
+    display.drawLine(x + 1, y - 4, x + 4, y - 7, GxEPD_BLACK);
+}
+
+void Display::drawTriangleIcon(int16_t x, int16_t y) {
+    display.drawLine(x + 1, y - 5, x - 4, y, GxEPD_BLACK);
+    display.drawLine(x + 1, y - 5, x + 6, y, GxEPD_BLACK);
+    display.drawLine(x - 4, y, x + 6, y, GxEPD_BLACK);
+}
+
+void Display::drawAlertBoxIcon(int16_t x, int16_t y) {
+    display.drawRect(x, y - 10, 12, 12, GxEPD_BLACK);
+}
+
+void Display::drawWarningCircleIcon(int16_t x, int16_t y) {
+    display.fillCircle(x + 6, y - 4, 5, GxEPD_BLACK);
+    display.fillCircle(x + 6, y - 4, 2, GxEPD_WHITE);
+}
+
+void Display::drawDoubleBoxIcon(int16_t x, int16_t y) {
+    display.drawRect(x, y - 10, 5, 12, GxEPD_BLACK);
+    display.drawRect(x + 7, y - 10, 5, 12, GxEPD_BLACK);
+}
+
+void Display::drawPMDotsIcon(int16_t x, int16_t y, uint8_t size) {
+    // Size: 1=small, 2=medium, 3=large
+    if (size == 1) {
+        display.fillCircle(x + 3, y - 6, 2, GxEPD_BLACK);
+        display.fillCircle(x + 9, y - 2, 2, GxEPD_BLACK);
+    } else if (size == 2) {
+        display.fillCircle(x + 3, y - 6, 3, GxEPD_BLACK);
+        display.fillCircle(x + 9, y - 2, 2, GxEPD_BLACK);
+    } else {
+        display.fillCircle(x + 3, y - 6, 4, GxEPD_BLACK);
+        display.fillCircle(x + 10, y - 2, 3, GxEPD_BLACK);
+    }
+}
+
+// Full refresh helper: render entire screen with title and content
+void Display::performFullRefresh(const String& title, std::function<void()> contentFunc) {
+    partialRefreshCounter = 0;
+    
+    display.setFullWindow();
+    display.firstPage();
+    
+    do {
+        display.fillScreen(GxEPD_WHITE);
+        
+        if (title.length() > 0) {
+            display.setFont(&FreeMonoBold18pt7b);
+            display.setCursor(centerText_X(title), 30);
+            display.print(title);
+        }
+        
+        contentFunc();
+    } while (display.nextPage());
+}
+
+// Icon drawing helpers
+void Display::drawThermometerIcon(int16_t x, int16_t y) {
+    display.fillRect(x, y - 13, 3, 12, GxEPD_BLACK);
+    display.fillCircle(x + 1, y + 1, 3, GxEPD_BLACK);
+}
+
+void Display::drawDropletIcon(int16_t x, int16_t y) {
+    display.fillCircle(x + 1, y - 4, 4, GxEPD_BLACK);
+}
+
+void Display::drawGaugeIcon(int16_t x, int16_t y) {
+    display.drawCircle(x + 1, y - 4, 5, GxEPD_BLACK);
+    display.drawLine(x + 1, y - 4, x + 4, y - 7, GxEPD_BLACK);
+}
+
+void Display::drawTriangleIcon(int16_t x, int16_t y) {
+    display.drawLine(x + 1, y - 5, x - 4, y, GxEPD_BLACK);
+    display.drawLine(x + 1, y - 5, x + 6, y, GxEPD_BLACK);
+    display.drawLine(x - 4, y, x + 6, y, GxEPD_BLACK);
+}
+
+void Display::drawAlertBoxIcon(int16_t x, int16_t y) {
+    display.drawRect(x, y - 10, 12, 12, GxEPD_BLACK);
+}
+
+void Display::drawWarningCircleIcon(int16_t x, int16_t y) {
+    display.fillCircle(x + 6, y - 4, 5, GxEPD_BLACK);
+    display.fillCircle(x + 6, y - 4, 2, GxEPD_WHITE);
+}
+
+void Display::drawDoubleBoxIcon(int16_t x, int16_t y) {
+    display.drawRect(x, y - 10, 5, 12, GxEPD_BLACK);
+    display.drawRect(x + 7, y - 10, 5, 12, GxEPD_BLACK);
+}
+
+void Display::drawPMDotsIcon(int16_t x, int16_t y, uint8_t size) {
+    // Size: 1=small, 2=medium, 3=large
+    if (size == 1) {
+        display.fillCircle(x + 3, y - 6, 2, GxEPD_BLACK);
+        display.fillCircle(x + 9, y - 2, 2, GxEPD_BLACK);
+    } else if (size == 2) {
+        display.fillCircle(x + 3, y - 6, 3, GxEPD_BLACK);
+        display.fillCircle(x + 9, y - 2, 2, GxEPD_BLACK);
+    } else {
+        display.fillCircle(x + 3, y - 6, 4, GxEPD_BLACK);
+        display.fillCircle(x + 10, y - 2, 3, GxEPD_BLACK);
+    }
 }

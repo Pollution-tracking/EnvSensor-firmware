@@ -17,6 +17,7 @@
 #include <Resources/RTC_values.h>
 #include <Resources/Software/ScreenBufferUtils.h>
 #include <Logger/logger.h>
+#include <functional>
 
 #define GxEPD2_DISPLAY_CLASS GxEPD2_BW
 // #define GxEPD2_DRIVER_CLASS GxEPD2_154_D67
@@ -35,10 +36,14 @@ class Display {
         void refreshScreen(SCREEN_REFRESH screen);
     private:
         GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> display;
+        uint8_t partialRefreshCounter;
         void showScreen(SCREEN_MODE mode);
         void showLoadingScreen();
         void showHeatingScreen();
         void showSendingScreen();
+        void contentLoadingScreen();
+        void contentHeatingScreen();
+        void contentSendingScreen();
         void showBluetoothScreen();
         void contentBluetoothScreen();
         void fullBluetoothScreen();
@@ -46,18 +51,33 @@ class Display {
         void showSensorsScreen();
         void fullSensorsScreen();
         void partialSensorsScreen();
-        void showEnvironmentalScreen();
-        void fullEnvironmentalScreen();
-        void partialEnvironmentalScreen();
-        void showPollutantsScreen();
-        void fullPollutantsScreen();
-        void partialPollutantsScreen();
+        void showAmbientScreen();
+        void fullAmbientScreen();
+        void partialAmbientScreen();
+        void showPollutionScreen();
+        void fullPollutionScreen();
+        void partialPollutionScreen();
         uint16_t centerText_X(String text);
         void printBLEStatus();
         void printSensorsStatus();
-        void printEnvironmentalStatus();
-        void printPollutantsStatus();
+        void printAmbientStatus();
+        void printPollutionStatus();
         void printBatteryData();
+        
+        // Partial refresh helper functions
+        void clearPartialRegion(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+        void redrawPartialRegion(uint16_t x, uint16_t y, uint16_t w, uint16_t h, std::function<void()> drawFunc);
+        void performFullRefresh(const String& title, std::function<void()> contentFunc);
+        
+        // Icon drawing helper functions
+        void drawThermometerIcon(int16_t x, int16_t y);
+        void drawDropletIcon(int16_t x, int16_t y);
+        void drawGaugeIcon(int16_t x, int16_t y);
+        void drawTriangleIcon(int16_t x, int16_t y);
+        void drawAlertBoxIcon(int16_t x, int16_t y);
+        void drawWarningCircleIcon(int16_t x, int16_t y);
+        void drawDoubleBoxIcon(int16_t x, int16_t y);
+        void drawPMDotsIcon(int16_t x, int16_t y, uint8_t size);
 };
 
 #endif // DISPLAY_H
