@@ -25,6 +25,12 @@ Designed for portability and endurance, the system features an ultra-low-power *
     *   **PMS5003/7003**: Particulate Matter (PM1.0, PM2.5, PM10).
     *   **MICS-6814**: CO, NO2, NH3.
 
+### Hardware Buses & Pin Map
+An explicit hardware buses and pins diagram is available as `docs/diagrams/cityairq_buses_pins.dot`. It documents which sensors use UART / I2C / SPI / Analog / GPIO and the main peripherals (display, SD, buttons, battery monitor).
+
+![Buses & Pins](docs/diagrams/cityairq_buses_pins.png)
+
+
 ## 💾 Project Structure
 
 The project is built using [PlatformIO](https://platformio.org/).
@@ -64,11 +70,21 @@ Driving E-Paper displays is time-consuming (often taking seconds). To prevent th
 -   **Display Task**: A dedicated FreeRTOS task (`DisplayTask.cpp`) handles the low-level SPI communication and E-Ink refresh sequences.
 -   **Command Queue**: The main loop sends high-level commands (e.g., `CMD_SET_MODE`, `CMD_REFRESH`) to the Display Task via a thread-safe Queue (`displayQueue`). This allows the main system to "fire and forget" display updates.
 
+#### Display Workflow Diagram
+The asynchronous display flow (command queue, FreeRTOS task, rendering, and screen types) is documented in `docs/diagrams/cityairq_display_workflow.dot`.
+
+![Display Workflow](docs/diagrams/cityairq_display_workflow.png)
+
 ### 3. Data Flow & Management
 Environmental data flows through the system in a structured pipeline:
 1.  **Acquisition**: Timer interrupts trigger sensor reading routines.
 2.  **Aggregation**: Raw interactions with sensor drivers (mostly I2C/UART) are abstracted by wrapper classes in `src/Sensors/`.
 3.  **Storage**: Collected data is aggregated into a central data structure (`lastSensorsData`), making it immediately available for the Display, Bluetooth, and SD Logging modules.
+
+#### Sensor Pipeline Diagram
+A step-by-step diagram of the sensor acquisition and processing pipeline (Timer → Sensor Manager → LatestSensorData → DataHandler → BLE/SD/Display) is available as `docs/diagrams/cityairq_sensor_pipeline.dot`.
+
+![Sensor Pipeline](docs/diagrams/cityairq_sensor_pipeline.png)
 
 ### 4. Interactions & Communication
 *   **User Input**: Button interrupts modify the `board_config.screen` state, triggering a display update command.
@@ -87,6 +103,13 @@ Once the sensors are stable (`SENSORS::HEATED_SENSORS` state):
 *   **Reading**: The `Sensors.cpp` module iterates through all enabled drivers (BME680, MH-Z19, etc.).
 *   **Abstraction**: Each sensor driver (e.g., `PM_sensor.cpp`) handles the low-level I2C/UART comms and validates the raw bytes (checksums, error flags).
 *   **Aggregation**: Validated readings are normalized and stored in the global `lastSensorsData` structure defined in `board_constants.h`. This structure also captures the current timestamp from the RTC and battery voltage.
+
+#### MICS Calibration Procedure
+The MICS gas sensor calibration flow (warmup, buffering, averaging, stability checks, and saving baselines to RTC memory) is documented in `docs/diagrams/cityairq_mics_calibration.dot`.
+
+![MICS Calibration](docs/diagrams/cityairq_mics_calibration.png)
+
+Also see the high-level system diagram below.
 
 **3. Data Routing (`DataHandler.cpp`):**
 Immediate after acquisition, `handleLiveData()` is invoked to route the new dataset:
