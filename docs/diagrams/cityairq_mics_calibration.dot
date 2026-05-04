@@ -1,0 +1,47 @@
+digraph MICS_Calibration_Procedure {
+    rankdir=TB; // Top to bottom layout
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Start/End Nodes
+    start [label="Start MICS Calibration", shape=Mrecord, fillcolor="darkseagreen"];
+    end [label="End MICS Calibration", shape=Mrecord, fillcolor="darkseagreen"];
+
+    // Process Steps
+    warmup [label="Warm-up Period", fillcolor="lightblue"];
+    read_channels [label="Read All Gas Channels (NH3, CO, NO2)", fillcolor="aquamarine"];
+    store_buffer [label="Store Samples in Circular Buffer", fillcolor="lightsteelblue"];
+    calc_average [label="Calculate Floating Average", fillcolor="lightsteelblue"];
+    check_stability [label="Check Stability (Current vs. Average)", fillcolor="lightgoldenrod"];
+    increment_count [label="Increment Stable Count", fillcolor="lightyellow"];
+    store_rtc_success [label="Store Baselines to RTC Memory", fillcolor="plum", shape=folder];
+    store_rtc_timeout [label="Store Best Available Average to RTC Memory", fillcolor="plum", shape=folder];
+
+    // Decision Points
+    stable_decision [label="All Channels Stable?", shape=diamond, fillcolor="lightcyan"];
+    timeout_decision [label="Calibration Timeout Reached?", shape=diamond, fillcolor="lightcyan"];
+
+    // Flow
+    start -> warmup;
+    warmup -> read_channels [label="After warm-up"];
+    read_channels -> store_buffer;
+    store_buffer -> calc_average;
+    calc_average -> check_stability;
+    check_stability -> increment_count [label="If stable"];
+    check_stability -> read_channels [label="If not stable", style=dashed]; // Loop back implicitly
+    increment_count -> stable_decision;
+
+    stable_decision -> store_rtc_success [label="Yes"];
+    store_rtc_success -> end [label="Calibration Successful"];
+    stable_decision -> timeout_decision [label="No (Continue Loop)"];
+
+    timeout_decision -> store_rtc_timeout [label="Yes"];
+    store_rtc_timeout -> end [label="Calibration Completed"];
+    timeout_decision -> read_channels [label="No (Continue Loop)"];
+
+    // Self-loop for continuous reading if not stable or timed out
+    // read_channels -> read_channels [label="Loop", style=dotted];
+
+    // Some implicit loops to simplify diagram, explicitly shown as edges
+    // from decision points back to the reading cycle
+}

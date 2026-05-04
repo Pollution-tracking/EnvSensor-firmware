@@ -1,0 +1,69 @@
+digraph DisplayModuleWorkflow_NoRefreshTypes {
+    rankdir=TB; // Top to bottom layout
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Main Control/System Context
+    subgraph cluster_main_control {
+        label = "Main System Control";
+        color=blue;
+        style=filled;
+        fillcolor="#F0F8FF"; // AliceBlue
+
+        SystemInit [label="System Initialization", fillcolor="lightcoral"];
+        MainOrchestrator [label="Main System Orchestrator\n(Event-Driven)", shape=ellipse, fillcolor="lightyellow"];
+
+        SystemInit -> MainOrchestrator [label="Display Task Creation"];
+    }
+
+    // Display Task Operations
+    subgraph cluster_display_task {
+        label = "Asynchronous Display Processing";
+        color=darkgreen;
+        style=filled;
+        fillcolor="#F5FFFA"; // MintCream
+
+        CommandQueue [label="Display Command Queue", shape=queue, fillcolor="plum"];
+        DisplayProcessor [label="Dedicated Display Processor\n(FreeRTOS Task)", fillcolor="lightblue"];
+        DisplayPanel [label="E-Paper Display Panel", shape=box3d, fillcolor="gray"];
+
+        MainOrchestrator -> CommandQueue [label="Sends Display Command\n(e.g., Change Screen)"];
+        CommandQueue -> DisplayProcessor [label="Receives Command"];
+        DisplayProcessor -> DisplayPanel [label="Renders Content"];
+    }
+
+    // Screen Types
+    subgraph cluster_screen_types {
+        label = "Available Screen Modes";
+        color=purple;
+        style=filled;
+        fillcolor="#F8F8FF"; // GhostWhite
+        rank=same;
+
+        LoadingScreen [label="Loading Screen", group="screens"];
+        BluetoothScreen [label="Bluetooth Status", group="screens"];
+        SensorOverviewScreen [label="Sensor Overview", group="screens"];
+        AmbientDataScreen [label="Ambient Data", group="screens"];
+        PollutionDataScreen [label="Pollution Data", group="screens"];
+        SendingDataScreen [label="Sending Data", group="screens"];
+        HeatingScreen [label="Sensor Heating Status", group="screens"];
+
+        // Connect DisplayProcessor to Screen Types (implies rendering)
+        DisplayProcessor -> {LoadingScreen, BluetoothScreen, SensorOverviewScreen, AmbientDataScreen, PollutionDataScreen, SendingDataScreen, HeatingScreen} [label="Renders"];
+    }
+
+    // User Interaction (Asynchronous)
+    subgraph cluster_user_interaction {
+        label = "User Interaction";
+        color=darkred;
+        style=filled;
+        fillcolor="#FAEBD7"; // AntiqueWhite
+        
+        UserInput [label="User Input (Buttons)", fillcolor="indianred"];
+        
+        UserInput -> MainOrchestrator [label="Triggers Screen Change Event"];
+    }
+
+    // Additional flows
+    MainOrchestrator -> DisplayProcessor [label="Awaits Display Idle\n(before Deep Sleep)", style=dashed]; // Synchronization for sleep
+}

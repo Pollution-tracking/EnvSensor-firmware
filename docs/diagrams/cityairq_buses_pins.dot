@@ -1,0 +1,54 @@
+digraph DataBusesAndPins {
+    rankdir=LR; // Left to right layout
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Bus Types
+    subgraph cluster_buses {
+        label = "Data Buses";
+        color=blue;
+        style=filled;
+        fillcolor="#F0F8FF"; // AliceBlue
+
+        UART [label="UART (Serial)", shape=folder, fillcolor="paleturquoise"];
+        I2C [label="I2C (Wire)", shape=folder, fillcolor="lightskyblue"];
+        SPI [label="SPI", shape=folder, fillcolor="cornflowerblue"];
+        Analog [label="Analog Inputs", shape=folder, fillcolor="aquamarine"];
+        GPIO [label="GPIO (Digital I/O)", shape=folder, fillcolor="lightgreen"];
+    }
+
+    // Peripherals/Sensors
+    subgraph cluster_peripherals {
+        label = "Peripherals & Sensors";
+        color=darkgreen;
+        style=filled;
+        fillcolor="#F5FFFA"; // MintCream
+
+        CO2Sensor [label="MH-Z19 (CO2 Sensor)", fillcolor="tan"];
+        PMSensor [label="PMSA003 (PM Sensor)", fillcolor="tan"];
+        MICSSensor [label="MICS 6814 (Gas Sensor)", fillcolor="tan"];
+        BMESensor [label="BME680 Sensor", fillcolor="tan"];
+        SHTC3Sensor [label="SHTC3 Sensor", fillcolor="tan"];
+        Display [label="E-Paper Display", fillcolor="lightgray"];
+        SDCard [label="SD Card Module", fillcolor="lightgray"];
+        Buttons [label="Buttons (Left, Center, Right)", fillcolor="lightgray"];
+        Battery [label="Battery Monitor", fillcolor="gold"];
+        BuckBoost [label="Buck-Boost Converter", fillcolor="orange"];
+    }
+
+    // Connections from Buses to Peripherals/Sensors with pins
+    UART -> CO2Sensor;
+    UART -> PMSensor;
+
+    I2C -> BMESensor;
+    I2C -> SHTC3Sensor;
+
+    SPI -> Display;
+    SPI -> SDCard;
+
+    Analog -> MICSSensor;
+    Analog -> Battery;
+
+    GPIO -> Buttons;
+    GPIO -> BuckBoost;
+}

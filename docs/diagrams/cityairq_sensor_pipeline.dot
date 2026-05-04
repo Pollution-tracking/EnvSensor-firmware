@@ -1,0 +1,83 @@
+digraph SensorDataPipeline_SimplifiedFurther {
+    rankdir=TB; // Top to bottom layout
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Clusters for logical grouping
+    subgraph cluster_initiation {
+        label = "Automated";
+        color=blue;
+        style=filled;
+        fillcolor="#F0F8FF"; // AliceBlue
+
+        TimerEvent [label="Timer Event", fillcolor="lightcoral"];
+        MainOrchestrator [label="Event Handler", shape=ellipse, fillcolor="lightyellow"];
+
+        TimerEvent -> MainOrchestrator [label="Periodic Cycle"];
+    }
+
+    subgraph cluster_collection {
+        label = "Data Collection & Aggregation";
+        color=darkgreen;
+        style=filled;
+        fillcolor="#F5FFFA"; // MintCream
+
+        SensorManagement [label="Sensor Management Module", fillcolor="lightblue"];
+        IndividualSensors [label="Individual Sensor Modules\n(BME, CO2, MICS, PM, Battery)", shape=cylinder, fillcolor="aquamarine"];
+
+        MainOrchestrator -> SensorManagement [label="Read Cycle"];
+        SensorManagement -> IndividualSensors [label="Requests Readings"];
+    }
+
+    subgraph cluster_storage {
+        label = "Temporary Data Storage";
+        color=purple;
+        style=filled;
+        fillcolor="#F8F8FF"; // GhostWhite
+
+        LatestSensorData [label="Latest Sensor Data)", shape=folder, fillcolor="plum"];
+
+        IndividualSensors -> LatestSensorData [label="Stores Raw Readings"];
+    }
+
+    subgraph cluster_processing {
+        label = "Data Processing & Formatting";
+        color=orange;
+        style=filled;
+        fillcolor="#FFF5EE"; // Seashell
+
+        DataProcessingModule [label="Data Processing & Formatting", fillcolor="lightgoldenrod"];
+    }
+
+    subgraph cluster_output {
+        label = "Data Output & Usage";
+        color=darkblue;
+        style=filled;
+        fillcolor="#F0FFFF"; // Azure
+
+        DisplayModule [label="Display Module\n(Screens, UI)", fillcolor="paleturquoise"];
+        BluetoothModule [label="Bluetooth Module\n(BLE Characteristics)", fillcolor="lightskyblue"];
+        SDCardModule [label="SD Card Module\n(CSV Logging)", fillcolor="cornflowerblue"];
+
+        DataProcessingModule -> DisplayModule [label="UI"];
+        DataProcessingModule -> {BluetoothModule, SDCardModule} [label="Output"];
+    }
+
+    // Connections between clusters
+    LatestSensorData -> DataProcessingModule [label="Provides Raw Data"];
+
+    // User Interaction (async)
+    subgraph cluster_user_interaction {
+        label = "User Interaction";
+        color=darkred;
+        style=filled;
+        fillcolor="#FAEBD7"; // AntiqueWhite
+        
+        UserInput [label="Buttons", fillcolor="indianred"];
+        
+        UserInput -> MainOrchestrator [label="Read Event"];
+    }
+    
+    // Asynchronous control flow related to sensors and data
+    SensorManagement -> MainOrchestrator [label="Updates System State", style=dashed];
+}

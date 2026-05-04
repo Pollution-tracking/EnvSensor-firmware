@@ -1,0 +1,57 @@
+digraph CityAirQ_Architecture_Simplified {
+    rankdir=LR; // Left to right layout
+    node [shape=box, style=filled, fillcolor=lightblue, fontname="Helvetica"];
+    edge [fontname="Helvetica"];
+
+    // Main System Flow
+    subgraph cluster_main_flow {
+        label = "Main System Flow";
+        color=blue;
+        style=filled;
+        fillcolor="#F0F8FF"; // AliceBlue
+
+        BootInit [label="Boot & Initialization"];
+        HeatCalibrate [label="Sensor Heating & Calibration"];
+        MainLoop [label="Event Handler"];
+        SensorAcquisition [label="Sensor Data Acquisition"];
+        DataRouting [label="Data Routing"];
+        DataStore [label="Data Storage (SD Card)"];
+        DataBLE [label="Data Transmission (BLE)"];
+        DeepSleep [label="Deep Sleep Mode"];
+
+        BootInit -> HeatCalibrate;
+        HeatCalibrate -> MainLoop;
+        MainLoop -> SensorAcquisition [label="Scheduled by Timer"];
+        SensorAcquisition -> DataRouting [label="Collected Data"];
+        DataRouting -> DataStore [label="If BLE Disconnected"];
+        DataRouting -> DataBLE [label="If BLE Connected"];
+        DeepSleep -> MainLoop [label="Wakeup Event"];
+    }
+
+    // Asynchronous / Concurrent Operations
+    subgraph cluster_async_ops {
+        label = "Asynchronous Operations";
+        color=green;
+        style=filled;
+        fillcolor="#F5FFFA"; // MintCream
+
+        UserInteraction [label="User Interaction"];
+        DisplayUpdates [label="Display Updates"];
+
+        UserInteraction -> MainLoop [label="Triggers Event"];
+        DataRouting -> DisplayUpdates [label="Data to Show"];
+        MainLoop -> DisplayUpdates [label="Screen Mode Change"];
+        UserInteraction -> DeepSleep [label="Request wake-up"];
+    }
+
+    // Optional: Add notes/legends
+    note [shape=note, style=solid, fillcolor=yellow, labelloc="l"];
+    note [label="Key:\nBlue: Main Sequential Flow\nGreen: Asynchronous/Concurrent Activities"];
+
+    // Styles for emphasis
+    BootInit [shape=doubleoctagon, fillcolor="lightcoral"];
+    DeepSleep [shape=doubleoctagon, fillcolor="lightsalmon"];
+    MainLoop [shape=ellipse, fillcolor="lightyellow"];
+    UserInteraction [fillcolor="palegreen"];
+    DisplayUpdates [fillcolor="palegreen"];
+}
