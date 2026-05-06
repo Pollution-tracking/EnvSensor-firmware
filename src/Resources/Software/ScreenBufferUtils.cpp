@@ -58,11 +58,17 @@ String convertBattery(BatteryData data, bool includeUnit) {
     return result;
 }
 
-#ifdef BME_ENABLE
+#ifdef SHTC3_ENABLE
+String convertTemperature(SHTC3Data data, bool includeUnit, bool integerOnly) {
+    return formatSensorValue(data.temperature, " C", includeUnit, integerOnly);
+}
+#elif defined(BME_ENABLE)
 String convertTemperature(BMEData data, bool includeUnit, bool integerOnly) {
     return formatSensorValue(data.temperature, " C", includeUnit, integerOnly);
 }
+#endif
 
+#ifdef BME_ENABLE
 String convertHumidity(BMEData data, bool includeUnit, bool integerOnly) {
     return formatSensorValue(data.humidity, " %", includeUnit, integerOnly);
 }

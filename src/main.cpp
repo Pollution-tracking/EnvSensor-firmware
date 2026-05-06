@@ -26,6 +26,9 @@
 #ifdef BME_ENABLE
 #include <Sensors/BME_sensor.h>
 #endif
+#ifdef SHTC3_ENABLE
+#include <Sensors/SHTC3_sensor.h>
+#endif
 #ifdef CO2_ENABLE
 #include <Sensors/CO2_sensor.h>
 #endif
@@ -49,6 +52,9 @@ CO2Sensor co2Sensor; // CO2 sensor
 #endif
 #ifdef BME_ENABLE
 BMESensor bmeSensor; // BME sensor
+#endif
+#ifdef SHTC3_ENABLE
+SHTC3Sensor shtc3Sensor; // SHTC3 sensor
 #endif
 #ifdef MICS_ENABLE
 MICSSensor micsSensor; // MICS sensor

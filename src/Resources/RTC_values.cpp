@@ -23,6 +23,9 @@ RTC_DATA_ATTR RTC_SensorData lastSensorsData = {
 #ifdef BME_ENABLE
     .lastBMEData = BMEData(),
 #endif
+#ifdef SHTC3_ENABLE
+    .lastSHTC3Data = SHTC3Data(),
+#endif
 #ifdef PM_ENABLE
     .lastPMData = PMData(),
 #endif

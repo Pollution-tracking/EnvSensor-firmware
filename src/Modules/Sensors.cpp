@@ -75,6 +75,9 @@ void initializeSensors() {
 #ifdef BME_ENABLE
     initSensor(bmeSensor);
 #endif
+#ifdef SHTC3_ENABLE
+    initSensor(shtc3Sensor);
+#endif
 #ifdef PM_ENABLE
     initSensor(pmSensor);
 #endif
@@ -93,6 +96,10 @@ void readAllSensors() {
 #ifdef BME_ENABLE
     treatSensor(bmeSensor);
     lastSensorsData.lastBMEData = bmeSensor.getData();
+#endif
+#ifdef SHTC3_ENABLE
+    treatSensor(shtc3Sensor);
+    lastSensorsData.lastSHTC3Data = shtc3Sensor.getData();
 #endif
 #ifdef PM_ENABLE
     treatSensor(pmSensor);
@@ -118,10 +125,16 @@ void wakeUpSensors() {
 #ifdef PM_ENABLE
     pmSensor.wake();
 #endif
+#ifdef SHTC3_ENABLE
+    shtc3Sensor.wake();
+#endif
 }
 
 void sleepSensors() {
 #ifdef PM_ENABLE
     pmSensor.sleep();
+#endif
+#ifdef SHTC3_ENABLE
+    shtc3Sensor.sleep();
 #endif
 }

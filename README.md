@@ -21,6 +21,7 @@ Designed for portability and endurance, the system features an ultra-low-power *
 *   **Storage**: MicroSD Card Module (SPI)
 *   **Supported Sensors**:
     *   **BME680**: Temperature, Humidity, Pressure, Gas Resistance (VOCs).
+    *   **SHTC3**: Temperature and Humidity (I2C, low power).
     *   **MH-Z19**: CO2 concentration.
     *   **PMS5003/7003**: Particulate Matter (PM1.0, PM2.5, PM10).
     *   **MICS-6814**: CO, NO2, NH3.
@@ -126,6 +127,7 @@ The firmware behavior and hardware setup can be configured in `src/configs.h` (a
 Key compile-time switches (typically defined in `src/configs.h` or `main.cpp`):
 *   `PM_ENABLE`: Enable Particulate Matter sensor.
 *   `BME_ENABLE`: Enable BME680 environmental sensor.
+*   `SHTC3_ENABLE`: Enable SHTC3 temperature & humidity sensor.
 *   `CO2_ENABLE`: Enable CO2 sensor.
 *   `MICS_ENABLE`: Enable MICS gas sensor.
 
@@ -157,6 +159,37 @@ Upon boot, the device initializes the activated sensors and the SD card.
     *   **Pollutants**: Detailed gas and PM data.
 *   **Logging**: Data is automatically written to the SD card at defined intervals.
 
-## 📄 License
+## � Troubleshooting
+
+### Resolving ESP32-S3 Flash Corruption & Bootloop Issues
+
+If your ESP32-S3 enters an infinite bootloop with error messages like:
+```
+rst:0x3 (RTC_SW_SYS_RST), boot:0x8 (SPI_FAST_FLASH_BOOT)
+ESP-ROM:esp32s3-20210327
+...entry 0x403c98b8
+```
+
+This typically indicates **corrupted flash memory**. Follow these steps to recover:
+
+#### Step 1: Full Flash Erase
+```bash
+platformio run -t erase --upload-port /dev/cu.usbmodem14401 -v
+```
+This performs a complete erase of the flash memory. On macOS, replace `/dev/cu.usbmodem14401` with your actual device port (visible via `platformio device list`).
+
+#### Step 2: Rebuild & Upload Clean Firmware
+```bash
+platformio run -t upload --upload-port /dev/cu.usbmodem14401
+```
+
+#### Step 4: Verify Boot via Serial Monitor
+After uploading, open a serial monitor to confirm clean boot:
+```bash
+platformio device monitor -p /dev/cu.usbmodem14401 -b 115200
+```
+You should see initialization logs (logger startup, sensor initialization messages, etc.) without repeated reset cycles.
+
+## �📄 License
 
 [License Information Here - e.g., MIT, Proprietary, etc.]

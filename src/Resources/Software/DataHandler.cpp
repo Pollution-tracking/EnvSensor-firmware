@@ -9,8 +9,12 @@ static void transferSDcard();
 static String convertDataToCSV();
 
 static void transferBLE() {
-#ifdef BME_ENABLE
+#ifdef SHTC3_ENABLE
+    bluetooth.updateTemperatureCharacteristic(lastSensorsData.lastSHTC3Data.temperature);
+#elif defined(BME_ENABLE)
     bluetooth.updateTemperatureCharacteristic(lastSensorsData.lastBMEData.temperature);
+#endif
+#ifdef BME_ENABLE
     bluetooth.updateHumidityCharacteristic(lastSensorsData.lastBMEData.humidity);
     bluetooth.updatePressureCharacteristic(lastSensorsData.lastBMEData.pressure);
     bluetooth.updateGasCharacteristic(lastSensorsData.lastBMEData.gas);
@@ -54,6 +58,9 @@ static String convertDataToCSV() {
     dataLine += lastSensorsData.lastBatteryData.getData() + ",";
 #ifdef BME_ENABLE
     dataLine += lastSensorsData.lastBMEData.getData() + ",";
+#endif
+#ifdef SHTC3_ENABLE
+    dataLine += lastSensorsData.lastSHTC3Data.getData() + ",";
 #endif
 #ifdef CO2_ENABLE
     dataLine += lastSensorsData.lastCO2Data.getData() + ",";
@@ -136,8 +143,12 @@ void handleHistoricalData() {
             if (decodedDataLine.size() == NR_VALUES) {
                 bluetooth.updateTimestampCharacteristic(decodedDataLine[TIMESTAMP_INDEX]);
                 bluetooth.updateBatteryCharacteristic(decodedDataLine[BATTERY_INDEX].toFloat());
-#ifdef BME_ENABLE
+#ifdef SHTC3_ENABLE
+                bluetooth.updateTemperatureCharacteristic(decodedDataLine[SHTC3_TEMPERATURE_INDEX].toInt());
+#elif defined(BME_ENABLE)
                 bluetooth.updateTemperatureCharacteristic(decodedDataLine[BME_TEMPERATURE_INDEX].toInt());
+#endif
+#ifdef BME_ENABLE
                 bluetooth.updatePressureCharacteristic(decodedDataLine[BME_PRESSURE_INDEX].toInt());
                 bluetooth.updateHumidityCharacteristic(decodedDataLine[BME_HUMIDITY_INDEX].toInt());
                 bluetooth.updateGasCharacteristic(decodedDataLine[BME_GAS_INDEX].toInt());

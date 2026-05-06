@@ -472,9 +472,14 @@ void Display::printSensorsStatus() {
     centerInColumn("P", col3X, startY);
     display.print("P");
     
-#ifdef BME_ENABLE
+#if defined(BME_ENABLE) || defined(SHTC3_ENABLE)
     // Line 2: Temperature, Humidity, Pressure values
-    String temp = convertTemperature(lastSensorsData.lastBMEData, false, true);
+    String temp =
+#ifdef SHTC3_ENABLE
+    convertTemperature(lastSensorsData.lastSHTC3Data, false, true);
+#else
+    convertTemperature(lastSensorsData.lastBMEData, false, true);
+#endif
     String hum = convertHumidity(lastSensorsData.lastBMEData, false, true);
     String press = convertPressure(lastSensorsData.lastBMEData, false, true);
     
@@ -622,13 +627,21 @@ void Display::printAmbientStatus() {
     int iconX = ICON_X;
     int textX = TEXT_X;
     
-#ifdef BME_ENABLE
+#if defined(BME_ENABLE) || defined(SHTC3_ENABLE)
     // Temperature with thermometer icon
     drawThermometerIcon(iconX, startY);
     // Temperature with thermometer icon
     drawThermometerIcon(iconX, startY);
     display.setCursor(textX, startY);
-    display.println("Temp: " + convertTemperature(lastSensorsData.lastBMEData));
+    display.println("Temp: " +
+#ifdef SHTC3_ENABLE
+                    convertTemperature(lastSensorsData.lastSHTC3Data)
+#else
+                    convertTemperature(lastSensorsData.lastBMEData)
+#endif
+                    );
+
+#ifdef BME_ENABLE
     
     // Humidity with droplet icon
     drawDropletIcon(iconX, startY + lineSpacing);
@@ -650,6 +663,7 @@ void Display::printAmbientStatus() {
     drawGaugeIcon(iconX, startY + lineSpacing * 2);
     display.setCursor(textX, startY + lineSpacing * 2);
     display.println("Pres:" + convertPressure(lastSensorsData.lastBMEData, true, true));
+#endif
 #endif
 
     // Draw battery section with filled background

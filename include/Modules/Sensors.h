@@ -12,6 +12,9 @@
 #ifdef BME_ENABLE
 #include <Sensors/BME_sensor.h>
 #endif
+#ifdef SHTC3_ENABLE
+#include <Sensors/SHTC3_sensor.h>
+#endif
 #ifdef PM_ENABLE
 #include <Sensors/PM_sensor.h>
 #endif
@@ -32,6 +35,9 @@ extern PMSensor pmSensor;
 #endif
 #ifdef BME_ENABLE
 extern BMESensor bmeSensor;
+#endif
+#ifdef SHTC3_ENABLE
+extern SHTC3Sensor shtc3Sensor;
 #endif
 #ifdef MICS_ENABLE
 extern MICSSensor micsSensor;
