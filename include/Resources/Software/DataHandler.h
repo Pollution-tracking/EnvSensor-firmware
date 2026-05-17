@@ -12,6 +12,9 @@
 #ifdef BME_ENABLE
 #include <Sensors/BME_sensor.h>
 #endif
+#ifdef SHTC3_ENABLE
+#include <Sensors/SHTC3_sensor.h>
+#endif
 #ifdef PM_ENABLE
 #include <Sensors/PM_sensor.h>
 #endif

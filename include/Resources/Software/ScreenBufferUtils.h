@@ -6,6 +6,9 @@
 #include <Resources/RTC_values.h>
 #include <Resources/Constants/sensor_constants.h>
 #include <Sensors/Battery.h>
+#ifdef SHTC3_ENABLE
+#include <Sensors/SHTC3_sensor.h>
+#endif
 #ifdef BME_ENABLE
 #include <Sensors/BME_sensor.h>
 #endif
@@ -20,8 +23,12 @@
 #endif
 
 String convertBattery(BatteryData data, bool includeUnit = true);
-#ifdef BME_ENABLE
+#ifdef SHTC3_ENABLE
+String convertTemperature(SHTC3Data data, bool includeUnit = true, bool integerOnly = false);
+#elif defined(BME_ENABLE)
 String convertTemperature(BMEData data, bool includeUnit = true, bool integerOnly = false);
+#endif
+#ifdef BME_ENABLE
 String convertHumidity(BMEData data, bool includeUnit = true, bool integerOnly = false);
 String convertPressure(BMEData data, bool includeUnit = true, bool integerOnly = false);
 String convertAltitude(BMEData data, bool includeUnit = true, bool integerOnly = false);

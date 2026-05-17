@@ -5,7 +5,6 @@
 
 // Construct BME sensor
 BMESensor::BMESensor() {
-    Wire.setPins(_SDA_PIN, _SCL_PIN); // Set I2C pins
     bme = new Adafruit_BME680();
 }
 

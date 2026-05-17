@@ -20,6 +20,10 @@ enum SensorDataIndex {
     BME_GAS_INDEX,
     BME_ALTITUDE_INDEX,
 #endif
+#ifdef SHTC3_ENABLE
+    SHTC3_TEMPERATURE_INDEX,
+    SHTC3_HUMIDITY_INDEX,
+#endif
 #ifdef CO2_ENABLE
     CO2_CO2_INDEX,
 #endif
