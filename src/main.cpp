@@ -13,6 +13,9 @@
 
 #include <Modules/Bluetooth.h>
 #include <Modules/BoardUtilities.h>
+#include <Modules/Scheduler/ClientProfiles.h>
+#include <Modules/Scheduler/SensorScheduler.h>
+#include <Modules/SensorTask.h>
 #include <Modules/Sensors.h>
 #include <Modules/Buttons.h>
 #include <Modules/Timers.h>
@@ -97,21 +100,27 @@ void setup() {
 	rtc.init();
 	// Initialize SD card
 	sdcard.init();
+	// Treat wakeup reason before configuring client scheduling
+	boardUtilities.treatWakeupReason();
+	// Register sensor clients once per boot path, keeping the registry in RTC memory
+	clientRegistryInit();
+	applyDefaultSensorClientProfiles(board_config.board_state == SLEEP_STATE::FROM_SLEEP);
 	// Create display task
 	createDisplayTask();
+	// Create sensor scheduler
+	createSensorScheduler();
+	// Create sensor task
+	createSensorTask();
 	// Initialize display
 	DisplayCommand cmd_init = {CMD_INIT, {}};
 	sendDisplayCommand(cmd_init);
-
-    // Treat wakeup reason
-    boardUtilities.treatWakeupReason();
 }
 
 void loop() {
-    // Check if board config needs to be treated
-    if (board_config.to_treat) {
+	// Check if board config needs to be treated
+	if (board_config.to_treat) {
 		board_config.to_treat = false;
-        logg("Treating board config changes");
+		logg("Treating board config changes");
 
 		// Check if display needs to be handled
 		if (board_config.screen != SCREEN_MODE::NO_SCREEN) {
@@ -142,7 +151,7 @@ void loop() {
 		if (board_config.ble_state != BLE::NO_UPDATE) {
 			treatBluetooth();
 		}
-    }
+	}
 }
 
 void treatDisplay() {
@@ -157,36 +166,28 @@ void treatDisplay() {
 }
 
 void treatSensors() {
-	logg("Handling sensors state change");
-	SENSORS executed;
+	logg("Dispatching sensors state change");
+	SENSORS sensor_state = board_config.sensors_state;
 
-	executed = handleSensorsState(board_config.sensors_state);
-
-	if (executed == SENSORS::READ_SENSORS) {
-		// When reading from deep sleep wakeup, let the board go back to sleep afterwards
-		if (board_config.board_state == SLEEP_STATE::FROM_SLEEP) {
-			board_config.board_state = SLEEP_STATE::TO_SLEEP;
-			board_config.to_treat = true;
-		}
-
-		// Process collected data
-		handleLiveData();
-		// Signal display to refresh shown values
-		DisplayCommand cmd_refresh = {CMD_REFRESH, {}};
-		cmd_refresh.payload.screen_refresh = SCREEN_REFRESH::SENSORS;
-		sendDisplayCommand(cmd_refresh);
-	} else if (executed == SENSORS::HEATED_SENSORS) {
-		// Start sensor reading timer
-		configureTimer(TIMER_MODES::T_ACTIVE, TIMER_TYPES::T_READ);
-		// Stop sensor heat timer
-		configureTimer(TIMER_MODES::T_DISABLE, TIMER_TYPES::T_HEAT);
-		// Signal display to show sensors screen (no one else changes the screen)
-		DisplayCommand cmd_set_mode = {CMD_SET_MODE, {}};
-		cmd_set_mode.payload.screen_mode = SCREEN_MODE::SENSORS;
-		sendDisplayCommand(cmd_set_mode);
+	if (sensor_state == SENSORS::NO_ACTION) {
+		return;
 	}
 
-	// Reset sensors state after handling
+	if (sensor_state == SENSORS::INIT_SENSORS) {
+		SensorClientEvent ev = {.client = CLIENT_BOOT, .phase = PHASE_INIT};
+		sendSensorCommand(ev);
+	} else if (sensor_state == SENSORS::PREPARE_SENSORS) {
+		SensorClientEvent ev = {.client = CLIENT_ENVIRONMENTAL, .phase = PHASE_PREHEAT};
+		sendSensorCommand(ev);
+	} else if (sensor_state == SENSORS::READ_SENSORS) {
+		SensorClientEvent ev = {.client = CLIENT_ENVIRONMENTAL, .phase = PHASE_READ};
+		sendSensorCommand(ev);
+	} else if (sensor_state == SENSORS::HEATED_SENSORS) {
+		SensorClientEvent ev = {.client = CLIENT_ENVIRONMENTAL, .phase = PHASE_READ};
+		sendSensorCommand(ev);
+	}
+
+	// Reset sensors state after dispatching
 	board_config.sensors_state = SENSORS::NO_ACTION;
 }
 
@@ -301,10 +302,14 @@ void treatSleep() {
 	switch (board_config.board_state) {
 		case SLEEP_STATE::TO_SLEEP:
 			logg("Entering deep sleep mode");
+			// Wait for sensor task to finish any pending work
+			waitForSensorIdle();
+			// Stop the scheduler before suspending the board
+			stopSensorScheduler();
+			// Stop sensor drivers before deep sleep
+			sleepSensors();
 			// Enable deep sleep wakeup sources
 			boardUtilities.configureWakeupSources();
-			// Change sensors state to sleep
-			pmSensor.sleep();
 			// Disable timers
 			disable_all_timers();
 			// Wait for display task to finish
@@ -323,8 +328,6 @@ void treatSleep() {
 			configureTimer(TIMER_MODES::T_DISABLE, TIMER_TYPES::T_SLEEP);
 			// Initialize sensors
             board_config.sensors_state = SENSORS::INIT_SENSORS;
-			// Start sensor reading timer
-			configureTimer(TIMER_MODES::T_ACTIVE, TIMER_TYPES::T_READ);
 
 			board_config.to_treat = true;
 			break;

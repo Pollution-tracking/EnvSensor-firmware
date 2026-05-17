@@ -49,7 +49,20 @@ extern BoardUtilities boardUtilities;
 SENSORS handleSensorsState(SENSORS state);
 void readAllSensors();
 void initializeSensors();
+void preparePollutionSensors();
+void prepareEnvironmentalSensors();
+void readPollutionSensors();
+void readEnvironmentalSensors();
 void wakeUpSensors();
 void sleepSensors();
+void sleepPollutionSensors();
+void sleepEnvironmentalSensors();
+
+// Sensors module: convenience wrappers for grouped sensor operations.
+//
+// This module exposes higher-level operations used by the scheduler and
+// sensor worker such as grouped preheat/read/sleep sequences for the
+// pollution and environmental sensor groups. It forwards to concrete sensor
+// driver implementations (BME, SHTC3, PM, CO2, MICS) where enabled.
 
 #endif // SENSORS_H

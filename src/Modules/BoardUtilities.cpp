@@ -28,9 +28,6 @@ void BoardUtilities::treatWakeupReason() {
             loggValue("Wakeup caused by timer", "wakeup_reason");
             // Initialize sensors
             board_config.sensors_state = SENSORS::INIT_SENSORS;
-            // Start sensor reading timer
-            board_config.timer_type = TIMER_TYPES::T_READ;
-            board_config.timer_mode = TIMER_MODES::T_ACTIVE;
             // Set board state to partially awake from sleep, but will go back
             board_config.board_state = SLEEP_STATE::FROM_SLEEP;
             break;
@@ -56,9 +53,6 @@ void BoardUtilities::treatWakeupReason() {
             board_config.buttons_state = BUTTONS::INIT_BUTTONS;
             // Initialize Bluetooth
             board_config.ble_state = BLE::INIT_BLE;
-            // Start sensor heating timer
-            board_config.timer_type = TIMER_TYPES::T_HEAT;
-            board_config.timer_mode = TIMER_MODES::T_ACTIVE;
             // Set board state to awake
             board_config.board_state = SLEEP_STATE::AWAKE;
             break;
