@@ -1,7 +1,7 @@
 #include <Arduino.h>
-#include <configs.h>
-#include <Resources/Constants/screen_constants.h>
 #include <Resources/Constants/board_constants.h>
+#include <Resources/Constants/screen_constants.h>
+#include <configs.h>
 
 // Update board name with chipid
 RTC_DATA_ATTR String bleServerName =
@@ -36,7 +36,17 @@ RTC_DATA_ATTR RTC_SensorData lastSensorsData = {
     .lastMICSData = MICSData(),
 #endif
     .lastBatteryData = {},
-    .timestamp = ""
+    .timestamp = "",
+#if defined(BME_ENABLE) && defined(SHTC3_ENABLE)
+    .bmeCompensatedRH = NO_DATA,
+    .vocPctDecoupled  = NO_DATA,
+    .aqScore          = NO_DATA,
+#endif
+#if defined(MICS_ENABLE) && defined(SHTC3_ENABLE)
+    .coPPMComp  = NO_DATA,
+    .no2PPMComp = NO_DATA,
+    .nh3PPMComp = NO_DATA,
+#endif
 };
 
 RTC_DATA_ATTR RTC_ScreenData lastScreenData = {

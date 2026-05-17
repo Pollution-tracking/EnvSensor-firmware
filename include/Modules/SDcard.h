@@ -21,7 +21,7 @@ class SDcard {
         bool isInitialised();
         bool hasCard();
         bool haveHistoricalData();
-        bool writeHistoricalData(String data);
+        bool writeHistoricalData(String data, String header = "");
         String getHistoricalData();
     private:
         bool _initialised = false;

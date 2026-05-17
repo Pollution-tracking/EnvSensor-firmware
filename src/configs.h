@@ -11,5 +11,6 @@
 #define SHTC3_ENABLE 1
 #define MICS_ENABLE 1
 #define SD_ENABLE 1
+#define COMPENSATION_ENABLE 1
 
 #endif // CONFIGS_H

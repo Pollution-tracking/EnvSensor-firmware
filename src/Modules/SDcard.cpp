@@ -58,10 +58,24 @@ bool SDcard::haveHistoricalData() {
 }
 
 // Routine to write historical data updates to SD card
-bool SDcard::writeHistoricalData(String data) {
+bool SDcard::writeHistoricalData(String data, String header) {
     loggValue("Storing to file", "HistoricalData");
     
-    bool res = writeData(DATA_PATH, data);
+    bool res = true;
+    bool isNewFile = !this->haveHistoricalData();
+    
+    if (isNewFile) {
+        // Overwrite or create file
+        if (header.length() > 0) {
+            res &= writeToFile(DATA_PATH, header);
+            res &= appendToFile(DATA_PATH, data);
+        } else {
+            res &= writeToFile(DATA_PATH, data);
+        }
+    } else {
+        res &= appendToFile(DATA_PATH, data);
+    }
+    
     if (res) {
         res &= loadStats();
         _storedDataCount++;

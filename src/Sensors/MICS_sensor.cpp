@@ -1,16 +1,23 @@
 #include "Sensors/MICS_sensor.h"
 #include <math.h>
+#include <Resources/Constants/compensation_constants.h>
 
 #define logg(message) loggWithObj(message, "MICS")
 #define loggValue(message, value) loggWithCtx(message, "MICS", value)
 
 // MICS Calibration data stored in RTC memory
 RTC_DATA_ATTR MICSCalibration micsCalibration = {
-    .baseNH3 = 0,
-    .baseCO = 0,
-    .baseNO2 = 0,
-    .isValid = false
+    .baseNH3    = 0,
+    .baseCO     = 0,
+    .baseNO2    = 0,
+    .isValid    = false,
+    .r0CO_Ohm  = 0.0f,
+    .r0NO2_Ohm = 0.0f,
+    .r0NH3_Ohm = 0.0f
 };
+
+// Cache of the most recent raw ADC readings per channel (updated every read())
+static float lastADC[3] = { 0.0f, 0.0f, 0.0f };  // [CO, NO2, NH3]
 
 // MICS-6814 Calibration Constants
 #define MICS_WARMUP_TIME_MS             (1000)   // Initial warm-up time (1 second minimum)
@@ -20,8 +27,8 @@ RTC_DATA_ATTR MICSCalibration micsCalibration = {
 #define MICS_MAX_CALIBRATION_TIME_MS    (16000)  // Maximum calibration time (16 seconds = 5s buffer fill + 10s stability checks + 1s warm-up)
 
 // Stability criteria - reading is stable when consecutive samples are within threshold
-#define MICS_STABILITY_DELTA            (10)     // Absolute difference threshold for stability (relaxed to ±10)
-#define MICS_STABILITY_CONSECUTIVE      (1)      // Number of consecutive stable readings required (just need 1 stable reading with good average)
+#define MICS_STABILITY_DELTA            (3)      // Absolute difference threshold for stability
+#define MICS_STABILITY_CONSECUTIVE      (5)      // Number of consecutive stable readings required
 
 // Operational reading parameters
 #define MICS_OPERATIONAL_SAMPLES        (100)    // Samples per operational read
@@ -102,9 +109,17 @@ void MICSSensor::read() {
     }
     
     // Measure all three gas channels
-    float coValue = measureGasConcentration(CHANNEL_CO);
+    float coValue  = measureGasConcentration(CHANNEL_CO);
     float no2Value = measureGasConcentration(CHANNEL_NO2);
     float nh3Value = measureGasConcentration(CHANNEL_NH3);
+    
+    // Cache last raw ADC readings (set inside calculateResistanceRatio)
+    // The cache is updated as a side-effect of measureGasConcentration via
+    // the readADCAverage call inside calculateResistanceRatio.
+    // We also snapshot directly here so CompensationService can retrieve them.
+    lastADC[CHANNEL_CO]  = readADCAverage(MICS_CO_PIN,  MICS_OPERATIONAL_SAMPLES);
+    lastADC[CHANNEL_NO2] = readADCAverage(MICS_NO2_PIN, MICS_OPERATIONAL_SAMPLES);
+    lastADC[CHANNEL_NH3] = readADCAverage(MICS_NH3_PIN, MICS_OPERATIONAL_SAMPLES);
     
     // Check for measurement errors (negative values indicate error)
     if (coValue < 0 || no2Value < 0 || nh3Value < 0) {
@@ -139,8 +154,8 @@ String MICSSensor::getName() {
 }
 
 // Read ADC value from a specific pin with averaging
-// Returns averaged ADC reading (0-1023)
-uint16_t MICSSensor::readADCAverage(uint8_t pin, uint16_t numSamples) {
+// Returns averaged ADC reading
+float MICSSensor::readADCAverage(uint8_t pin, uint16_t numSamples) {
     uint32_t sum = 0;
     
     for (uint16_t i = 0; i < numSamples; i++) {
@@ -148,7 +163,7 @@ uint16_t MICSSensor::readADCAverage(uint8_t pin, uint16_t numSamples) {
         delay(MICS_OPERATIONAL_DELAY_MS);
     }
     
-    return (uint16_t)(sum / numSamples);
+    return sum * 1.0f / numSamples;
 }
 
 // Read all three gas channels
@@ -183,6 +198,16 @@ void MICSSensor::readAllChannels(uint16_t* readings, uint16_t numSamples) {
 // Check if a reading is stable (within absolute threshold of average)
 bool MICSSensor::isReadingStable(float current, float average) {
     return fabs(average - current) < MICS_STABILITY_DELTA;
+}
+
+// Helper to compute R0 in kΩ from baseline ADC values for log-log PPM formulas.
+// Uses the same voltage-divider formula as CompensationService::adcToResistance().
+static float adcToR0(uint16_t adc, float rl) {
+    if (adc == 0 || adc >= static_cast<uint16_t>(COMP_ADC_FULL)) return 0.0f;
+    float v_adc    = (static_cast<float>(adc) / COMP_ADC_FULL) * COMP_ADC_VREF;
+    float v_sensor = v_adc * (MICS_R1 + MICS_R2) / MICS_R2;
+    if (v_sensor >= MICS_VCC) return 0.0f;
+    return (rl * (MICS_VCC / v_sensor - 1.0f));
 }
 
 // Calibrate MICS sensor
@@ -313,13 +338,23 @@ bool MICSSensor::calibrate() {
                 stableCountNO2 >= MICS_STABILITY_CONSECUTIVE) {
                 
                 micsCalibration.baseNH3 = fltSumNH3 / MICS_CALIBRATION_WINDOW_SIZE;
-                micsCalibration.baseCO = fltSumCO / MICS_CALIBRATION_WINDOW_SIZE;
+                micsCalibration.baseCO  = fltSumCO  / MICS_CALIBRATION_WINDOW_SIZE;
                 micsCalibration.baseNO2 = fltSumNO2 / MICS_CALIBRATION_WINDOW_SIZE;
                 micsCalibration.isValid = true;
+
+                // Compute R0 in kΩ from baseline ADC values for log-log PPM formulas.
+                // Uses the same voltage-divider formula as CompensationService::adcToResistance().
+                micsCalibration.r0CO_Ohm = adcToR0(micsCalibration.baseCO,  MICS_RL_CO);
+                micsCalibration.r0NO2_Ohm = adcToR0(micsCalibration.baseNO2, MICS_RL_NO2);
+                micsCalibration.r0NH3_Ohm = adcToR0(micsCalibration.baseNH3, MICS_RL_NH3);
+                micsCalibration.isValid = true;
                 
-                loggValue("Baseline NH3", String(micsCalibration.baseNH3));
-                loggValue("Baseline CO", String(micsCalibration.baseCO));
-                loggValue("Baseline NO2", String(micsCalibration.baseNO2));
+                loggValue("Baseline NH3",    String(micsCalibration.baseNH3));
+                loggValue("Baseline CO",     String(micsCalibration.baseCO));
+                loggValue("Baseline NO2",    String(micsCalibration.baseNO2));
+                loggValue("R0 CO (Ω)", String(micsCalibration.r0CO_Ohm));
+                loggValue("R0 NO2 (Ω)", String(micsCalibration.r0NO2_Ohm));
+                loggValue("R0 NH3 (Ω)", String(micsCalibration.r0NH3_Ohm));
                 logg("Calibration successful");
                 
                 return true;
@@ -337,13 +372,23 @@ bool MICSSensor::calibrate() {
     
     if (samplesFilled > 0) {
         micsCalibration.baseNH3 = fltSumNH3 / samplesFilled;
-        micsCalibration.baseCO = fltSumCO / samplesFilled;
+        micsCalibration.baseCO  = fltSumCO  / samplesFilled;
         micsCalibration.baseNO2 = fltSumNO2 / samplesFilled;
         micsCalibration.isValid = true;
+
+        // Compute R0 in kΩ from baseline ADC values for log-log PPM formulas.
+        // Uses the same voltage-divider formula as CompensationService::adcToResistance().
+        micsCalibration.r0CO_Ohm = adcToR0(micsCalibration.baseCO,  MICS_RL_CO);
+        micsCalibration.r0NO2_Ohm = adcToR0(micsCalibration.baseNO2, MICS_RL_NO2);
+        micsCalibration.r0NH3_Ohm = adcToR0(micsCalibration.baseNH3, MICS_RL_NH3);
+        micsCalibration.isValid = true;
         
-        loggValue("Baseline NH3", String(micsCalibration.baseNH3));
-        loggValue("Baseline CO", String(micsCalibration.baseCO));
-        loggValue("Baseline NO2", String(micsCalibration.baseNO2));
+        loggValue("Baseline NH3",    String(micsCalibration.baseNH3));
+        loggValue("Baseline CO",     String(micsCalibration.baseCO));
+        loggValue("Baseline NO2",    String(micsCalibration.baseNO2));
+        loggValue("R0 CO (Ω)", String(micsCalibration.r0CO_Ohm));
+        loggValue("R0 NO2 (Ω)", String(micsCalibration.r0NO2_Ohm));
+        loggValue("R0 NH3 (Ω)", String(micsCalibration.r0NH3_Ohm));
     }
     
     return true; // Return true even on timeout - we have baseline values
@@ -417,17 +462,17 @@ float MICSSensor::measureGasConcentration(uint8_t channel) {
     switch (channel) {
         case CHANNEL_CO:
             // CO: ppm = (Rs/R0)^(-1.179) * 4.385
-            concentration = pow(ratio, MICSConstants::CO_EXPONENT) * MICSConstants::CO_MULTIPLIER;
+            concentration = powf(ratio, MICSConstants::CO_EXPONENT) * MICSConstants::CO_MULTIPLIER;
             break;
             
         case CHANNEL_NO2:
             // NO2: ppm = (Rs/R0)^1.007 / 6.855
-            concentration = pow(ratio, MICSConstants::NO2_EXPONENT) / MICSConstants::NO2_DIVISOR;
+            concentration = powf(ratio, MICSConstants::NO2_EXPONENT) / MICSConstants::NO2_DIVISOR;
             break;
             
         case CHANNEL_NH3:
             // NH3: ppm = (Rs/R0)^(-1.67) / 1.47
-            concentration = pow(ratio, MICSConstants::NH3_EXPONENT) / MICSConstants::NH3_DIVISOR;
+            concentration = powf(ratio, MICSConstants::NH3_EXPONENT) / MICSConstants::NH3_DIVISOR;
             break;
     }
     
@@ -443,7 +488,23 @@ float MICSSensor::measureGasConcentration(uint8_t channel) {
 // Mark all sensor data as read error
 void MICSSensor::markReadError() {
     this->status.error = true;
-    this->data.co = READ_ERROR;
+    this->data.co  = READ_ERROR;
     this->data.no2 = READ_ERROR;
     this->data.nh3 = READ_ERROR;
+}
+
+// ---------------------------------------------------------------------------
+// Returns the last averaged 12-bit ADC reading for a given channel.
+// channel: 0=CO, 1=NO2, 2=NH3 (use MICSGasChannel enum values)
+// ---------------------------------------------------------------------------
+float MICSSensor::getRawADC(uint8_t channel) const {
+    if (channel >= CHANNEL_COUNT) return 0.0f;
+    return lastADC[channel];
+}
+
+// ---------------------------------------------------------------------------
+// Returns a const reference to the micsCalibration RTC struct (R0 baselines).
+// ---------------------------------------------------------------------------
+const MICSCalibration& MICSSensor::getCalibration() const {
+    return micsCalibration;
 }
