@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="787pt" height="408pt" viewBox="0.00 0.00 787.00 408.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 404)">
+<title>CompensationServicePipeline</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-404 782.68,-404 782.68,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_inputs</title>
+<polygon fill="#f0f8ff" stroke="blue" points="8,-78 8,-371 110.81,-371 110.81,-78 8,-78"/>
+<text xml:space="preserve" text-anchor="middle" x="59.4" y="-354.4" font-family="Times,serif" font-size="14.00">Sensor Inputs</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_algorithms</title>
+<polygon fill="#f5fffa" stroke="darkgreen" points="131.81,-99 131.81,-392 770.68,-392 770.68,-99 131.81,-99"/>
+<text xml:space="preserve" text-anchor="middle" x="451.24" y="-375.4" font-family="Times,serif" font-size="14.00">Compensation Algorithms</text>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_outputs</title>
+<polygon fill="#f8f8ff" stroke="purple" points="621.17,-8 621.17,-91 765.21,-91 765.21,-8 621.17,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="693.19" y="-74.4" font-family="Times,serif" font-size="14.00">Outputs</text>
+</g>
+<!-- SHTC3 -->
+<g id="node1" class="node">
+<title>SHTC3</title>
+<path fill="lightblue" stroke="black" d="M90.35,-280.73C90.35,-282.53 76.48,-284 59.4,-284 42.33,-284 28.46,-282.53 28.46,-280.73 28.46,-280.73 28.46,-251.27 28.46,-251.27 28.46,-249.47 42.33,-248 59.4,-248 76.48,-248 90.35,-249.47 90.35,-251.27 90.35,-251.27 90.35,-280.73 90.35,-280.73"/>
+<path fill="none" stroke="black" d="M90.35,-280.73C90.35,-278.92 76.48,-277.45 59.4,-277.45 42.33,-277.45 28.46,-278.92 28.46,-280.73"/>
+<text xml:space="preserve" text-anchor="middle" x="59.4" y="-261.8" font-family="Helvetica,sans-Serif" font-size="14.00">SHTC3</text>
+</g>
+<!-- Algo1 -->
+<g id="node6" class="node">
+<title>Algo1</title>
+<polygon fill="aquamarine" stroke="black" points="370.19,-251 183.79,-251 183.79,-215 370.19,-215 370.19,-251"/>
+<text xml:space="preserve" text-anchor="middle" x="276.99" y="-228.8" font-family="Helvetica,sans-Serif" font-size="14.00">Algo 1: Humidity Correction</text>
+</g>
+<!-- SHTC3&#45;&gt;Algo1 -->
+<g id="edge2" class="edge">
+<title>SHTC3-&gt;Algo1</title>
+<path fill="none" stroke="darkgray" stroke-dasharray="5,2" d="M90.74,-262.87C100.66,-261.76 111.71,-260.43 121.81,-259 138.23,-256.68 155.6,-253.99 172.53,-251.23"/>
+<polygon fill="darkgray" stroke="darkgray" points="182.38,-249.61 173.24,-255.67 178.64,-250.22 172.51,-251.23 172.51,-251.23 172.51,-251.23 178.64,-250.22 171.78,-246.79 182.38,-249.61"/>
+</g>
+<!-- Algo2 -->
+<g id="node7" class="node">
+<title>Algo2</title>
+<polygon fill="aquamarine" stroke="black" points="398.98,-359 155.01,-359 155.01,-323 398.98,-323 398.98,-359"/>
+<text xml:space="preserve" text-anchor="middle" x="276.99" y="-336.8" font-family="Helvetica,sans-Serif" font-size="14.00">Algo 2: MICS m5 &amp; PPM Conversion</text>
+</g>
+<!-- SHTC3&#45;&gt;Algo2 -->
+<g id="edge3" class="edge">
+<title>SHTC3-&gt;Algo2</title>
+<path fill="none" stroke="darkgray" stroke-dasharray="5,2" d="M90.67,-277.67C98.02,-281.65 105.33,-286.71 110.81,-293 119.21,-302.65 110.82,-312 120.81,-320 127.9,-325.68 135.78,-330.23 144.13,-333.86"/>
+<polygon fill="darkgray" stroke="darkgray" points="153.38,-337.4 142.44,-338.03 149.85,-336.05 144.04,-333.83 144.04,-333.83 144.04,-333.83 149.85,-336.05 145.65,-329.62 153.38,-337.4"/>
+</g>
+<!-- Algo3 -->
+<g id="node8" class="node">
+<title>Algo3</title>
+<polygon fill="aquamarine" stroke="black" points="414.18,-305 139.81,-305 139.81,-269 414.18,-269 414.18,-305"/>
+<text xml:space="preserve" text-anchor="middle" x="276.99" y="-282.8" font-family="Helvetica,sans-Serif" font-size="14.00">Algo 3: Donchian Decoupling &amp; AQ Score</text>
+</g>
+<!-- SHTC3&#45;&gt;Algo3 -->
+<g id="edge4" class="edge">
+<title>SHTC3-&gt;Algo3</title>
+<path fill="none" stroke="darkgray" stroke-dasharray="5,2" d="M90.79,-279.6C97.74,-283.41 104.83,-287.93 110.81,-293 116.37,-297.72 114.27,-302.78 120.81,-306 132.1,-311.56 155.58,-310.6 180.93,-307.11"/>
+<polygon fill="darkgray" stroke="darkgray" points="190.68,-305.65 181.46,-311.58 186.94,-306.21 180.79,-307.13 180.79,-307.13 180.79,-307.13 186.94,-306.21 180.12,-302.68 190.68,-305.65"/>
+</g>
+<!-- Algo4 -->
+<g id="node9" class="node">
+<title>Algo4</title>
+<polygon fill="aquamarine" stroke="black" points="394.7,-143 159.29,-143 159.29,-107 394.7,-107 394.7,-143"/>
+<text xml:space="preserve" text-anchor="middle" x="276.99" y="-120.8" font-family="Helvetica,sans-Serif" font-size="14.00">Algo 4: CO2 Termobaric Correction</text>
+</g>
+<!-- SHTC3&#45;&gt;Algo4 -->
+<g id="edge5" class="edge">
+<title>SHTC3-&gt;Algo4</title>
+<path fill="none" stroke="darkgray" stroke-dasharray="5,2" d="M90.66,-255.03C98.19,-251.02 105.59,-245.76 110.81,-239 122.97,-223.26 117.38,-165.69 131.81,-152 136.96,-147.11 142.7,-142.96 148.84,-139.46"/>
+<polygon fill="darkgray" stroke="darkgray" points="157.7,-135.01 150.78,-143.52 154.32,-136.71 148.76,-139.5 148.76,-139.5 148.76,-139.5 154.32,-136.71 146.74,-135.48 157.7,-135.01"/>
+</g>
+<!-- Algo5 -->
+<g id="node10" class="node">
+<title>Algo5</title>
+<polygon fill="aquamarine" stroke="black" points="393.92,-197 160.06,-197 160.06,-161 393.92,-161 393.92,-197"/>
+<text xml:space="preserve" text-anchor="middle" x="276.99" y="-174.8" font-family="Helvetica,sans-Serif" font-size="14.00">Algo 5: PM Hygroscopic Correction</text>
+</g>
+<!-- SHTC3&#45;&gt;Algo5 -->
+<g id="edge6" class="edge">
+<title>SHTC3-&gt;Algo5</title>
+<path fill="none" stroke="darkgray" stroke-dasharray="5,2" d="M90.6,-253.07C97.7,-249.18 104.91,-244.47 110.81,-239 123.55,-227.18 117.41,-215.74 131.81,-206 137.41,-202.21 143.41,-198.91 149.66,-196.05"/>
+<polygon fill="darkgray" stroke="darkgray" points="158.53,-192.37 151.02,-200.36 155.04,-193.82 149.29,-196.2 149.29,-196.2 149.29,-196.2 155.04,-193.82 147.57,-192.05 158.53,-192.37"/>
+</g>
+<!-- BME680 -->
+<g id="node2" class="node">
+<title>BME680</title>
+<path fill="lightblue" stroke="black" d="M94.25,-226.73C94.25,-228.53 78.63,-230 59.4,-230 40.17,-230 24.56,-228.53 24.56,-226.73 24.56,-226.73 24.56,-197.27 24.56,-197.27 24.56,-195.47 40.17,-194 59.4,-194 78.63,-194 94.25,-195.47 94.25,-197.27 94.25,-197.27 94.25,-226.73 94.25,-226.73"/>
+<path fill="none" stroke="black" d="M94.25,-226.73C94.25,-224.92 78.63,-223.45 59.4,-223.45 40.17,-223.45 24.56,-224.92 24.56,-226.73"/>
+<text xml:space="preserve" text-anchor="middle" x="59.4" y="-207.8" font-family="Helvetica,sans-Serif" font-size="14.00">BME680</text>
+</g>
+<!-- BME680&#45;&gt;Algo1 -->
+<g id="edge10" class="edge">
+<title>BME680-&gt;Algo1</title>
+<path fill="none" stroke="blue" stroke-width="1.5" d="M94.56,-215.33C115.64,-217.38 143.92,-220.14 171.87,-222.86"/>
+<polygon fill="blue" stroke="blue" stroke-width="1.5" points="181.56,-223.8 171.17,-227.31 178.38,-223.74 171.58,-223.08 171.61,-222.83 171.63,-222.58 178.43,-223.25 172.04,-218.35 181.56,-223.8"/>
+</g>
+<!-- BME680&#45;&gt;Algo3 -->
+<g id="edge11" class="edge">
+<title>BME680-&gt;Algo3</title>
+<path fill="none" stroke="blue" stroke-width="1.5" d="M94.59,-228.54C100.18,-231.74 105.79,-235.27 110.81,-239 121.4,-246.87 120.13,-253.84 131.81,-260 134.47,-261.4 137.19,-262.73 139.96,-264"/>
+<polygon fill="blue" stroke="blue" stroke-width="1.5" points="149.19,-267.84 138.23,-268.15 146.17,-266.85 139.86,-264.23 139.96,-264 140.06,-263.77 146.36,-266.39 141.69,-259.84 149.19,-267.84"/>
+</g>
+<!-- BME680&#45;&gt;Algo4 -->
+<g id="edge12" class="edge">
+<title>BME680-&gt;Algo4</title>
+<path fill="none" stroke="cyan" stroke-width="1.5" d="M94.55,-196.82C100.33,-193.41 106,-189.46 110.81,-185 123.55,-173.18 117.41,-161.74 131.81,-152 137.01,-148.48 142.56,-145.38 148.33,-142.67"/>
+<polygon fill="cyan" stroke="cyan" stroke-width="1.5" points="157.24,-138.89 149.79,-146.94 154.42,-140.36 148.13,-143.02 148.03,-142.79 147.94,-142.56 154.22,-139.9 146.28,-138.65 157.24,-138.89"/>
+</g>
+<!-- BME680&#45;&gt;Algo5 -->
+<g id="edge13" class="edge">
+<title>BME680-&gt;Algo5</title>
+<path fill="none" stroke="purple" stroke-width="1.5" d="M94.56,-206.77C109.65,-204.46 128.42,-201.59 148.12,-198.57"/>
+<polygon fill="purple" stroke="purple" stroke-width="1.5" points="158,-197.06 148.8,-203.02 154.9,-197.79 148.15,-198.82 148.12,-198.57 148.08,-198.33 154.83,-197.29 147.43,-194.13 158,-197.06"/>
+</g>
+<!-- MICS6814 -->
+<g id="node3" class="node">
+<title>MICS6814</title>
+<path fill="lightblue" stroke="black" d="M102.81,-334.73C102.81,-336.53 83.35,-338 59.4,-338 35.45,-338 16,-336.53 16,-334.73 16,-334.73 16,-305.27 16,-305.27 16,-303.47 35.45,-302 59.4,-302 83.35,-302 102.81,-303.47 102.81,-305.27 102.81,-305.27 102.81,-334.73 102.81,-334.73"/>
+<path fill="none" stroke="black" d="M102.81,-334.73C102.81,-332.92 83.35,-331.45 59.4,-331.45 35.45,-331.45 16,-332.92 16,-334.73"/>
+<text xml:space="preserve" text-anchor="middle" x="59.4" y="-315.8" font-family="Helvetica,sans-Serif" font-size="14.00">MICS-6814</text>
+</g>
+<!-- MICS6814&#45;&gt;Algo2 -->
+<g id="edge7" class="edge">
+<title>MICS6814-&gt;Algo2</title>
+<path fill="none" stroke="green" stroke-width="1.5" d="M84.3,-338.29C94.89,-345.29 107.86,-352.43 120.81,-356 141.71,-361.76 164.73,-362.44 186.49,-360.67"/>
+<polygon fill="green" stroke="green" stroke-width="1.5" points="196.26,-359.67 186.77,-365.16 193.13,-360.24 186.34,-360.93 186.31,-360.68 186.29,-360.44 193.08,-359.74 185.85,-356.21 196.26,-359.67"/>
+</g>
+<!-- MHZ19B -->
+<g id="node4" class="node">
+<title>MHZ19B</title>
+<path fill="lightblue" stroke="black" d="M97.35,-118.73C97.35,-120.53 80.34,-122 59.4,-122 38.46,-122 21.46,-120.53 21.46,-118.73 21.46,-118.73 21.46,-89.27 21.46,-89.27 21.46,-87.47 38.46,-86 59.4,-86 80.34,-86 97.35,-87.47 97.35,-89.27 97.35,-89.27 97.35,-118.73 97.35,-118.73"/>
+<path fill="none" stroke="black" d="M97.35,-118.73C97.35,-116.92 80.34,-115.45 59.4,-115.45 38.46,-115.45 21.46,-116.92 21.46,-118.73"/>
+<text xml:space="preserve" text-anchor="middle" x="59.4" y="-99.8" font-family="Helvetica,sans-Serif" font-size="14.00">MH-Z19B</text>
+</g>
+<!-- MHZ19B&#45;&gt;Algo4 -->
+<g id="edge8" class="edge">
+<title>MHZ19B-&gt;Algo4</title>
+<path fill="none" stroke="orange" stroke-width="1.5" d="M97.76,-106.91C105.7,-107.56 114.03,-108.28 121.81,-109 130.1,-109.77 138.64,-110.58 147.24,-111.42"/>
+<polygon fill="orange" stroke="orange" stroke-width="1.5" points="157.18,-112.41 146.79,-115.9 154,-112.34 147.21,-111.67 147.23,-111.42 147.25,-111.17 154.05,-111.84 147.67,-106.94 157.18,-112.41"/>
+</g>
+<!-- PMSA003 -->
+<g id="node5" class="node">
+<title>PMSA003</title>
+<path fill="lightblue" stroke="black" d="M98.92,-172.73C98.92,-174.53 81.21,-176 59.4,-176 37.6,-176 19.89,-174.53 19.89,-172.73 19.89,-172.73 19.89,-143.27 19.89,-143.27 19.89,-141.47 37.6,-140 59.4,-140 81.21,-140 98.92,-141.47 98.92,-143.27 98.92,-143.27 98.92,-172.73 98.92,-172.73"/>
+<path fill="none" stroke="black" d="M98.92,-172.73C98.92,-170.92 81.21,-169.45 59.4,-169.45 37.6,-169.45 19.89,-170.92 19.89,-172.73"/>
+<text xml:space="preserve" text-anchor="middle" x="59.4" y="-153.8" font-family="Helvetica,sans-Serif" font-size="14.00">PMSA003</text>
+</g>
+<!-- PMSA003&#45;&gt;Algo5 -->
+<g id="edge9" class="edge">
+<title>PMSA003-&gt;Algo5</title>
+<path fill="none" stroke="red" stroke-width="1.5" d="M99.41,-157.97C106.85,-158.16 114.58,-158.47 121.81,-159 130.42,-159.63 139.28,-160.41 148.21,-161.3"/>
+<polygon fill="red" stroke="red" stroke-width="1.5" points="158.13,-162.33 147.72,-165.77 154.95,-162.25 148.16,-161.54 148.19,-161.3 148.21,-161.05 155.01,-161.76 148.66,-156.82 158.13,-162.33"/>
+</g>
+<!-- RTC_Data -->
+<g id="node12" class="node">
+<title>RTC_Data</title>
+<polygon fill="plum" stroke="black" points="751.21,-57.8 629.17,-57.8 629.17,-16.2 757.21,-16.2 757.21,-51.8 751.21,-57.8"/>
+<polyline fill="none" stroke="black" points="751.21,-57.8 751.21,-51.8"/>
+<polyline fill="none" stroke="black" points="757.21,-51.8 751.21,-51.8"/>
+<text xml:space="preserve" text-anchor="middle" x="693.19" y="-41.2" font-family="Helvetica,sans-Serif" font-size="14.00">RTC_SensorData</text>
+<text xml:space="preserve" text-anchor="middle" x="693.19" y="-24.4" font-family="Helvetica,sans-Serif" font-size="14.00">(lastSensorsData)</text>
+</g>
+<!-- Algo1&#45;&gt;RTC_Data -->
+<g id="edge14" class="edge">
+<title>Algo1-&gt;RTC_Data</title>
+<path fill="none" stroke="darkgray" d="M370.38,-228.53C386.44,-224.1 401.9,-217.04 414.18,-206 434.19,-188.01 411.81,-165.78 432.18,-148.2 491.26,-97.19 541.04,-164.74 605.69,-121 616.83,-113.47 612.39,-105.19 621.17,-95 630.52,-84.15 642.06,-73.77 653.11,-64.86"/>
+<polygon fill="darkgray" stroke="darkgray" points="660.85,-58.8 655.75,-68.51 657.87,-61.13 652.98,-64.96 652.98,-64.96 652.98,-64.96 657.87,-61.13 650.2,-61.42 660.85,-58.8"/>
+<text xml:space="preserve" text-anchor="middle" x="518.94" y="-152.4" font-family="Helvetica,sans-Serif" font-size="14.00">Humidity compensated</text>
+</g>
+<!-- Algo2&#45;&gt;RTC_Data -->
+<g id="edge15" class="edge">
+<title>Algo2-&gt;RTC_Data</title>
+<path fill="none" stroke="darkgray" d="M399.31,-324.24C404.58,-321.29 409.58,-317.9 414.18,-314 431.49,-299.32 415.18,-281.25 432.18,-266.2 491.6,-213.59 553.02,-283.36 605.69,-224 644.02,-180.81 593.35,-145.6 621.17,-95 627.52,-83.45 637.19,-73.3 647.37,-64.86"/>
+<polygon fill="darkgray" stroke="darkgray" points="655.02,-58.92 649.88,-68.61 652.04,-61.24 647.12,-65.05 647.12,-65.05 647.12,-65.05 652.04,-61.24 644.36,-61.5 655.02,-58.92"/>
+<text xml:space="preserve" text-anchor="middle" x="518.94" y="-270.4" font-family="Helvetica,sans-Serif" font-size="14.00">CO/NO2/NH3 compensated</text>
+</g>
+<!-- SDFile -->
+<g id="node11" class="node">
+<title>SDFile</title>
+<polygon fill="peachpuff" stroke="black" points="762.68,-305 759.68,-309 738.68,-309 735.68,-305 623.69,-305 623.69,-269 762.68,-269 762.68,-305"/>
+<text xml:space="preserve" text-anchor="middle" x="693.19" y="-282.8" font-family="Helvetica,sans-Serif" font-size="14.00">donchian_buffer.bin</text>
+</g>
+<!-- Algo3&#45;&gt;SDFile -->
+<g id="edge1" class="edge">
+<title>Algo3-&gt;SDFile</title>
+<path fill="none" stroke="darkgreen" stroke-dasharray="5,2" d="M414.48,-287C480.11,-287 556.49,-287 612.51,-287"/>
+<polygon fill="darkgreen" stroke="darkgreen" points="622.22,-287 612.22,-291.5 618.44,-287 612.22,-287 612.22,-287 612.22,-287 618.44,-287 612.22,-282.5 622.22,-287"/>
+<text xml:space="preserve" text-anchor="middle" x="518.94" y="-291.2" font-family="Helvetica,sans-Serif" font-size="14.00">Saves state</text>
+</g>
+<!-- Algo3&#45;&gt;RTC_Data -->
+<g id="edge16" class="edge">
+<title>Algo3-&gt;RTC_Data</title>
+<path fill="none" stroke="darkgray" d="M403.48,-268.51C407.26,-265.97 410.85,-263.14 414.18,-260 437.41,-238.06 408.4,-211.74 432.18,-190.4 490.18,-138.33 548.63,-218.09 605.69,-165 629.02,-143.3 604.47,-122.13 621.17,-95 628.21,-83.56 638.32,-73.36 648.72,-64.83"/>
+<polygon fill="darkgray" stroke="darkgray" points="656.49,-58.81 651.34,-68.49 653.5,-61.12 648.59,-64.93 648.59,-64.93 648.59,-64.93 653.5,-61.12 645.83,-61.37 656.49,-58.81"/>
+<text xml:space="preserve" text-anchor="middle" x="518.94" y="-211.4" font-family="Helvetica,sans-Serif" font-size="14.00">VOC compensated</text>
+<text xml:space="preserve" text-anchor="middle" x="518.94" y="-194.6" font-family="Helvetica,sans-Serif" font-size="14.00">AQ score</text>
+</g>
+<!-- Algo4&#45;&gt;RTC_Data -->
+<g id="edge17" class="edge">
+<title>Algo4-&gt;RTC_Data</title>
+<path fill="none" stroke="darkgray" d="M310.48,-106.5C340.89,-90.18 388.12,-67.3 432.18,-56.2 493.44,-40.77 565.19,-36.46 617.78,-35.73"/>
+<polygon fill="darkgray" stroke="darkgray" points="627.48,-35.64 617.52,-40.23 623.7,-35.67 617.48,-35.73 617.48,-35.73 617.48,-35.73 623.7,-35.67 617.44,-31.23 627.48,-35.64"/>
+<text xml:space="preserve" text-anchor="middle" x="518.94" y="-60.4" font-family="Helvetica,sans-Serif" font-size="14.00">CO2 compensated</text>
+</g>
+<!-- Algo5&#45;&gt;RTC_Data -->
+<g id="edge18" class="edge">
+<title>Algo5-&gt;RTC_Data</title>
+<path fill="none" stroke="darkgray" d="M394.16,-164.94C401.34,-161.41 408.11,-157.14 414.18,-152 431.49,-137.32 414.73,-118.72 432.18,-104.2 492.39,-54.07 530.53,-95.12 605.69,-73 615.77,-70.04 626.26,-66.28 636.33,-62.31"/>
+<polygon fill="darkgray" stroke="darkgray" points="645.49,-58.59 637.92,-66.52 641.99,-60.01 636.23,-62.35 636.23,-62.35 636.23,-62.35 641.99,-60.01 634.53,-58.18 645.49,-58.59"/>
+<text xml:space="preserve" text-anchor="middle" x="518.94" y="-108.4" font-family="Helvetica,sans-Serif" font-size="14.00">PM1/2.5/10 compensated</text>
+</g>
+</g>
+</svg>

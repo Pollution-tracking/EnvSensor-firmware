@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="602pt" height="338pt" viewBox="0.00 0.00 602.00 338.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 333.6)">
+<title>Algo1BmeRH</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-333.6 598.39,-333.6 598.39,4 -4,4"/>
+<!-- t_ambient -->
+<g id="node1" class="node">
+<title>t_ambient</title>
+<polygon fill="lightblue" stroke="black" points="202.72,-329.6 0,-329.6 0,-293.6 202.72,-293.6 202.72,-329.6"/>
+<text xml:space="preserve" text-anchor="middle" x="101.36" y="-307.4" font-family="Helvetica,sans-Serif" font-size="14.00">SHTC3 Temperature (T_amb)</text>
+</g>
+<!-- calc_vp_ambient -->
+<g id="node4" class="node">
+<title>calc_vp_ambient</title>
+<polygon fill="lightsteelblue" stroke="black" points="189.51,-257.6 13.21,-257.6 13.21,-221.6 189.51,-221.6 189.51,-257.6"/>
+<text xml:space="preserve" text-anchor="middle" x="101.36" y="-235.4" font-family="Helvetica,sans-Serif" font-size="14.00">Vapor Pressure at T_amb</text>
+</g>
+<!-- t_ambient&#45;&gt;calc_vp_ambient -->
+<g id="edge1" class="edge">
+<title>t_ambient-&gt;calc_vp_ambient</title>
+<path fill="none" stroke="black" d="M101.36,-293.3C101.36,-285.92 101.36,-277.12 101.36,-268.85"/>
+<polygon fill="black" stroke="black" points="101.36,-258.92 105.86,-268.92 101.36,-262.7 101.36,-268.92 101.36,-268.92 101.36,-268.92 101.36,-262.7 96.86,-268.92 101.36,-258.92"/>
+</g>
+<!-- rh_ambient -->
+<g id="node2" class="node">
+<title>rh_ambient</title>
+<polygon fill="lightblue" stroke="black" points="395.71,-257.6 207.01,-257.6 207.01,-221.6 395.71,-221.6 395.71,-257.6"/>
+<text xml:space="preserve" text-anchor="middle" x="301.36" y="-235.4" font-family="Helvetica,sans-Serif" font-size="14.00">SHTC3 Humidity (RH_amb)</text>
+</g>
+<!-- ratio_mult -->
+<g id="node6" class="node">
+<title>ratio_mult</title>
+<polygon fill="aquamarine" stroke="black" points="462.43,-185.6 140.28,-185.6 140.28,-144 462.43,-144 462.43,-185.6"/>
+<text xml:space="preserve" text-anchor="middle" x="301.36" y="-169" font-family="Helvetica,sans-Serif" font-size="14.00">Humidity Compensation</text>
+<text xml:space="preserve" text-anchor="middle" x="301.36" y="-152.2" font-family="Helvetica,sans-Serif" font-size="14.00">RH_comp = RH_amb * (e_s(T_amb) / e_s(T_int))</text>
+</g>
+<!-- rh_ambient&#45;&gt;ratio_mult -->
+<g id="edge3" class="edge">
+<title>rh_ambient-&gt;ratio_mult</title>
+<path fill="none" stroke="black" d="M301.36,-221.35C301.36,-214.06 301.36,-205.35 301.36,-197"/>
+<polygon fill="black" stroke="black" points="301.36,-187.25 305.86,-197.25 301.36,-191.03 301.36,-197.25 301.36,-197.25 301.36,-197.25 301.36,-191.03 296.86,-197.25 301.36,-187.25"/>
+</g>
+<!-- t_internal -->
+<g id="node3" class="node">
+<title>t_internal</title>
+<polygon fill="lightblue" stroke="black" points="594.39,-329.6 396.32,-329.6 396.32,-293.6 594.39,-293.6 594.39,-329.6"/>
+<text xml:space="preserve" text-anchor="middle" x="495.36" y="-307.4" font-family="Helvetica,sans-Serif" font-size="14.00">BME680 Temperature (T_int)</text>
+</g>
+<!-- calc_vp_internal -->
+<g id="node5" class="node">
+<title>calc_vp_internal</title>
+<polygon fill="lightsteelblue" stroke="black" points="577.28,-257.6 413.43,-257.6 413.43,-221.6 577.28,-221.6 577.28,-257.6"/>
+<text xml:space="preserve" text-anchor="middle" x="495.36" y="-235.4" font-family="Helvetica,sans-Serif" font-size="14.00">Vapor Pressure at T_int</text>
+</g>
+<!-- t_internal&#45;&gt;calc_vp_internal -->
+<g id="edge2" class="edge">
+<title>t_internal-&gt;calc_vp_internal</title>
+<path fill="none" stroke="black" d="M495.36,-293.3C495.36,-285.92 495.36,-277.12 495.36,-268.85"/>
+<polygon fill="black" stroke="black" points="495.36,-258.92 499.86,-268.92 495.36,-262.7 495.36,-268.92 495.36,-268.92 495.36,-268.92 495.36,-262.7 490.86,-268.92 495.36,-258.92"/>
+</g>
+<!-- calc_vp_ambient&#45;&gt;ratio_mult -->
+<g id="edge4" class="edge">
+<title>calc_vp_ambient-&gt;ratio_mult</title>
+<path fill="none" stroke="black" d="M149.26,-221.16C174.98,-211.8 207.08,-200.12 235.16,-189.9"/>
+<polygon fill="black" stroke="black" points="244.55,-186.48 236.69,-194.13 241,-187.77 235.15,-189.9 235.15,-189.9 235.15,-189.9 241,-187.77 233.62,-185.67 244.55,-186.48"/>
+</g>
+<!-- calc_vp_internal&#45;&gt;ratio_mult -->
+<g id="edge5" class="edge">
+<title>calc_vp_internal-&gt;ratio_mult</title>
+<path fill="none" stroke="black" d="M448.89,-221.16C423.94,-211.8 392.81,-200.12 365.57,-189.9"/>
+<polygon fill="black" stroke="black" points="356.49,-186.49 367.44,-185.79 360.03,-187.82 365.85,-190 365.85,-190 365.85,-190 360.03,-187.82 364.27,-194.22 356.49,-186.49"/>
+</g>
+<!-- clamp_val -->
+<g id="node7" class="node">
+<title>clamp_val</title>
+<polygon fill="lightyellow" stroke="black" points="377.45,-108 225.26,-108 225.26,-72 377.45,-72 377.45,-108"/>
+<text xml:space="preserve" text-anchor="middle" x="301.36" y="-85.8" font-family="Helvetica,sans-Serif" font-size="14.00">Clamp Range [0, 100]</text>
+</g>
+<!-- ratio_mult&#45;&gt;clamp_val -->
+<g id="edge6" class="edge">
+<title>ratio_mult-&gt;clamp_val</title>
+<path fill="none" stroke="black" d="M301.36,-143.52C301.36,-136.06 301.36,-127.46 301.36,-119.42"/>
+<polygon fill="black" stroke="black" points="301.36,-109.43 305.86,-119.43 301.36,-113.21 301.36,-119.43 301.36,-119.43 301.36,-119.43 301.36,-113.21 296.86,-119.43 301.36,-109.43"/>
+</g>
+<!-- output -->
+<g id="node8" class="node">
+<title>output</title>
+<polygon fill="plum" stroke="black" points="420.45,-36 176.26,-36 176.26,0 426.45,0 426.45,-30 420.45,-36"/>
+<polyline fill="none" stroke="black" points="420.45,-36 420.45,-30"/>
+<polyline fill="none" stroke="black" points="426.45,-30 420.45,-30"/>
+<text xml:space="preserve" text-anchor="middle" x="301.36" y="-13.8" font-family="Helvetica,sans-Serif" font-size="14.00">bmeCompensatedRH (stored in RTC)</text>
+</g>
+<!-- clamp_val&#45;&gt;output -->
+<g id="edge7" class="edge">
+<title>clamp_val-&gt;output</title>
+<path fill="none" stroke="black" d="M301.36,-71.7C301.36,-64.32 301.36,-55.52 301.36,-47.25"/>
+<polygon fill="black" stroke="black" points="301.36,-37.32 305.86,-47.32 301.36,-41.1 301.36,-47.32 301.36,-47.32 301.36,-47.32 301.36,-41.1 296.86,-47.32 301.36,-37.32"/>
+</g>
+</g>
+</svg>

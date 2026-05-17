@@ -1,0 +1,28 @@
+digraph Algo1BmeRH {
+    rankdir=TB;
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Inputs
+    t_ambient [label="SHTC3 Temperature (T_amb)", fillcolor="lightblue"];
+    rh_ambient [label="SHTC3 Humidity (RH_amb)", fillcolor="lightblue"];
+    t_internal [label="BME680 Temperature (T_int)", fillcolor="lightblue"];
+
+    // Steps
+    calc_vp_ambient [label="Vapor Pressure at T_amb", fillcolor="lightsteelblue"];
+    calc_vp_internal [label="Vapor Pressure at T_int", fillcolor="lightsteelblue"];
+    ratio_mult [label="Humidity Compensation\nRH_comp = RH_amb * (e_s(T_amb) / e_s(T_int))", fillcolor="aquamarine"];
+    clamp_val [label="Clamp Range [0, 100]", fillcolor="lightyellow"];
+
+    // Output
+    output [label="bmeCompensatedRH (stored in RTC)", shape=note, fillcolor="plum"];
+
+    // Flow
+    t_ambient -> calc_vp_ambient;
+    t_internal -> calc_vp_internal;
+    rh_ambient -> ratio_mult;
+    calc_vp_ambient -> ratio_mult;
+    calc_vp_internal -> ratio_mult;
+    ratio_mult -> clamp_val;
+    clamp_val -> output;
+}

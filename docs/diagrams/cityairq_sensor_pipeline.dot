@@ -35,9 +35,20 @@ digraph SensorDataPipeline_SimplifiedFurther {
         style=filled;
         fillcolor="#F8F8FF"; // GhostWhite
 
-        LatestSensorData [label="Latest Sensor Data)", shape=folder, fillcolor="plum"];
+        LatestSensorData [label="Latest Sensor Data", shape=folder, fillcolor="plum"];
 
         IndividualSensors -> LatestSensorData [label="Stores Raw Readings"];
+    }
+    
+    subgraph cluster_compensation {
+        label = "Compensation service";
+        color=darkpurple;
+        style=filled;
+        fillcolor="#D8D8FF"; // GhostWhite
+
+        CompensatedSensorData [label="Compensated sensor values", shape=rectangle, fillcolor="gold"];
+
+        LatestSensorData -> CompensatedSensorData [label="Processes Raw Readings"];
     }
 
     subgraph cluster_processing {
@@ -64,7 +75,7 @@ digraph SensorDataPipeline_SimplifiedFurther {
     }
 
     // Connections between clusters
-    LatestSensorData -> DataProcessingModule [label="Provides Raw Data"];
+    CompensatedSensorData -> DataProcessingModule [label="Provides Processed Data"];
 
     // User Interaction (async)
     subgraph cluster_user_interaction {
