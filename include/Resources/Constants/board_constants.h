@@ -74,6 +74,7 @@ struct RTC_SensorData {
   // -----------------------------------------------------------------------
   // Compensated output fields (populated by CompensationService)
   // -----------------------------------------------------------------------
+#ifdef COMPENSATION_ENABLE
 #if defined(BME_ENABLE) && defined(SHTC3_ENABLE)
   // Algorithm 1: BME680 chip-surface RH after self-heating correction (×100)
   int32_t bmeCompensatedRH;
@@ -87,6 +88,17 @@ struct RTC_SensorData {
   int32_t coPPMComp;
   int32_t no2PPMComp;
   int32_t nh3PPMComp;
+#endif
+#if defined(CO2_ENABLE) && defined(BME_ENABLE) && defined(SHTC3_ENABLE)
+  // Algorithm 4: termobaric-compensated CO2 (direct ppm * 100)
+  int32_t co2Comp;
+#endif
+#if defined(PM_ENABLE) && defined(SHTC3_ENABLE)
+  // Algorithm 5: compensated PM values (x100, stored as integers)
+  int32_t pm1Comp;
+  int32_t pm25Comp;
+  int32_t pm10Comp;
+#endif
 #endif
 };
 

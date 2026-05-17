@@ -37,6 +37,7 @@ RTC_DATA_ATTR RTC_SensorData lastSensorsData = {
 #endif
     .lastBatteryData = {},
     .timestamp = "",
+#ifdef COMPENSATION_ENABLE
 #if defined(BME_ENABLE) && defined(SHTC3_ENABLE)
     .bmeCompensatedRH = NO_DATA,
     .vocPctDecoupled  = NO_DATA,
@@ -46,6 +47,15 @@ RTC_DATA_ATTR RTC_SensorData lastSensorsData = {
     .coPPMComp  = NO_DATA,
     .no2PPMComp = NO_DATA,
     .nh3PPMComp = NO_DATA,
+#endif
+#if defined(CO2_ENABLE) && defined(BME_ENABLE) && defined(SHTC3_ENABLE)
+    .co2Comp = NO_DATA,
+#endif
+#if defined(PM_ENABLE) && defined(SHTC3_ENABLE)
+    .pm1Comp  = NO_DATA,
+    .pm25Comp = NO_DATA,
+    .pm10Comp = NO_DATA,
+#endif
 #endif
 };
 

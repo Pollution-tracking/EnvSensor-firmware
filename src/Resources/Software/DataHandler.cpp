@@ -27,12 +27,22 @@ static void transferBLE() {
   bluetooth.updateAltitudeCharacteristic(lastSensorsData.lastBMEData.altitude);
 #endif
 #ifdef PM_ENABLE
+#ifdef COMPENSATION_ENABLE
+  bluetooth.updatePM1Characteristic(lastSensorsData.pm1Comp);
+  bluetooth.updatePM2_5Characteristic(lastSensorsData.pm25Comp);
+  bluetooth.updatePM10Characteristic(lastSensorsData.pm10Comp);
+#else
   bluetooth.updatePM1Characteristic(lastSensorsData.lastPMData.pm1);
   bluetooth.updatePM2_5Characteristic(lastSensorsData.lastPMData.pm2_5);
   bluetooth.updatePM10Characteristic(lastSensorsData.lastPMData.pm10);
 #endif
+#endif
 #ifdef CO2_ENABLE
+#ifdef COMPENSATION_ENABLE
+  bluetooth.updateCO2Characteristic(lastSensorsData.co2Comp);
+#else
   bluetooth.updateCO2Characteristic(lastSensorsData.lastCO2Data.co2);
+#endif
 #endif
 #ifdef MICS_ENABLE
 #ifdef COMPENSATION_ENABLE
@@ -88,6 +98,12 @@ static String getCSVHeader() {
 #ifdef MICS_ENABLE
     header += "Comp_MICS_CO_ppm_x100,Comp_MICS_NO2_ppm_x100,Comp_MICS_NH3_ppm_x100,";
 #endif
+#ifdef CO2_ENABLE
+  header += "Comp_CO2_ppm_x100,";
+#endif
+#ifdef PM_ENABLE
+  header += "Comp_PM1_ugm3_x100,Comp_PM25_ugm3_x100,Comp_PM10_ugm3_x100,";
+#endif
 #endif
 
   // Remove trailing comma
@@ -126,6 +142,14 @@ static String convertDataToCSV() {
   dataLine += String(lastSensorsData.coPPMComp) + "," +
               String(lastSensorsData.no2PPMComp) + "," +
               String(lastSensorsData.nh3PPMComp) + ",";
+#endif
+#ifdef CO2_ENABLE
+  dataLine += String(lastSensorsData.co2Comp) + ",";
+#endif
+#ifdef PM_ENABLE
+  dataLine += String(lastSensorsData.pm1Comp) + "," +
+              String(lastSensorsData.pm25Comp) + "," +
+              String(lastSensorsData.pm10Comp) + ",";
 #endif
 #endif
 
@@ -222,12 +246,22 @@ void handleHistoricalData() {
                 bluetooth.updateAltitudeCharacteristic(decodedDataLine[BME_ALTITUDE_INDEX].toInt());
 #endif // BME_ENABLE
 #ifdef CO2_ENABLE
+#ifdef COMPENSATION_ENABLE
+                bluetooth.updateCO2Characteristic(decodedDataLine[COMP_CO2_INDEX].toInt());
+#else
                 bluetooth.updateCO2Characteristic(decodedDataLine[CO2_CO2_INDEX].toInt());
+#endif
 #endif // CO2_ENABLE
 #ifdef PM_ENABLE
+#ifdef COMPENSATION_ENABLE
+                bluetooth.updatePM1Characteristic(decodedDataLine[COMP_PM_PM1_INDEX].toInt());
+                bluetooth.updatePM2_5Characteristic(decodedDataLine[COMP_PM_PM2_5_INDEX].toInt());
+                bluetooth.updatePM10Characteristic(decodedDataLine[COMP_PM_PM10_INDEX].toInt());
+#else
                 bluetooth.updatePM1Characteristic(decodedDataLine[PM_PM1_INDEX].toInt());
                 bluetooth.updatePM2_5Characteristic(decodedDataLine[PM_PM2_5_INDEX].toInt());
                 bluetooth.updatePM10Characteristic(decodedDataLine[PM_PM10_INDEX].toInt());
+#endif
 #endif // PM_ENABLE
 #ifdef MICS_ENABLE
 #ifdef COMPENSATION_ENABLE

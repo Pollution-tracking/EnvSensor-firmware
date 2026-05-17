@@ -16,16 +16,23 @@ extern SDcard sdcard;
 // ---------------------------------------------------------------------------
 // MICS-6814 m5 polynomial correction coefficients
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// MICS-6814 m5 polynomial correction coefficients
+// ---------------------------------------------------------------------------
+#ifdef MICS_ENABLE
 static const MICSCoefficients COMP_CO_PARAMS  = { M5_CO_C0,  M5_CO_C1,  M5_CO_C2,  M5_CO_C3,  M5_CO_C4,  M5_CO_C5  };
 static const MICSCoefficients COMP_NO2_PARAMS = { M5_NO2_C0, M5_NO2_C1, M5_NO2_C2, M5_NO2_C3, M5_NO2_C4, M5_NO2_C5 };
 static const MICSCoefficients COMP_NH3_PARAMS = { M5_NH3_C0, M5_NH3_C1, M5_NH3_C2, M5_NH3_C3, M5_NH3_C4, M5_NH3_C5 };
+#endif
 
 // ---------------------------------------------------------------------------
 // File-scope Donchian buffer – loaded from SD once on first use, then kept
 // in RAM for the lifetime of the running session.
 // ---------------------------------------------------------------------------
+#ifdef BME_ENABLE
 static DonchianBuffer donchianBuf = { {}, {}, 0, 0, false };
 static bool           donchianBufLoaded = false;
+#endif
 
 // ---------------------------------------------------------------------------
 // Private helpers (file-scope statics)
@@ -35,6 +42,7 @@ float clampf(float v, float lo, float hi) {
   return v < lo ? lo : (v > hi ? hi : v);
 }
 
+#ifdef BME_ENABLE
 void loadDonchianFromSD() {
   logg("Loading Donchian buffer from SD");
 
@@ -120,10 +128,12 @@ void saveDonchianToSD() {
 
   loggValue("Donchian buffer saved, count", String(donchianBuf.count));
 }
+#endif
 
 // ---------------------------------------------------------------------------
 // ALGORITHM 1 – BME680 thermodynamic self-heating RH compensation
 // ---------------------------------------------------------------------------
+#ifdef BME_ENABLE
 float calculateCompensatedRH(float t_ambient, float rh_ambient, float t_internal) {
   float exponent = (17.625f * t_ambient) / (t_ambient + 243.04f) -
                    (17.625f * t_internal) / (t_internal + 243.04f);
@@ -132,10 +142,12 @@ float calculateCompensatedRH(float t_ambient, float rh_ambient, float t_internal
   loggValue("Algorithm 1 – BME RH compensated", String(rh_comp, 2));
   return clampf(rh_comp, 0.0f, 100.0f);
 }
+#endif
 
 // ---------------------------------------------------------------------------
 // ALGORITHM 2 – ADC → Rs (kΩ) conversion
 // ---------------------------------------------------------------------------
+#ifdef MICS_ENABLE
 float adcToResistance(float adc_raw, float rl) {
   if (adc_raw <= 0.0f || adc_raw >= COMP_ADC_FULL) {
     loggValue("Algorithm 2: saturated ADC reading", String(adc_raw));
@@ -207,10 +219,12 @@ float convertToNH3PPM(float rs_corrected, float r0_baseline) {
   loggValue("Algorithm 2 – NH3 PPM", String(ppm, 3));
   return ppm;
 }
+#endif
 
 // ---------------------------------------------------------------------------
 // ALGORITHM 3 – Donchian VOC decoupling + AQ score
 // ---------------------------------------------------------------------------
+#ifdef BME_ENABLE
 void updateAQScore(float r_gas_raw, float rh_shtc3, float &voc_pct_out, float &aq_score_out) {
   // Load buffer from SD on first call each session
   if (!donchianBufLoaded) {
@@ -293,6 +307,90 @@ void updateAQScore(float r_gas_raw, float rh_shtc3, float &voc_pct_out, float &a
 
   saveDonchianToSD();
 }
+#endif
+
+// ---------------------------------------------------------------------------
+// ALGORITHM 4 – Termobaric CO2 Compensation (MH-Z19B)
+// ---------------------------------------------------------------------------
+#ifdef CO2_ENABLE
+float compensateCO2(float co2_raw, float t_ambient_c, float p_measured_hpa) {
+  if (p_measured_hpa <= 0.0f || co2_raw <= 0.0f) {
+    return co2_raw;
+  }
+  const float P_REF = 1013.25f;
+  const float T_REF_K = 298.15f; // 25 °C in Kelvin
+  float t_ambient_k = t_ambient_c + 273.15f;
+  
+  float co2_corrected = co2_raw * ((t_ambient_k * P_REF) / (p_measured_hpa * T_REF_K));
+  float result = co2_corrected < 0.0f ? 0.0f : co2_corrected;
+  loggValue("Algorithm 4 – CO2 corrected (ppm)", String(result, 2));
+  return result;
+}
+#endif
+
+// ---------------------------------------------------------------------------
+// ALGORITHM 5 – Particulate Matter Compensation (PMSA003)
+// ---------------------------------------------------------------------------
+#ifdef PM_ENABLE
+float compensatePM1(float pm1_raw, float rh_ambient) {
+  if (pm1_raw <= 0.0f) {
+    return 0.0f;
+  }
+  float rh_dec = clampf(rh_ambient / 100.0f, 0.0f, 0.99f);
+  float growth_factor = 1.0f + 0.25f * (rh_dec * rh_dec) / (1.0f - rh_dec);
+  float pm1_corrected = pm1_raw / growth_factor;
+  float result = pm1_corrected < 0.0f ? 0.0f : pm1_corrected;
+  loggValue("Algorithm 5 – PM1 corrected", String(result, 2));
+  return result;
+}
+
+float compensatePM25(float pm25_raw, float rh_ambient) {
+  if (pm25_raw <= 0.0f) {
+    return 0.0f;
+  }
+
+  float pm25_corrected = 0.0f;
+  if (pm25_raw < 30.0f) {
+    pm25_corrected = 0.524f * pm25_raw - 0.0862f * rh_ambient + 5.75f;
+  } else if (pm25_raw < 50.0f) {
+    float u = (pm25_raw / 20.0f) - 1.5f;
+    float slope = 0.786f * u + 0.524f * (1.0f - u);
+    pm25_corrected = slope * pm25_raw - 0.0862f * rh_ambient + 5.75f;
+  } else if (pm25_raw < 210.0f) {
+    pm25_corrected = 0.786f * pm25_raw - 0.0862f * rh_ambient + 5.75f;
+  } else if (pm25_raw < 260.0f) {
+    float u = (pm25_raw / 50.0f) - 4.2f;
+    float slope = 0.69f * u + 0.786f * (1.0f - u);
+    float rh_term = 0.0862f * rh_ambient * (1.0f - u);
+    pm25_corrected = slope * pm25_raw - rh_term + 2.966f * u + 5.75f * (1.0f - u) + 0.000884f * pm25_raw * pm25_raw * u;
+  } else {
+    pm25_corrected = 2.966f + 0.69f * pm25_raw + 0.000884f * pm25_raw * pm25_raw;
+  }
+
+  float result = pm25_corrected < 0.0f ? 0.0f : pm25_corrected;
+  loggValue("Algorithm 5 – PM2.5 corrected", String(result, 2));
+  return result;
+}
+
+float compensatePM10(float pm10_raw, float rh_ambient, float p_measured_hpa) {
+  if (pm10_raw <= 0.0f) {
+    return 0.0f;
+  }
+  if (p_measured_hpa <= 0.0f) {
+    return pm10_raw;
+  }
+
+  float k = 1.0f;
+  if (rh_ambient > 50.0f) {
+    k = (50.0f / rh_ambient) * (p_measured_hpa / 1013.25f);
+  }
+
+  float pm10_corrected = pm10_raw * k;
+  float result = pm10_corrected < 0.0f ? 0.0f : pm10_corrected;
+  loggValue("Algorithm 5 – PM10 corrected", String(result, 2));
+  return result;
+}
+#endif
 
 void runCompensationPipeline() {
   logg("Running compensation pipeline");
@@ -393,6 +491,60 @@ void runCompensationPipeline() {
     lastSensorsData.nh3PPMComp = static_cast<int32_t>(clampf(nh3_ppm, 0.0f, 100000.0f) * 100.0f);
   } else {
     logg("Algorithm 2: skipped – MICS or ambient data unavailable");
+  }
+#endif
+
+#if defined(CO2_ENABLE) && defined(BME_ENABLE) && defined(SHTC3_ENABLE)
+  // -------------------------------------------------------------------
+  // Algorithm 4 – NDIR Termobaric CO2 Compensation (MH-Z19B)
+  // -------------------------------------------------------------------
+  logg("Algorithm 4: MH-Z19B CO2 termobaric compensation");
+  bool co2_ok = lastSensorsData.lastCO2Data.co2 != READ_ERROR &&
+                lastSensorsData.lastCO2Data.co2 != NO_DATA;
+  bool press_ok = lastSensorsData.lastBMEData.pressure != READ_ERROR &&
+                  lastSensorsData.lastBMEData.pressure != NO_DATA;
+
+  if (co2_ok && press_ok && has_amb) {
+    float co2_raw_ppm = lastSensorsData.lastCO2Data.co2 / 100.0f;
+    float p_measured_hpa = lastSensorsData.lastBMEData.pressure / 100.0f;
+    
+    float co2_comp_ppm = compensateCO2(co2_raw_ppm, t_amb, p_measured_hpa);
+    lastSensorsData.co2Comp = static_cast<int32_t>(co2_comp_ppm * 100.0f);
+  } else {
+    logg("Algorithm 4: skipped – CO2, pressure or ambient data unavailable");
+  }
+#endif
+
+#if defined(PM_ENABLE) && defined(SHTC3_ENABLE)
+  // -------------------------------------------------------------------
+  // Algorithm 5 – PMSA003 PM Compensation (Barkjohn + Malings + Polish)
+  // -------------------------------------------------------------------
+  logg("Algorithm 5: PMSA003 PM environmental compensation");
+  bool pm_ok = lastSensorsData.lastPMData.pm2_5 != READ_ERROR &&
+               lastSensorsData.lastPMData.pm2_5 != NO_DATA;
+
+  if (pm_ok && has_amb) {
+    float pm1_raw = lastSensorsData.lastPMData.pm1 / 100.0f;
+    float pm25_raw = lastSensorsData.lastPMData.pm2_5 / 100.0f;
+    float pm10_raw = lastSensorsData.lastPMData.pm10 / 100.0f;
+
+    float p_measured_hpa = 1013.25f; // Default sea level pressure if BME is disabled
+#ifdef BME_ENABLE
+    if (lastSensorsData.lastBMEData.pressure != READ_ERROR &&
+        lastSensorsData.lastBMEData.pressure != NO_DATA) {
+      p_measured_hpa = lastSensorsData.lastBMEData.pressure / 100.0f;
+    }
+#endif
+
+    float pm1_comp  = compensatePM1(pm1_raw, rh_amb);
+    float pm25_comp = compensatePM25(pm25_raw, rh_amb);
+    float pm10_comp = compensatePM10(pm10_raw, rh_amb, p_measured_hpa);
+
+    lastSensorsData.pm1Comp  = static_cast<int32_t>(pm1_comp * 100.0f);
+    lastSensorsData.pm25Comp = static_cast<int32_t>(pm25_comp * 100.0f);
+    lastSensorsData.pm10Comp = static_cast<int32_t>(pm10_comp * 100.0f);
+  } else {
+    logg("Algorithm 5: skipped – PM or ambient data unavailable");
   }
 #endif
 }

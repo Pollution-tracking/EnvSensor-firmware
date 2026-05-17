@@ -90,21 +90,37 @@ String convertAltitude(BMEData data, bool includeUnit, bool integerOnly) {
 
 #ifdef CO2_ENABLE
 String convertCO2(CO2Data data, bool includeUnit, bool integerOnly) {
+#ifdef COMPENSATION_ENABLE
+  return formatSensorValue(lastSensorsData.co2Comp, " ppm", includeUnit, integerOnly);
+#else
   return formatSensorValue(data.co2, " ppm", includeUnit, integerOnly);
+#endif
 }
 #endif // CO2_ENABLE
 
 #ifdef PM_ENABLE
 String convertPM1(PMData data, bool includeUnit, bool integerOnly) {
+#ifdef COMPENSATION_ENABLE
+  return formatSensorValue(lastSensorsData.pm1Comp, " ug/m3", includeUnit, integerOnly);
+#else
   return formatSensorValue(data.pm1, " ug/m3", includeUnit, integerOnly);
+#endif
 }
 
 String convertPM2_5(PMData data, bool includeUnit, bool integerOnly) {
+#ifdef COMPENSATION_ENABLE
+  return formatSensorValue(lastSensorsData.pm25Comp, " ug/m3", includeUnit, integerOnly);
+#else
   return formatSensorValue(data.pm2_5, " ug/m3", includeUnit, integerOnly);
+#endif
 }
 
 String convertPM10(PMData data, bool includeUnit, bool integerOnly) {
+#ifdef COMPENSATION_ENABLE
+  return formatSensorValue(lastSensorsData.pm10Comp, " ug/m3", includeUnit, integerOnly);
+#else
   return formatSensorValue(data.pm10, " ug/m3", includeUnit, integerOnly);
+#endif
 }
 #endif // PM_ENABLE
 
