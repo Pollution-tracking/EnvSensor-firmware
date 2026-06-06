@@ -1,0 +1,33 @@
+digraph Algo3VocAQ {
+    rankdir=TB;
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Inputs
+    gas_raw [label="BME680 Gas Resistance", fillcolor="lightblue"];
+    rh_amb [label="SHTC3 Humidity (RH_amb)", fillcolor="lightblue"];
+    sd_file [label="donchian_buffer.bin on SD", shape=folder, fillcolor="peachpuff"];
+
+    // Steps
+    buffer_manage [label="Sliding Donchian Buffer (Loads/Saves SD)\nStores raw Gas and RH readings", fillcolor="lightsteelblue"];
+    find_extrema [label="Find Extremas\n[gMin, gMax] & [hMin, hMax]", fillcolor="lightsteelblue"];
+    decouple_humidity [label="Decouple RH Effects from Gas\nRatio r = dRH / dGas\nR_gas_comp = R_gas_raw - r * RH_amb", fillcolor="aquamarine"];
+    calc_voc [label="VOC Purity %\nvoc_pct = ((R_gas_comp - gMin)/(gMax - gMin)) * 100", fillcolor="aquamarine"];
+    calc_aq [label="Compute AQ Score (0-100)\nAQ_Score = Score_Hum(25%) + Score_Gas(75%)", fillcolor="lightyellow"];
+
+    // Outputs
+    voc_out [label="vocPctDecoupled", shape=note, fillcolor="plum"];
+    aq_out [label="aqScore", shape=note, fillcolor="plum"];
+
+    // Flow
+    gas_raw -> buffer_manage;
+    rh_amb -> buffer_manage;
+    sd_file -> buffer_manage [style=dashed, dir=both];
+    buffer_manage -> find_extrema;
+    find_extrema -> decouple_humidity;
+    rh_amb -> decouple_humidity [style=dashed];
+    decouple_humidity -> calc_voc;
+    calc_voc -> calc_aq;
+    calc_voc -> voc_out;
+    calc_aq -> aq_out;
+}

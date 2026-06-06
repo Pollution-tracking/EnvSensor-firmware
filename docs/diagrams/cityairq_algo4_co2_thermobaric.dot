@@ -1,0 +1,26 @@
+digraph Algo4Co2Thermobaric {
+    rankdir=TB;
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Inputs
+    co2_raw [label="MH-Z19B Measured CO2", fillcolor="lightblue"];
+    t_ambient [label="SHTC3 Ambient Temperature (°C)", fillcolor="lightblue"];
+    p_measured [label="BME680 Pressure (Pa)", fillcolor="lightblue"];
+
+    // Steps
+    units_conv [label="Convert to Absolute Units\n- T_amb_K = T_amb + 273.15f\n- P_hPa = Pressure_Pa / 100.0f", fillcolor="lightsteelblue"];
+    gas_density [label="Ideal Gas Density Correction\nRatio = (T_amb_K * 1013.25) / (P_hPa * 298.15)\nCO2_comp = CO2_raw * Ratio", fillcolor="aquamarine"];
+    clamp_zero [label="Clamp Negative Values to 0.0f", fillcolor="lightyellow"];
+
+    // Output
+    co2_comp_out [label="CO2 compensated", shape=note, fillcolor="plum"];
+
+    // Flow
+    co2_raw -> units_conv;
+    t_ambient -> units_conv;
+    p_measured -> units_conv;
+    units_conv -> gas_density;
+    gas_density -> clamp_zero;
+    clamp_zero -> co2_comp_out;
+}

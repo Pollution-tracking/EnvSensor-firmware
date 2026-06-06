@@ -1,0 +1,35 @@
+digraph Algo5PmGrowth {
+    rankdir=TB;
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Inputs
+    pm_raw [label="PMSA003 PM Raw Data", fillcolor="lightblue"];
+    rh_ambient [label="SHTC3 Ambient Humidity", fillcolor="lightblue"];
+    pressure [label="BME680 Pressure", fillcolor="lightblue"];
+
+    // Algorithms / Processing Steps
+    pm1_corr [label="PM1.0 Hygroscopic Growth Model\n(Chakrabarti-Malings)", fillcolor="aquamarine"];
+    pm25_corr [label="PM2.5 Regression Model\n(US-EPA / Barkjohn)", fillcolor="aquamarine"];
+    pm10_corr [label="PM10 Baro-Hydrometric Model\n(Polish Study)", fillcolor="aquamarine"];
+
+    // Outputs
+    output_pm1 [label="PM1.0 compensated", shape=note, fillcolor="plum"];
+    output_pm25 [label="PM2.5 compensated", shape=note, fillcolor="plum"];
+    output_pm10 [label="PM10 compensated", shape=note, fillcolor="plum"];
+
+    // Connections
+    pm_raw -> pm1_corr;
+    pm_raw -> pm25_corr;
+    pm_raw -> pm10_corr;
+
+    rh_ambient -> pm1_corr [style=dashed, label="Ref RH"];
+    rh_ambient -> pm25_corr [style=dashed, label="Ref RH"];
+    rh_ambient -> pm10_corr [style=dashed, label="Ref RH"];
+
+    pressure -> pm10_corr [style=dashed, label="Ref Press"];
+
+    pm1_corr -> output_pm1;
+    pm25_corr -> output_pm25;
+    pm10_corr -> output_pm10;
+}

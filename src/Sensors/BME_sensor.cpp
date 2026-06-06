@@ -43,8 +43,8 @@ void BMESensor::init() {
         if (!bme->setIIRFilterSize(BME680_FILTER_SIZE_3)) {
             logg("Failed to set IIR filter size");
         }
-        if (!bme->setGasHeater(0, 0)) {
-            logg("Failed to stop gas heater");
+        if (!bme->setGasHeater(320, 150)) {
+            logg("Failed to start gas heater");
         }
     } else {
         logg(NOT_INITIALIZED);
@@ -113,7 +113,7 @@ String BMESensor::getName() {
 // Internal functions
 float BMESensor::compute_altitude(float pressure, float temp_c, float seaLevel) {
     pressure /= 100.0; // Convert Pa to hPa
-    return ((pow((seaLevel / pressure), (1.0 / 5.257)) - 1.0) * (temp_c + 273.15)) / 0.0065;    
+    return ((powf((seaLevel / pressure), (1.0f / 5.257f)) - 1.0f) * (temp_c + 273.15f)) / 0.0065f;    
 }
 
 void BMESensor::markReadError() {

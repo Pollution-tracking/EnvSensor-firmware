@@ -1,6 +1,7 @@
 #include <Modules/Sensors.h>
+#include <Resources/Software/CompensationService.h>
 
-#define logg(message) loggWithObj(message, "SENSORS")
+#define logg(message)             loggWithObj(message, "SENSORS")
 #define loggValue(message, value) loggWithCtx(message, "SENSORS", value)
 
 static void initSensor(Sensor& sensor) {
@@ -117,7 +118,15 @@ void readAllSensors() {
     lastSensorsData.lastBatteryData = battery.getData();
     // Update timestamp
     lastSensorsData.timestamp = rtc.getTimestamp();
-    
+
+    // -----------------------------------------------------------------------
+    // Compensation pipeline – runs after all raw readings are collected.
+    // -----------------------------------------------------------------------
+#ifdef COMPENSATION_ENABLE
+    runCompensationPipeline();
+#endif
+
+    logg("Compensation pipeline complete");
     logg(END_READ);
 }
 

@@ -14,7 +14,7 @@ digraph CityAirQ_Architecture_Simplified {
         HeatCalibrate [label="Sensor Heating & Calibration"];
         MainLoop [label="Event Handler"];
         SensorAcquisition [label="Sensor Data Acquisition"];
-        DataRouting [label="Data Routing"];
+        DataProcessingRouting [label="Data Processing & Routing"];
         DataStore [label="Data Storage (SD Card)"];
         DataBLE [label="Data Transmission (BLE)"];
         DeepSleep [label="Deep Sleep Mode"];
@@ -22,9 +22,9 @@ digraph CityAirQ_Architecture_Simplified {
         BootInit -> HeatCalibrate;
         HeatCalibrate -> MainLoop;
         MainLoop -> SensorAcquisition [label="Scheduled by Timer"];
-        SensorAcquisition -> DataRouting [label="Collected Data"];
-        DataRouting -> DataStore [label="If BLE Disconnected"];
-        DataRouting -> DataBLE [label="If BLE Connected"];
+        SensorAcquisition -> DataProcessingRouting [label="Collected Data"];
+        DataProcessingRouting -> DataStore [label="If BLE Disconnected"];
+        DataProcessingRouting -> DataBLE [label="If BLE Connected"];
         DeepSleep -> MainLoop [label="Wakeup Event"];
     }
 
@@ -39,7 +39,7 @@ digraph CityAirQ_Architecture_Simplified {
         DisplayUpdates [label="Display Updates"];
 
         UserInteraction -> MainLoop [label="Triggers Event"];
-        DataRouting -> DisplayUpdates [label="Data to Show"];
+        DataProcessingRouting -> DisplayUpdates [label="Data to Show"];
         MainLoop -> DisplayUpdates [label="Screen Mode Change"];
         UserInteraction -> DeepSleep [label="Request wake-up"];
     }

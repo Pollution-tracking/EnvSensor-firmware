@@ -1,0 +1,32 @@
+digraph Algo2MicsGas {
+    rankdir=TB;
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Inputs
+    raw_adc [label="Raw ADC Readings\n(CO, NO2, NH3)", fillcolor="lightblue"];
+    t_amb [label="Ambient Temp (T_amb)", fillcolor="lightblue"];
+    rh_amb [label="Ambient Humidity (RH_amb)", fillcolor="lightblue"];
+    r0_baselines [label="R0 Baselines from Flash", fillcolor="peachpuff"];
+
+    // Steps
+    calc_rs [label="Calculate Raw Resistance (Rs)\nRs = RL * (VCC/V_sensor - 1)", fillcolor="lightsteelblue"];
+    m5_poly [label="m5 Bivariate Polynomial Correction\nRs_comp = C0 + C1*Rs + C2*T + C3*RH + C4*Rs*T + C5*Rs*RH", fillcolor="aquamarine"];
+    log_conv [label="Log-Log Power Law Conversion\nPPM = 10^(slope * log10(Rs_comp/R0) + intercept)", fillcolor="aquamarine"];
+    clamp_ppm [label="Clamp PPM to Positive Domain", fillcolor="lightyellow"];
+
+    // Outputs
+    output_co [label="coPPMComp", shape=note, fillcolor="plum"];
+    output_no2 [label="no2PPMComp", shape=note, fillcolor="plum"];
+    output_nh3 [label="nh3PPMComp", shape=note, fillcolor="plum"];
+
+    // Flow
+    raw_adc -> calc_rs;
+    calc_rs -> m5_poly;
+    t_amb -> m5_poly;
+    rh_amb -> m5_poly;
+    m5_poly -> log_conv;
+    r0_baselines -> log_conv;
+    log_conv -> clamp_ppm;
+    clamp_ppm -> {output_co, output_no2, output_nh3};
+}

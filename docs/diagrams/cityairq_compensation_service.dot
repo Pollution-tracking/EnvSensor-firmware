@@ -1,0 +1,72 @@
+digraph CompensationServicePipeline {
+    rankdir=LR; // Left to Right layout for clear, readable columns
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // --- LEFT COLUMN: SENSOR INPUTS ---
+    subgraph cluster_inputs {
+        label = "Sensor Inputs";
+        color=blue;
+        style=filled;
+        fillcolor="#F0F8FF"; // AliceBlue
+        
+        SHTC3 [label="SHTC3", shape=cylinder, fillcolor="lightblue"];
+        BME680 [label="BME680", shape=cylinder, fillcolor="lightblue"];
+        MICS6814 [label="MICS-6814", shape=cylinder, fillcolor="lightblue"];
+        MHZ19B [label="MH-Z19B", shape=cylinder, fillcolor="lightblue"];
+        PMSA003 [label="PMSA003", shape=cylinder, fillcolor="lightblue"];
+    }
+
+    // --- MIDDLE COLUMN: COMPENSATION ALGORITHMS ---
+    subgraph cluster_algorithms {
+        label = "Compensation Algorithms";
+        color=darkgreen;
+        style=filled;
+        fillcolor="#F5FFFA"; // MintCream
+
+        Algo1 [label="Algo 1: Humidity Correction", fillcolor="aquamarine"];
+        Algo2 [label="Algo 2: MICS m5 & PPM Conversion", fillcolor="aquamarine"];
+        Algo3 [label="Algo 3: Donchian Decoupling & AQ Score", fillcolor="aquamarine"];
+        Algo4 [label="Algo 4: CO2 Termobaric Correction", fillcolor="aquamarine"];
+        Algo5 [label="Algo 5: PM Hygroscopic Correction", fillcolor="aquamarine"];
+        
+        SDFile [label="donchian_buffer.bin", shape=folder, fillcolor="peachpuff"];
+        Algo3 -> SDFile [label="Saves state", style=dashed, color="darkgreen"];
+    }
+
+    // --- COLOR-CODED ROUTING (EASY TO TRACE) ---
+    // 1. Ambient References (Dashed light grey to avoid clutter)
+    SHTC3 -> {Algo1, Algo2, Algo3, Algo4, Algo5} [color="darkgray", style=dashed];
+
+    // 2. Core Gas Sensor Connections (Green)
+    MICS6814 -> Algo2 [color="green", penwidth=1.5];
+
+    // 3. NDIR CO2 Connections (Orange)
+    MHZ19B -> Algo4 [color="orange", penwidth=1.5];
+
+    // 4. PM Particle Connections (Red)
+    PMSA003 -> Algo5 [color="red", penwidth=1.5];
+
+    // 5. BME680 Multipurpose Connections (Blue / Purple)
+    BME680 -> Algo1 [color="blue", penwidth=1.5];
+    BME680 -> Algo3 [color="blue", penwidth=1.5];
+    BME680 -> Algo4 [color="cyan", penwidth=1.5];
+    BME680 -> Algo5 [color="purple", penwidth=1.5];
+
+    // --- RIGHT COLUMN: PERSISTENT OUTPUTS ---
+    subgraph cluster_outputs {
+        label = "Outputs";
+        color=purple;
+        style=filled;
+        fillcolor="#F8F8FF"; // GhostWhite
+
+        RTC_Data [label="RTC_SensorData\n(lastSensorsData)", shape=note, fillcolor="plum"];
+    }
+
+    Algo1 -> RTC_Data [label="Humidity compensated", color="darkgray"];
+    Algo2 -> RTC_Data [label="CO/NO2/NH3 compensated", color="darkgray"];
+    Algo3 -> RTC_Data [label="VOC compensated\nAQ score", color="darkgray"];
+    Algo4 -> RTC_Data [label="CO2 compensated", color="darkgray"];
+    Algo5 -> RTC_Data [label="PM1/2.5/10 compensated", color="darkgray"];
+}
+

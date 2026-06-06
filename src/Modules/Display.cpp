@@ -546,9 +546,9 @@ void Display::printSensorsStatus() {
     
 #ifdef MICS_ENABLE
     // Line 8: CO, NO2, NH3 values
-    String co = convertCO(lastSensorsData.lastMICSData, false, true);
-    String no2 = convertNO2(lastSensorsData.lastMICSData, false, true);
-    String nh3 = convertNH3(lastSensorsData.lastMICSData, false, true);
+    String co = convertCO(lastSensorsData.lastMICSData, false, false);
+    String no2 = convertNO2(lastSensorsData.lastMICSData, false, false);
+    String nh3 = convertNH3(lastSensorsData.lastMICSData, false, false);
     
     centerInColumn(co, col1X, startY + lineSpacing * 7);
     display.print(co);
