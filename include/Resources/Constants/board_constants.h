@@ -100,7 +100,18 @@ struct RTC_SensorData {
   int32_t pm10Comp;
 #endif
 #endif
+#ifdef COMP_ML_ENABLED
+  // Machine Learning tuned output fields (x100, stored as integers)
+  int32_t pm1ML;
+  int32_t pm25ML;
+  int32_t pm10ML;
+  int32_t coML;
+  int32_t no2ML;
+  int32_t nh3ML;
+  int32_t co2ML;
+#endif
 };
+
 
 struct RTC_ScreenData {
   SCREEN_MODE previousScreen;

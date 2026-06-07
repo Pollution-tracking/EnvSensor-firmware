@@ -3,7 +3,9 @@
 #include <Resources/Constants/compensation_constants.h>
 #include <Resources/Constants/storage_constants.h>
 #include <Resources/Software/CompensationService.h>
+#include <Resources/Software/DecisionTreeEngine.h>
 #include <cmath>
+
 
 #define logg(message) loggWithObj(message, "COMPENSATION")
 #define loggValue(message, value) loggWithCtx(message, "COMPENSATION", value)
@@ -400,7 +402,7 @@ void runCompensationPipeline() {
   bool has_amb = false;
 
 #if defined(SHTC3_ENABLE)
-  // Ambient reference values from the isolated SHTC3 (ground truth)
+   // Ambient reference values from the isolated SHTC3 (ground truth)
   if (lastSensorsData.lastSHTC3Data.temperature != READ_ERROR &&
       lastSensorsData.lastSHTC3Data.temperature != NO_DATA) {
     t_amb = lastSensorsData.lastSHTC3Data.temperature / 100.0f;
@@ -410,15 +412,22 @@ void runCompensationPipeline() {
 #endif
 
 #if defined(BME_ENABLE)
-  // Fallback: if SHTC3 is not available, use BME's uncompensated data for
-  // ambient
+  // Fallback: if SHTC3 is not available, use BME's uncompensated data for ambient
   if (!has_amb && lastSensorsData.lastBMEData.temperature != READ_ERROR &&
       lastSensorsData.lastBMEData.temperature != NO_DATA) {
     t_amb = lastSensorsData.lastBMEData.temperature / 100.0f;
     rh_amb = lastSensorsData.lastBMEData.humidity / 100.0f;
     has_amb = true;
   }
+#endif
 
+  // ===========================================================================
+  // STAGE 2: PHYSICAL/EMPIRICAL COMPENSATION
+  // ===========================================================================
+#ifdef COMP_PHYSICAL_ENABLED
+  logg("Stage 2: Physical/Empirical Compensation enabled");
+
+#if defined(BME_ENABLE)
   // -------------------------------------------------------------------
   // Algorithm 1 – BME680 self-heating RH correction
   // -------------------------------------------------------------------
@@ -427,12 +436,10 @@ void runCompensationPipeline() {
                 lastSensorsData.lastBMEData.temperature != NO_DATA;
 
   if (bme_ok) {
-    // If we only have BME, t_amb == t_bme, so rh_bme_comp = rh_amb (no
-    // self-heating fix possible).
+    // If we only have BME, t_amb == t_bme, so rh_bme_comp = rh_amb (no self-heating fix possible).
     float t_bme = lastSensorsData.lastBMEData.temperature / 100.0f;
     float rh_bme_comp = calculateCompensatedRH(t_amb, rh_amb, t_bme);
-    lastSensorsData.bmeCompensatedRH =
-        static_cast<int32_t>(rh_bme_comp * 100.0f);
+    lastSensorsData.bmeCompensatedRH = static_cast<int32_t>(rh_bme_comp * 100.0f);
   } else {
     logg("Algorithm 1: skipped – BME data unavailable");
   }
@@ -547,4 +554,211 @@ void runCompensationPipeline() {
     logg("Algorithm 5: skipped – PM or ambient data unavailable");
   }
 #endif
+
+#else // COMP_PHYSICAL_ENABLED not defined
+  logg("Stage 2: Physical/Empirical Compensation disabled – using raw sensor values as base");
+
+#if defined(BME_ENABLE)
+  if (lastSensorsData.lastBMEData.temperature != READ_ERROR &&
+      lastSensorsData.lastBMEData.humidity != NO_DATA) {
+    lastSensorsData.bmeCompensatedRH = lastSensorsData.lastBMEData.humidity;
+  }
+#endif
+
+#if defined(MICS_ENABLE)
+  if (lastSensorsData.lastMICSData.co != READ_ERROR &&
+      lastSensorsData.lastMICSData.co != NO_DATA) {
+    const MICSCalibration &cal = micsSensor.getCalibration();
+    float rs_co  = adcToResistance(micsSensor.getRawADC(0), MICS_RL_CO);
+    float rs_no2 = adcToResistance(micsSensor.getRawADC(1), MICS_RL_NO2);
+    float rs_nh3 = adcToResistance(micsSensor.getRawADC(2), MICS_RL_NH3);
+
+    float co_ppm  = convertToCOPPM(rs_co,   cal.r0CO_Ohm);
+    float no2_ppm = convertToNO2PPM(rs_no2, cal.r0NO2_Ohm);
+    float nh3_ppm = convertToNH3PPM(rs_nh3, cal.r0NH3_Ohm);
+
+    lastSensorsData.coPPMComp  = static_cast<int32_t>(clampf(co_ppm,  0.0f, 100000.0f) * 100.0f);
+    lastSensorsData.no2PPMComp = static_cast<int32_t>(clampf(no2_ppm, 0.0f, 100000.0f) * 100.0f);
+    lastSensorsData.nh3PPMComp = static_cast<int32_t>(clampf(nh3_ppm, 0.0f, 100000.0f) * 100.0f);
+  }
+#endif
+
+#if defined(CO2_ENABLE)
+  if (lastSensorsData.lastCO2Data.co2 != READ_ERROR &&
+      lastSensorsData.lastCO2Data.co2 != NO_DATA) {
+    lastSensorsData.co2Comp = lastSensorsData.lastCO2Data.co2;
+  }
+#endif
+
+#if defined(PM_ENABLE)
+  if (lastSensorsData.lastPMData.pm2_5 != READ_ERROR &&
+      lastSensorsData.lastPMData.pm2_5 != NO_DATA) {
+    lastSensorsData.pm1Comp  = lastSensorsData.lastPMData.pm1;
+    lastSensorsData.pm25Comp = lastSensorsData.lastPMData.pm2_5;
+    lastSensorsData.pm10Comp = lastSensorsData.lastPMData.pm10;
+  }
+#endif
+
+#endif // COMP_PHYSICAL_ENABLED
+
+  // ===========================================================================
+  // STAGE 3: MACHINE LEARNING CALIBRATION (DECISION TREE INFERENCE ENGINE)
+  // ===========================================================================
+#ifdef COMP_ML_ENABLED
+  logg("Stage 3: Machine Learning Tuning enabled");
+
+  float features[ML_FEATURE_COUNT];
+  memset(features, 0, sizeof(features));
+
+  features[FEATURE_AMBIENT_TEMP] = t_amb;
+  
+#ifdef COMP_PHYSICAL_ENABLED
+  features[FEATURE_AMBIENT_RH] = lastSensorsData.bmeCompensatedRH / 100.0f;
+#else
+  features[FEATURE_AMBIENT_RH] = rh_amb;
+#endif
+
+#if defined(BME_ENABLE)
+  if (lastSensorsData.lastBMEData.temperature != READ_ERROR &&
+      lastSensorsData.lastBMEData.humidity != NO_DATA) {
+    features[FEATURE_GAS_RESISTANCE_A] = lastSensorsData.lastBMEData.gas * 10.0f;
+  }
+#endif
+
+#if defined(MICS_ENABLE)
+  features[FEATURE_GAS_RESISTANCE_B] = adcToResistance(micsSensor.getRawADC(0), MICS_RL_CO);
+  features[FEATURE_GAS_RESISTANCE_C] = adcToResistance(micsSensor.getRawADC(1), MICS_RL_NO2);
+  features[FEATURE_GAS_RESISTANCE_D] = adcToResistance(micsSensor.getRawADC(2), MICS_RL_NH3);
+#endif
+
+#if defined(PM_ENABLE)
+  #ifdef COMP_PHYSICAL_ENABLED
+    features[FEATURE_PM1_0]  = lastSensorsData.pm1Comp / 100.0f;
+    features[FEATURE_PM2_5]  = lastSensorsData.pm25Comp / 100.0f;
+    features[FEATURE_PM10_0] = lastSensorsData.pm10Comp / 100.0f;
+  #else
+    features[FEATURE_PM1_0]  = lastSensorsData.lastPMData.pm1 / 100.0f;
+    features[FEATURE_PM2_5]  = lastSensorsData.lastPMData.pm2_5 / 100.0f;
+    features[FEATURE_PM10_0] = lastSensorsData.lastPMData.pm10 / 100.0f;
+  #endif
+#endif
+
+#if defined(CO2_ENABLE)
+  #ifdef COMP_PHYSICAL_ENABLED
+    features[FEATURE_CO2] = lastSensorsData.co2Comp / 100.0f;
+  #else
+    features[FEATURE_CO2] = lastSensorsData.lastCO2Data.co2 / 100.0f;
+  #endif
+#endif
+
+#if defined(BME_ENABLE)
+  if (lastSensorsData.lastBMEData.pressure != READ_ERROR &&
+      lastSensorsData.lastBMEData.pressure != NO_DATA) {
+    features[FEATURE_BARO_PRESSURE] = lastSensorsData.lastBMEData.pressure / 100.0f;
+  }
+#endif
+
+#if defined(PM_ENABLE)
+  {
+    bool pm_ok = lastSensorsData.lastPMData.pm2_5 != READ_ERROR &&
+                 lastSensorsData.lastPMData.pm2_5 != NO_DATA;
+    if (pm_ok) {
+      float base_pm1 = 0.0f;
+      float base_pm25 = 0.0f;
+      float base_pm10 = 0.0f;
+
+      #ifdef COMP_PHYSICAL_ENABLED
+        base_pm1  = lastSensorsData.pm1Comp / 100.0f;
+        base_pm25 = lastSensorsData.pm25Comp / 100.0f;
+        base_pm10 = lastSensorsData.pm10Comp / 100.0f;
+      #else
+        base_pm1  = lastSensorsData.lastPMData.pm1 / 100.0f;
+        base_pm25 = lastSensorsData.lastPMData.pm2_5 / 100.0f;
+        base_pm10 = lastSensorsData.lastPMData.pm10 / 100.0f;
+      #endif
+
+      float corr_pm1  = evaluateEnsemble(pm1Ensemble, features);
+      float corr_pm25 = evaluateEnsemble(pm25Ensemble, features);
+      float corr_pm10 = evaluateEnsemble(pm10Ensemble, features);
+
+      lastSensorsData.pm1ML  = static_cast<int32_t>(clampf(base_pm1 + corr_pm1, 0.0f, 10000.0f) * 100.0f);
+      lastSensorsData.pm25ML = static_cast<int32_t>(clampf(base_pm25 + corr_pm25, 0.0f, 10000.0f) * 100.0f);
+      lastSensorsData.pm10ML = static_cast<int32_t>(clampf(base_pm10 + corr_pm10, 0.0f, 10000.0f) * 100.0f);
+
+      loggValue("Stage 3: ML PM1.0", String((base_pm1 + corr_pm1), 2));
+      loggValue("Stage 3: ML PM2.5", String((base_pm25 + corr_pm25), 2));
+      loggValue("Stage 3: ML PM10.0", String((base_pm10 + corr_pm10), 2));
+    } else {
+      lastSensorsData.pm1ML  = lastSensorsData.lastPMData.pm1;
+      lastSensorsData.pm25ML = lastSensorsData.lastPMData.pm2_5;
+      lastSensorsData.pm10ML = lastSensorsData.lastPMData.pm10;
+    }
+  }
+#endif
+
+#if defined(MICS_ENABLE)
+  {
+    bool mics_ok = lastSensorsData.lastMICSData.co != READ_ERROR &&
+                   lastSensorsData.lastMICSData.co != NO_DATA;
+    if (mics_ok) {
+      float base_co  = 0.0f;
+      float base_no2 = 0.0f;
+      float base_nh3 = 0.0f;
+
+      #ifdef COMP_PHYSICAL_ENABLED
+        base_co  = lastSensorsData.coPPMComp / 100.0f;
+        base_no2 = lastSensorsData.no2PPMComp / 100.0f;
+        base_nh3 = lastSensorsData.nh3PPMComp / 100.0f;
+      #else
+        const MICSCalibration &cal = micsSensor.getCalibration();
+        float rs_co  = adcToResistance(micsSensor.getRawADC(0), MICS_RL_CO);
+        float rs_no2 = adcToResistance(micsSensor.getRawADC(1), MICS_RL_NO2);
+        float rs_nh3 = adcToResistance(micsSensor.getRawADC(2), MICS_RL_NH3);
+        base_co  = convertToCOPPM(rs_co, cal.r0CO_Ohm);
+        base_no2 = convertToNO2PPM(rs_no2, cal.r0NO2_Ohm);
+        base_nh3 = convertToNH3PPM(rs_nh3, cal.r0NH3_Ohm);
+      #endif
+
+      float corr_co  = evaluateEnsemble(coEnsemble, features);
+      float corr_no2 = evaluateEnsemble(no2Ensemble, features);
+      float corr_nh3 = evaluateEnsemble(nh3Ensemble, features);
+
+      lastSensorsData.coML  = static_cast<int32_t>(clampf(base_co + corr_co, 0.0f, 100000.0f) * 100.0f);
+      lastSensorsData.no2ML = static_cast<int32_t>(clampf(base_no2 + corr_no2, 0.0f, 100000.0f) * 100.0f);
+      lastSensorsData.nh3ML = static_cast<int32_t>(clampf(base_nh3 + corr_nh3, 0.0f, 100000.0f) * 100.0f);
+
+      loggValue("Stage 3: ML CO PPM", String((base_co + corr_co), 3));
+      loggValue("Stage 3: ML NO2 PPM", String((base_no2 + corr_no2), 3));
+      loggValue("Stage 3: ML NH3 PPM", String((base_nh3 + corr_nh3), 3));
+    } else {
+      lastSensorsData.coML  = lastSensorsData.lastMICSData.co;
+      lastSensorsData.no2ML = lastSensorsData.lastMICSData.no2;
+      lastSensorsData.nh3ML = lastSensorsData.lastMICSData.nh3;
+    }
+  }
+#endif
+
+#if defined(CO2_ENABLE)
+  {
+    bool co2_ok = lastSensorsData.lastCO2Data.co2 != READ_ERROR &&
+                  lastSensorsData.lastCO2Data.co2 != NO_DATA;
+    if (co2_ok) {
+      float base_co2 = 0.0f;
+      #ifdef COMP_PHYSICAL_ENABLED
+        base_co2 = lastSensorsData.co2Comp / 100.0f;
+      #else
+        base_co2 = lastSensorsData.lastCO2Data.co2 / 100.0f;
+      #endif
+
+      float corr_co2 = evaluateEnsemble(co2Ensemble, features);
+      lastSensorsData.co2ML = static_cast<int32_t>(clampf(base_co2 + corr_co2, 0.0f, 100000.0f) * 100.0f);
+      loggValue("Stage 3: ML CO2 PPM", String((base_co2 + corr_co2), 2));
+    } else {
+      lastSensorsData.co2ML = lastSensorsData.lastCO2Data.co2;
+    }
+  }
+#endif
+
+
+#endif // COMP_ML_ENABLED
 }

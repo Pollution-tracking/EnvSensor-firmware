@@ -102,4 +102,23 @@ const float AQ_HUM_MAX_SCORE = 25.0f;
 // Contribution of VOC gas reading to the AQ score (out of 75 points)
 const float AQ_GAS_MAX_SCORE = 75.0f;
 
+// ---------------------------------------------------------------------------
+// Machine Learning feature mapping (sensor-agnostic enums)
+// ---------------------------------------------------------------------------
+enum MLFeature {
+    FEATURE_AMBIENT_TEMP = 0,
+    FEATURE_AMBIENT_RH = 1,
+    FEATURE_GAS_RESISTANCE_A = 2, // e.g. BME680 Gas
+    FEATURE_GAS_RESISTANCE_B = 3, // e.g. MICS CO
+    FEATURE_GAS_RESISTANCE_C = 4, // e.g. MICS NO2
+    FEATURE_GAS_RESISTANCE_D = 5, // e.g. MICS NH3
+    FEATURE_PM1_0 = 6,
+    FEATURE_PM2_5 = 7,
+    FEATURE_PM10_0 = 8,
+    FEATURE_CO2 = 9,
+    FEATURE_BARO_PRESSURE = 10,
+    ML_FEATURE_COUNT = 11
+};
+
 #endif // COMPENSATION_CONSTANTS_H
+

@@ -120,6 +120,27 @@ Immediate after acquisition, `handleLiveData()` is invoked to route the new data
 **4. Visualization:**
 Concurrent with storage, the system triggers a `CMD_REFRESH` to the Display Task. The Display module (`Display.cpp`) reads from the shared `lastSensorsData` structure to update the E-Paper screen, ensuring the user always sees the latest snapshot without delaying the logging process.
 
+## 🤖 Machine Learning Calibration (TinyML)
+
+CityAirQ supports advanced **Stage 3 Machine Learning Tuning** on top of the Stage 2 physical calibration. This is particularly useful for correcting particulate matter hygroscopic swelling and decoupling complex MOS gas cross-sensitivities (MICS-6814 & BME680).
+
+*   **Tree-based Calibration**: Implements a highly optimized, generic C++ Decision Tree (XGBoost/LightGBM) inference engine.
+*   **Struct-based Memory Layout**: Trees are serialized into a packed 16-byte `TreeNode` array, reducing Flash usage and keeping RAM footprint near zero.
+*   **Zero-Recompile Model Loading**: On boot, the engine searches the SD card `/models/` folder for binary calibration files (e.g. `pm25_calib.bin`, `co_calib.bin`). If found, they override the default Flash arrays.
+
+### Calibration Pipeline & Stages
+Firmware calculations run in 3 distinct stages:
+1.  **Stage 1 (Raw Data)**: Captures uncompensated values.
+2.  **Stage 2 (Physical Compensation)**: Applying physical/thermodynamic formulas (guarded by `#define COMP_PHYSICAL_ENABLED`).
+3.  **Stage 3 (ML Tuning)**: Applying the tree ensembles to compute and add residual corrections (guarded by `#define COMP_ML_ENABLED`).
+
+### Model Training Workflow
+A Python training script is provided in `/tools/train_calib.py` to train and serialize models using reference station data (e.g. Bucharest WAQI open feeds):
+```bash
+python3 tools/train_calib.py --trace-csv <path-to-logs> --ref-csv <path-to-ref> --target pm25
+```
+This script evaluates the model and outputs a `.bin` payload to copy directly onto the SD card.
+
 ## ⚙️ Configuration
 
 The firmware behavior and hardware setup can be configured in `src/configs.h` (and `include/Resources/pins.h`).

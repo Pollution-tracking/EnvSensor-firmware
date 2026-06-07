@@ -12,5 +12,7 @@
 #define MICS_ENABLE 1
 #define SD_ENABLE 1
 #define COMPENSATION_ENABLE 1
+#define COMP_PHYSICAL_ENABLED 1
+#define COMP_ML_ENABLED 1
 
 #endif // CONFIGS_H

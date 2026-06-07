@@ -19,6 +19,7 @@
 #include <Modules/SDcard.h>
 #include <Modules/RTC.h>
 #include <Modules/DisplayTask.h>
+#include <Resources/Software/DecisionTreeEngine.h>
 
 #ifdef PM_ENABLE
 #include <Sensors/PM_sensor.h>
@@ -97,6 +98,10 @@ void setup() {
 	rtc.init();
 	// Initialize SD card
 	sdcard.init();
+#ifdef COMP_ML_ENABLED
+	// Initialize ML decision trees
+	initMLCalibration();
+#endif
 	// Create display task
 	createDisplayTask();
 	// Initialize display
