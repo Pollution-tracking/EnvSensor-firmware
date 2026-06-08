@@ -5,57 +5,71 @@ digraph CompensationServicePipeline {
 
     // --- LEFT COLUMN: SENSOR INPUTS ---
     subgraph cluster_inputs {
-        label = "Sensor Inputs";
+        label = "Stage 1: Sensor Inputs";
         color=blue;
         style=filled;
         fillcolor="#F0F8FF"; // AliceBlue
         
-        SHTC3 [label="SHTC3", shape=cylinder, fillcolor="lightblue"];
-        BME680 [label="BME680", shape=cylinder, fillcolor="lightblue"];
-        MICS6814 [label="MICS-6814", shape=cylinder, fillcolor="lightblue"];
-        MHZ19B [label="MH-Z19B", shape=cylinder, fillcolor="lightblue"];
-        PMSA003 [label="PMSA003", shape=cylinder, fillcolor="lightblue"];
+        SHTC3 [label="SHTC3\n(Reference T/RH)", shape=cylinder, fillcolor="lightblue"];
+        BME680 [label="BME680\n(T, RH, Gas, P)", shape=cylinder, fillcolor="lightblue"];
+        MICS6814 [label="MICS-6814\n(Raw CO, NO2, NH3)", shape=cylinder, fillcolor="lightblue"];
+        MHZ19B [label="MH-Z19B\n(Raw CO2)", shape=cylinder, fillcolor="lightblue"];
+        PMSA003 [label="PMSA003\n(Raw PM1.0, 2.5, 10)", shape=cylinder, fillcolor="lightblue"];
     }
 
-    // --- MIDDLE COLUMN: COMPENSATION ALGORITHMS ---
+    // --- MIDDLE COLUMN: PHYSICAL/EMPIRICAL COMPENSATION ---
     subgraph cluster_algorithms {
-        label = "Compensation Algorithms";
+        label = "Stage 2: Physical/Empirical Compensation";
         color=darkgreen;
         style=filled;
         fillcolor="#F5FFFA"; // MintCream
 
-        Algo1 [label="Algo 1: Humidity Correction", fillcolor="aquamarine"];
-        Algo2 [label="Algo 2: MICS m5 & PPM Conversion", fillcolor="aquamarine"];
-        Algo3 [label="Algo 3: Donchian Decoupling & AQ Score", fillcolor="aquamarine"];
-        Algo4 [label="Algo 4: CO2 Termobaric Correction", fillcolor="aquamarine"];
-        Algo5 [label="Algo 5: PM Hygroscopic Correction", fillcolor="aquamarine"];
+        Algo1 [label="Algo 1: BME RH Correct", fillcolor="aquamarine"];
+        Algo2 [label="Algo 2: MICS Rs & PPM", fillcolor="aquamarine"];
+        Algo3 [label="Algo 3: Donchian Decoupling", fillcolor="aquamarine"];
+        Algo4 [label="Algo 4: CO2 Termobaric", fillcolor="aquamarine"];
+        Algo5 [label="Algo 5: PM Hygroscopic", fillcolor="aquamarine"];
         
         SDFile [label="donchian_buffer.bin", shape=folder, fillcolor="peachpuff"];
         Algo3 -> SDFile [label="Saves state", style=dashed, color="darkgreen"];
     }
 
-    // --- COLOR-CODED ROUTING (EASY TO TRACE) ---
-    // 1. Ambient References (Dashed light grey to avoid clutter)
+    // --- MIDDLE-RIGHT COLUMN: MACHINE LEARNING CALIBRATION ---
+    subgraph cluster_ml_tuning {
+        label = "Stage 3: Machine Learning Calibration (XGBoost)";
+        color=darkgoldenrod;
+        style=filled;
+        fillcolor="#FFFDF0"; // Light yellow-gold
+
+        pmEnsembles [label="PM Ensembles\n(pm1, pm25, pm10 Ensembles)", fillcolor="gold"];
+        gasEnsembles [label="Gas Ensembles\n(co, no2, nh3 Ensembles)", fillcolor="gold"];
+        co2Ensemble [label="CO2 Ensemble\n(co2Ensemble)", fillcolor="gold"];
+        
+        SDModels [label="SD: /models/*.bin\n(Dynamic override)", shape=folder, fillcolor="peachpuff"];
+        SDModels -> {pmEnsembles, gasEnsembles, co2Ensemble} [label="Loads trees", style=dashed, color="darkgoldenrod"];
+    }
+
+    // --- PHYSICAL ROUTING ---
     SHTC3 -> {Algo1, Algo2, Algo3, Algo4, Algo5} [color="darkgray", style=dashed];
+    SHTC3 -> {pmEnsembles, gasEnsembles, co2Ensemble} [color="darkgray", style=dashed, label="Ref T/RH"];
 
-    // 2. Core Gas Sensor Connections (Green)
     MICS6814 -> Algo2 [color="green", penwidth=1.5];
-
-    // 3. NDIR CO2 Connections (Orange)
     MHZ19B -> Algo4 [color="orange", penwidth=1.5];
-
-    // 4. PM Particle Connections (Red)
     PMSA003 -> Algo5 [color="red", penwidth=1.5];
 
-    // 5. BME680 Multipurpose Connections (Blue / Purple)
     BME680 -> Algo1 [color="blue", penwidth=1.5];
     BME680 -> Algo3 [color="blue", penwidth=1.5];
     BME680 -> Algo4 [color="cyan", penwidth=1.5];
     BME680 -> Algo5 [color="purple", penwidth=1.5];
 
+    // --- ML ROUTING (STAGE 2 OUTPUTS TO STAGE 3 INPUTS) ---
+    Algo5 -> pmEnsembles [color="red", penwidth=1.2, label="Base PM"];
+    Algo2 -> gasEnsembles [color="green", penwidth=1.2, label="Base PPMs"];
+    Algo4 -> co2Ensemble [color="orange", penwidth=1.2, label="Base CO2"];
+
     // --- RIGHT COLUMN: PERSISTENT OUTPUTS ---
     subgraph cluster_outputs {
-        label = "Outputs";
+        label = "RTC Outputs";
         color=purple;
         style=filled;
         fillcolor="#F8F8FF"; // GhostWhite
@@ -63,10 +77,12 @@ digraph CompensationServicePipeline {
         RTC_Data [label="RTC_SensorData\n(lastSensorsData)", shape=note, fillcolor="plum"];
     }
 
-    Algo1 -> RTC_Data [label="Humidity compensated", color="darkgray"];
-    Algo2 -> RTC_Data [label="CO/NO2/NH3 compensated", color="darkgray"];
-    Algo3 -> RTC_Data [label="VOC compensated\nAQ score", color="darkgray"];
-    Algo4 -> RTC_Data [label="CO2 compensated", color="darkgray"];
-    Algo5 -> RTC_Data [label="PM1/2.5/10 compensated", color="darkgray"];
-}
+    // Connect empirical values directly (Stage 2)
+    Algo1 -> RTC_Data [label="bmeCompensatedRH", color="darkgray"];
+    Algo3 -> RTC_Data [label="vocPctDecoupled\naqScore", color="darkgray"];
 
+    // Connect ML values (Stage 3)
+    pmEnsembles -> RTC_Data [label="pm1ML, pm25ML, pm10ML", color="darkgoldenrod", penwidth=1.5];
+    gasEnsembles -> RTC_Data [label="coML, no2ML, nh3ML", color="darkgoldenrod", penwidth=1.5];
+    co2Ensemble -> RTC_Data [label="co2ML", color="darkgoldenrod", penwidth=1.5];
+}
