@@ -41,14 +41,16 @@ digraph SensorDataPipeline_SimplifiedFurther {
     }
     
     subgraph cluster_compensation {
-        label = "Compensation service";
-        color=darkpurple;
+        label = "Compensation Service";
+        color=purple;
         style=filled;
-        fillcolor="#D8D8FF"; // GhostWhite
+        fillcolor="#D8D8FF";
 
-        CompensatedSensorData [label="Compensated sensor values", shape=rectangle, fillcolor="gold"];
+        CompensatedSensorData [label="Compensated sensor values\n(Stage 2: Physical)", shape=rectangle, fillcolor="gold"];
+        MLCalibratedData [label="ML Calibrated Values\n(Stage 3: Tree Inference)", shape=rectangle, fillcolor="lightgreen"];
 
-        LatestSensorData -> CompensatedSensorData [label="Processes Raw Readings"];
+        LatestSensorData -> CompensatedSensorData [label="Raw Readings"];
+        CompensatedSensorData -> MLCalibratedData [label="Features Vector"];
     }
 
     subgraph cluster_processing {
@@ -75,7 +77,7 @@ digraph SensorDataPipeline_SimplifiedFurther {
     }
 
     // Connections between clusters
-    CompensatedSensorData -> DataProcessingModule [label="Provides Processed Data"];
+    MLCalibratedData -> DataProcessingModule [label="Provides Processed Data"];
 
     // User Interaction (async)
     subgraph cluster_user_interaction {

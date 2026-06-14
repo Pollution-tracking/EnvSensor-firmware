@@ -1,0 +1,77 @@
+digraph MlPipelineWorkflow {
+    rankdir=LR; // Left to Right flow
+    node [shape=box, style=filled, fontname="Helvetica"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // --- COLUMN 1: DATA SOURCES & BASES ---
+    subgraph cluster_sources {
+        label = "1. Pre-compensated Bases & Environment";
+        color=blue;
+        fillcolor="#F0F8FF";
+        style=filled;
+        
+        env_vars [label="Environmental References\n(T_amb, RH_amb, Pressure)", fillcolor="lightblue"];
+        raw_signals [label="Raw Sensor Elements\n(BME Gas, MICS ADC Channels)", fillcolor="lightblue"];
+        phys_bases [label="Stage 2 Physical Bases\n(Compensated PM, Gas PPM, CO2)", fillcolor="aquamarine"];
+    }
+
+    // --- COLUMN 2: FEATURE VECTOR ASSEMBLY ---
+    subgraph cluster_vector {
+        label = "2. Feature Vector Mapping";
+        color=darkgreen;
+        fillcolor="#F5FFFA";
+        style=filled;
+        
+        feat_array [label="features[11] Feature Array\nIndexed by generic MLFeature enum", fillcolor="lightgreen", shape=record];
+    }
+
+    env_vars -> feat_array [label="Maps to indices 0,1,10"];
+    raw_signals -> feat_array [label="Maps to indices 2,3,4,5"];
+    phys_bases -> feat_array [label="Maps to indices 6,7,8,9"];
+
+    // --- COLUMN 3: DECISION TREE traversal ENGINE ---
+    subgraph cluster_engine {
+        label = "3. Traverser & SD Deserializer";
+        color=darkgoldenrod;
+        fillcolor="#FFFDF0";
+        style=filled;
+        
+        sd_models [label="SD Card Binary Models\n(/models/*_calib.bin)", shape=folder, fillcolor="peachpuff"];
+        boot_loader [label="initMLCalibration()\nRuns on boot / wake", fillcolor="gold"];
+        nodes_ram [label="Ensemble structures in RAM\n(baseScore, Node arrays)", fillcolor="gold"];
+        eval_loop [label="evaluateEnsemble()\nIterative tree traversal\n(16-byte TreeNode jumps)", shape=diamond, fillcolor="gold"];
+        
+        sd_models -> boot_loader [label="Reads bin file"];
+        boot_loader -> nodes_ram [label="Allocates heap"];
+        nodes_ram -> eval_loop [label="Traverses trees"];
+    }
+
+    feat_array -> eval_loop [label="Provides feature splits"];
+
+    // --- COLUMN 4: SUMMATION & GUARDING ---
+    subgraph cluster_summation {
+        label = "4. residual correction & clamping";
+        color=purple;
+        fillcolor="#F8F8FF";
+        style=filled;
+        
+        residual_sum [label="Base Value + Tree Offset", fillcolor="plum"];
+        clamp_guard [label="Clamp Range [0, Max]\nCheck valid raw data", fillcolor="plum"];
+        
+        eval_loop -> residual_sum [label="Calculated offset"];
+        phys_bases -> residual_sum [style=dashed, label="Base value"];
+        residual_sum -> clamp_guard;
+    }
+
+    // --- COLUMN 5: PERSISTENT OUTPUTS ---
+    subgraph cluster_rtc {
+        label = "5. Outputs";
+        color=indigo;
+        fillcolor="#FAF0E6";
+        style=filled;
+        
+        rtc_ml [label="RTC ML Fields\n(pm25ML, coML, etc.)", shape=note, fillcolor="thistle"];
+        
+        clamp_guard -> rtc_ml [label="Writes final ppm/ug"];
+    }
+}

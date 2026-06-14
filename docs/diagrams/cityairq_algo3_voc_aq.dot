@@ -11,7 +11,7 @@ digraph Algo3VocAQ {
     // Steps
     buffer_manage [label="Sliding Donchian Buffer (Loads/Saves SD)\nStores raw Gas and RH readings", fillcolor="lightsteelblue"];
     find_extrema [label="Find Extremas\n[gMin, gMax] & [hMin, hMax]", fillcolor="lightsteelblue"];
-    decouple_humidity [label="Decouple RH Effects from Gas\nRatio r = dRH / dGas\nR_gas_comp = R_gas_raw - r * RH_amb", fillcolor="aquamarine"];
+    decouple_humidity [label="Decouple RH Effects from Gas\nRatio r = dRH / dGas\nR_gas_comp = (R_gas_max - R_gas_raw) * r + RH_min", fillcolor="aquamarine"];
     calc_voc [label="VOC Purity %\nvoc_pct = ((R_gas_comp - gMin)/(gMax - gMin)) * 100", fillcolor="aquamarine"];
     calc_aq [label="Compute AQ Score (0-100)\nAQ_Score = Score_Hum(25%) + Score_Gas(75%)", fillcolor="lightyellow"];
 

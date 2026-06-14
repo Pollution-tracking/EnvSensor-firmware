@@ -1,0 +1,80 @@
+digraph CityAirQ_Software_Layers {
+    rankdir=LR; // Left to right layout
+    node [shape=box, style="filled,rounded", fontname="Helvetica", fillcolor="lightblue"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Sensor Interface Layer
+    subgraph cluster_sensor_interface {
+        label = "Sensor Interface Layer";
+        color = dodgerblue;
+        style = "filled,dashed";
+        fillcolor = "#F0F8FF"; // AliceBlue
+        
+        sensors [label="Physical Sensors", shape=box, fillcolor="lightsteelblue"];
+        interface [label="Common Sensor Interface", shape=box, fillcolor="lightskyblue"];
+        
+        sensors -> interface;
+    }
+
+    // Processing Layer
+    subgraph cluster_processing {
+        label = "Processing Layer";
+        color = darkorchid;
+        style = "filled,dashed";
+        fillcolor = "#FAF0E6"; // Linen
+        
+        validate [label="Data Validation", fillcolor="plum"];
+        physical_comp [label="Physical & Empirical Compensation", fillcolor="plum"];
+        ml_residual [label="Edge ML Residual Correction", fillcolor="plum"];
+        
+        validate -> physical_comp -> ml_residual;
+    }
+
+    // Central Data Layer
+    subgraph cluster_central_data {
+        label = "Central Data Layer";
+        color = seagreen;
+        style = "filled,dashed";
+        fillcolor = "#F0FFF0"; // Honeydew
+        
+        subgraph cluster_data_store {
+            label = "Shared Data Store";
+            color = green;
+            style = "rounded";
+            
+            raw_data [label="Raw Outputs", fillcolor="lightgreen"];
+            comp_data [label="Compensated Values", fillcolor="lightgreen"];
+            ml_data [label="Final Samples", fillcolor="lightgreen"];
+        }
+    }
+
+    // Output Layer
+    subgraph cluster_output {
+        label = "Output Layer";
+        color = orange;
+        style = "filled,dashed";
+        fillcolor = "#FFF5EE"; // Seashell
+        
+        display [label="Display Module", fillcolor="navajowhite"];
+        storage [label="Storage Module", fillcolor="navajowhite"];
+        comm [label="Communication Module", fillcolor="navajowhite"];
+    }
+
+    // Core Pipeline Connections (Linear Left-to-Right Flow)
+    interface -> validate [label="Process"];
+    
+    // Processing writes to Central Data Layer
+    validate -> raw_data [label="Write"];
+    physical_comp -> comp_data [label="Write"];
+    ml_residual -> ml_data [label="Write"];
+
+    // Output connections
+    // Only Final Samples flow to Display and Communications
+    ml_data -> display;
+    ml_data -> comm;
+    
+    // Final is solid, raw/compensated are both identical dotted lines
+    ml_data -> storage;
+    comp_data -> storage [style=dotted];
+    raw_data -> storage [style=dotted];
+}

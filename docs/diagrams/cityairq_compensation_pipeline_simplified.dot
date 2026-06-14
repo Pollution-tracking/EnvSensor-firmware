@@ -1,0 +1,22 @@
+digraph CityAirQ_Compensation_Pipeline_Simplified {
+    rankdir=LR; // Left to right layout
+    node [shape=box, style="filled,rounded", fontname="Helvetica", fillcolor="lightblue"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Pipeline Steps
+    sensors [label="Sensors", shape=circle, fillcolor="lightsteelblue"];
+    stage1 [label="Stage 1\nRaw Acquisition", fillcolor="aquamarine"];
+    stage2 [label="Stage 2\nPhysical Compensation", fillcolor="plum"];
+    stage3 [label="Stage 3\nML Residual Correction", fillcolor="lightyellow"];
+    outputs [label="Outputs\n(Display, Storage, BLE)", fillcolor="navajowhite"];
+
+    // Main Pipeline Flow
+    sensors -> stage1;
+    stage1 -> stage2 [label="Raw Data"];
+    stage2 -> stage3 [label="Compensated"];
+    stage3 -> outputs [label="ML-Tuned"];
+
+    // Build-time Bypass Paths (Configurable Modes)
+    stage1 -> outputs [style=dotted];
+    stage2 -> outputs [style=dotted];
+}

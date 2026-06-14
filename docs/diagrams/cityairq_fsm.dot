@@ -1,0 +1,37 @@
+digraph CityAirQ_FSM_Simplified {
+    rankdir=TB; // Top to bottom layout
+    node [shape=box, style="filled,rounded", fontname="Helvetica", fillcolor="lightblue"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Wakeup / Boot entry point
+    boot [shape=point, width=0.2, height=0.2];
+
+    // Core States
+    awake_state [label="AWAKE\n(Continuous Operation)", shape=doubleoctagon, fillcolor="lightgreen", style="filled,bold"];
+    from_sleep_state [label="FROM_SLEEP\n(Transient Active State)", shape=octagon, fillcolor="lightskyblue"];
+    awakening_state [label="AWAKENING\n(Restoring Operation)", shape=octagon, fillcolor="lightyellow"];
+    to_sleep_state [label="TO_SLEEP\n(Pre-Sleep Cleanup)", shape=octagon, fillcolor="lightsalmon"];
+    deep_sleep [label="DEEP SLEEP\n(Power-Down State)", shape=ellipse, fillcolor="darkgray", fontcolor="white", style="filled"];
+
+    // Transitions
+    boot -> awake_state [label=" Power On / Cold Boot\n[Init Peripherals & start T_HEAT]"];
+    
+    // Continuous Active State Loops & Transitions
+    awake_state -> awake_state [label=" T_READ expires (2s)\n[Sample sensors & refresh screen]"];
+    awake_state -> to_sleep_state [label=" Center Button Pressed on BLE Screen\n[Toggle sleep state]"];
+    
+    // Deep Sleep Wakeup Transitions
+    deep_sleep -> from_sleep_state [label=" RTC Timer Wakeup\n[Enable buck & init sensors]"];
+    deep_sleep -> from_sleep_state [label=" Button GPIO Wakeup\n[Start T_SLEEP timer]"];
+    
+    // FROM_SLEEP Transitions
+    from_sleep_state -> to_sleep_state [label=" T_READ expires (single sample collected)"];
+    from_sleep_state -> to_sleep_state [label=" T_SLEEP expires (no user activity)"];
+    from_sleep_state -> awakening_state [label=" Center Button Pressed on BLE Screen\n[Toggle sleep state]"];
+    
+    // AWAKENING Transitions
+    awakening_state -> awake_state [label=" Enter Continuous Mode\n[Disable T_SLEEP, start continuous T_READ]"];
+    
+    // Shutdown Transition
+    to_sleep_state -> deep_sleep [label=" esp_deep_sleep_start()\n[Disable timers & sleep PM sensor]"];
+}

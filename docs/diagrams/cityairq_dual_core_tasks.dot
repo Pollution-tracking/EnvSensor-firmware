@@ -1,0 +1,42 @@
+digraph CityAirQ_DualCore_Tasks {
+    rankdir=TB; // Top to bottom layout (stacks Core 1 above Core 0)
+    node [shape=box, style="filled,rounded", fontname="Helvetica", fillcolor="lightblue"];
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Core 1 Cluster (Main Processing Core)
+    subgraph cluster_core1 {
+        label = "Core 1: Main Processing Core";
+        color = dodgerblue;
+        style = "filled,dashed";
+        fillcolor = "#F0F8FF"; // AliceBlue
+        
+        fsm [label="Central FSM & Timers", fillcolor="#FFF2CC"];
+        acquire [label="Sensor Acquisition", fillcolor="#E6F2FF"];
+        compensation [label="Compensation Pipeline", fillcolor="#E6F2FF"];
+        logging [label="SD Card Storage", fillcolor="#E6F2FF"];
+        ble_comm [label="BLE Communication", fillcolor="#E6F2FF"];
+
+        // Execution Flow within Core 1 (flows left-to-right inside the cluster)
+        { rank=same; fsm; acquire; compensation; logging; ble_comm; }
+        fsm -> acquire -> compensation -> logging -> ble_comm;
+    }
+
+    // Core 0 Cluster (Display & Asynchronous Core)
+    subgraph cluster_core0 {
+        label = "Core 0: Display & Async Core";
+        color = darkgreen;
+        style = "filled,dashed";
+        fillcolor = "#F4FFF4"; // Honeydew / Light green
+        
+        queue_handler [label="Command Queue Handler", fillcolor="#E6FFE6"];
+        rendering [label="E-Paper Rendering Engine", fillcolor="#E6FFE6"];
+        
+        // Execution Flow within Core 0 (flows left-to-right inside the cluster)
+        { rank=same; queue_handler; rendering; }
+        queue_handler -> rendering;
+    }
+
+    // Inter-Core Communication (IPC) via FreeRTOS primitives (flows downwards)
+    fsm -> queue_handler [label="displayQueue", style=dashed, color=blue];
+    rendering -> fsm [label="displayBusySemaphore", style=dotted, color=darkgreen, dir=both];
+}

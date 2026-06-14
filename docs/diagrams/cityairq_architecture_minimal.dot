@@ -1,0 +1,36 @@
+digraph CityAirQ_Architecture_Minimal {
+    rankdir=LR; // Left to right layout
+    node [shape=box, style="filled,rounded", fontname="Helvetica", fillcolor="#E6F2FF"]; // Default Core 1 color (light blue)
+    edge [fontname="Helvetica", arrowhead=vee];
+
+    // Core 1 (Main Processing Task) Nodes
+    boot [label="Boot & Init", shape=doubleoctagon, fillcolor="#E6F2FF"];
+    heat [label="Sensor Heating & Calib", fillcolor="#E6F2FF"];
+    acquire [label="Sensor Acquisition", fillcolor="#E6F2FF"];
+    process [label="Processing & Routing", fillcolor="#E6F2FF"];
+    storage [label="SD Card Storage", fillcolor="#E6F2FF"];
+    ble [label="BLE Transmit", fillcolor="#E6F2FF"];
+    sleep [label="Deep Sleep", shape=doubleoctagon, fillcolor="#E6F2FF"];
+
+    // Central FSM (Core 1, highlighted differently)
+    loop [label="Central FSM", shape=ellipse, fillcolor="#FFF2CC", style="filled,bold"]; // Highlighted yellow
+
+    // Core 0 (Asynchronous / Display Task) Nodes
+    display [label="Display Task", fillcolor="#E6FFE6"]; // Core 0 color (light green)
+    button [label="Button Input", fillcolor="#E6FFE6"];  // Core 0 / Async input (light green)
+
+    // Main Linear Flow (Core 1)
+    boot -> heat -> loop;
+    loop -> acquire -> process;
+    
+    // Outputs routing
+    process -> storage;
+    process -> ble;
+    process -> display;
+
+    // Asynchronous controls & Sleep
+    button -> loop;
+    loop -> display;
+    loop -> sleep;
+    sleep -> loop;
+}
